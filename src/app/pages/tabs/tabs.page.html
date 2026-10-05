@@ -1,0 +1,10 @@
+<ion-tabs>
+  <ion-tab-bar slot="bottom" class="tz-tabbar">
+    @for (item of tabs; track item.tab) {
+      <ion-tab-button tzHaptic [tab]="item.tab" layout="icon-start" class="tz-tab" [attr.aria-label]="item.label">
+        <i class="ph ph-{{ item.icon }} tz-tab__icon" aria-hidden="true"></i>
+        <ion-label class="tz-tab__label">{{ item.label }}</ion-label>
+      </ion-tab-button>
+    }
+  </ion-tab-bar>
+</ion-tabs>
