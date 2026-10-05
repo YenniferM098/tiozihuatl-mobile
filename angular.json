@@ -33,7 +33,12 @@
                 "output": "assets"
               }
             ],
-            "styles": ["src/global.scss", "src/theme/variables.scss"],
+            "styles": [
+              "node_modules/@phosphor-icons/web/src/regular/style.css",
+              "src/global.scss",
+              "src/theme/variables.scss",
+              "src/theme/forms.scss"
+            ],
             "scripts": [],
             "browser": "src/main.ts"
           },
@@ -115,7 +120,9 @@
     }
   },
   "cli": {
-    "schematicCollections": ["@ionic/angular-toolkit"]
+    "schematicCollections": [
+      "@ionic/angular-toolkit"
+    ]
   },
   "schematics": {
     "@ionic/angular-toolkit:component": {
