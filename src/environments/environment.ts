@@ -2,8 +2,14 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+import { API_URL } from './api.config';
+
 export const environment = {
-  production: false
+  production: false,
+  // Misma API institucional desplegada que usa la APK (definida en api.config.ts).
+  apiUrl: API_URL,
+  // Plataforma web institucional (términos, privacidad y seguridad que se aceptan al registrarse).
+  webUrl: 'https://frontiozihuatl.netlify.app',
 };
 
 /*

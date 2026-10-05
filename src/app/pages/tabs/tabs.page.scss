@@ -1,0 +1,123 @@
+/*
+ * Barra inferior fija: panel blanco pegado abajo, con esquinas superiores redondeadas
+ * y una sombra suave hacia arriba. Las pestañas inactivas muestran solo el icono en
+ * oscuro; la activa es una cápsula azul tenue con icono y texto en azul institucional.
+ *
+ * Para que el cambio se sienta suave, la cápsula no "salta": su ancho crece con el
+ * texto (max-width animado) mientras el fondo y los colores se funden, y las demás
+ * pestañas se reacomodan solas con el mismo ritmo.
+ */
+:host {
+  --tz-tab-ease: cubic-bezier(0.22, 1, 0.36, 1); // desacelera suave al final
+  --tz-tab-duration: 0.45s;
+  --tz-tab-inactive: var(--tz-text);
+  --tz-tab-active: var(--ion-color-primary-shade);
+}
+
+.tz-tabbar {
+  --background: #ffffff;
+  --border: 0;
+
+  // ion-tab-bar usa "contain: strict", así que necesita alto fijo (+ zona segura inferior).
+  box-sizing: content-box;
+  height: 72px;
+  padding: 0 8px var(--ion-safe-area-bottom, 0px);
+  justify-content: space-evenly;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -6px 24px rgba(29, 43, 54, 0.08);
+}
+
+.tz-tab {
+  --color: var(--tz-tab-inactive);
+  --color-selected: var(--tz-tab-active);
+  --background: transparent;
+  --background-focused: transparent;
+  --ripple-color: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+
+  flex: 0 0 auto;
+  min-width: 40px;
+  max-width: none;
+  height: 48px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background-color: transparent;
+  transition:
+    padding var(--tz-tab-duration) var(--tz-tab-ease),
+    background-color var(--tz-tab-duration) var(--tz-tab-ease),
+    transform var(--tz-press-out);
+
+  &.tab-selected {
+    padding: 0 14px;
+    background-color: rgba(var(--ion-color-primary-rgb), 0.16);
+  }
+
+  // Mismo "toque" que los botones del login: se hunde al presionar y rebota al soltar.
+  &:active {
+    transform: scale(0.92);
+    transition:
+      padding var(--tz-tab-duration) var(--tz-tab-ease),
+      background-color var(--tz-tab-duration) var(--tz-tab-ease),
+      transform var(--tz-press-in);
+  }
+}
+
+.tz-tab__icon {
+  font-size: 24px;
+  line-height: 1;
+  transition: color var(--tz-tab-duration) var(--tz-tab-ease);
+}
+
+.tz-tab.tab-selected .tz-tab__icon {
+  animation: tz-tab-pop 0.5s var(--tz-press-out);
+}
+
+.tz-tab__label {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transition:
+    max-width var(--tz-tab-duration) var(--tz-tab-ease),
+    margin var(--tz-tab-duration) var(--tz-tab-ease),
+    opacity 0.2s ease;
+}
+
+.tz-tab.tab-selected .tz-tab__label {
+  max-width: 140px;
+  margin-left: 8px;
+  opacity: 1;
+  transition:
+    max-width var(--tz-tab-duration) var(--tz-tab-ease),
+    margin var(--tz-tab-duration) var(--tz-tab-ease),
+    opacity 0.3s ease 0.12s; // el texto aparece cuando la cápsula ya se abrió
+}
+
+// Pequeño rebote del icono al quedar seleccionado.
+@keyframes tz-tab-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(0.82);
+  }
+  70% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tz-tab,
+  .tz-tab__icon,
+  .tz-tab__label {
+    transition: none;
+    animation: none !important;
+  }
+}

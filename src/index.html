@@ -1,25 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
   <meta charset="utf-8" />
-  <title>Ionic App</title>
+  <title>Instituto de Estudios Superiores Tiozihuatl</title>
 
   <base href="/" />
 
-  <meta name="color-scheme" content="light dark" />
+  <meta name="color-scheme" content="light" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Nunito:wght@800&display=swap" />
   <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="format-detection" content="telephone=no" />
   <meta name="msapplication-tap-highlight" content="no" />
 
-  <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dazzy4wzq/image/upload/v1772194846/BackgroundEraser_20260227_061627842_khnhzp.png" />
 
   <!-- add to homescreen for ios -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+  <!--
+    Splash de inicio: se pinta antes de que cargue Angular y AppComponent lo
+    retira cuando la primera pantalla está lista. No depende de ningún plugin.
+  -->
+  <style>
+    .tz-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #3fa6e8;
+      transition: opacity 0.35s ease-out, visibility 0.35s ease-out;
+    }
+
+    .tz-splash--hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /*
+      Mismo tamaño y posición que el logo del splash nativo de Android (180dp),
+      sin animación de entrada: así el paso del splash nativo a este se ve como
+      una sola pantalla continua.
+    */
+    .tz-splash__logo {
+      width: 180px;
+      height: 180px;
+      object-fit: contain;
+    }
+  </style>
+  <link rel="preload" as="image" href="assets/brand/iest-logo.png" />
 </head>
 
 <body>
+  <div id="tz-splash" class="tz-splash" aria-hidden="true">
+    <img
+      class="tz-splash__logo"
+      src="assets/brand/iest-logo.png"
+      alt=""
+    />
+  </div>
   <app-root></app-root>
 </body>
 

@@ -1,0 +1,324 @@
+<ion-content class="register-content">
+  <main class="register">
+    <header class="register__header">
+      <button type="button" class="register__back" aria-label="Regresar" [disabled]="loading()" (click)="goBack()">
+        <i class="ph ph-arrow-left" aria-hidden="true"></i>
+      </button>
+      <h1 class="register__title">Registro</h1>
+      <span class="register__back-spacer" aria-hidden="true"></span>
+    </header>
+
+    <section class="register__sheet">
+      <ol class="register__steps" aria-label="Pasos del registro">
+        <li [class.is-active]="stepNumber() >= 1" [attr.aria-current]="step() === 'datos' ? 'step' : null">
+          <i class="ph ph-user" aria-hidden="true"></i>
+          <span>Datos</span>
+          <span class="register__step-bar"></span>
+        </li>
+        <li [class.is-active]="stepNumber() >= 2" [attr.aria-current]="step() === 'verificacion' ? 'step' : null">
+          <i class="ph ph-envelope-simple" aria-hidden="true"></i>
+          <span>Verificación</span>
+          <span class="register__step-bar"></span>
+        </li>
+        <li [class.is-active]="stepNumber() >= 3" [attr.aria-current]="step() === 'seguridad' ? 'step' : null">
+          <i class="ph ph-shield-check" aria-hidden="true"></i>
+          <span>Seguridad</span>
+          <span class="register__step-bar"></span>
+        </li>
+      </ol>
+
+      @switch (step()) {
+        <!-- ================= Paso 1: datos personales ================= -->
+        @case ('datos') {
+          <form class="register__card" [formGroup]="datosForm" (ngSubmit)="submitDatos()" novalidate>
+            <p class="register__lead">Ingresa tus datos personales. Te enviaremos un enlace para verificar tu correo.</p>
+
+            <ion-input
+              class="tz-field"
+              formControlName="nombre"
+              label="Nombre(s)"
+              labelPlacement="stacked"
+              placeholder="Ej. Juan Carlos"
+              autocomplete="given-name"
+              autocapitalize="words"
+              [maxlength]="20"
+              [errorText]="nameError('nombre')"
+              [readonly]="loading()"
+              (ionInput)="errorMessage.set(null)"
+            >
+              <i slot="start" class="ph ph-user tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+
+            <ion-input
+              class="tz-field"
+              formControlName="apaterno"
+              label="Apellido paterno"
+              labelPlacement="stacked"
+              placeholder="Ej. García"
+              autocomplete="family-name"
+              autocapitalize="words"
+              [maxlength]="15"
+              [errorText]="nameError('apaterno')"
+              [readonly]="loading()"
+              (ionInput)="errorMessage.set(null)"
+            >
+              <i slot="start" class="ph ph-user tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+
+            <ion-input
+              class="tz-field"
+              formControlName="amaterno"
+              label="Apellido materno"
+              labelPlacement="stacked"
+              placeholder="Ej. López"
+              autocapitalize="words"
+              [maxlength]="15"
+              [errorText]="nameError('amaterno')"
+              [readonly]="loading()"
+              (ionInput)="errorMessage.set(null)"
+            >
+              <i slot="start" class="ph ph-user tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+
+            <ion-input
+              class="tz-field"
+              formControlName="correo"
+              label="Correo electrónico"
+              labelPlacement="stacked"
+              placeholder="correo@ejemplo.com"
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              autocapitalize="off"
+              [maxlength]="50"
+              [errorText]="emailError"
+              [readonly]="loading()"
+              (ionInput)="errorMessage.set(null)"
+            >
+              <i slot="start" class="ph ph-envelope-simple tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+
+            <ion-input
+              class="tz-field"
+              formControlName="telefono"
+              label="Teléfono"
+              labelPlacement="stacked"
+              placeholder="10 dígitos"
+              type="tel"
+              inputmode="numeric"
+              autocomplete="tel-national"
+              [maxlength]="10"
+              [errorText]="phoneError"
+              [readonly]="loading()"
+              (ionInput)="onPhoneInput()"
+            >
+              <i slot="start" class="ph ph-phone tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+
+            @if (errorMessage(); as message) {
+              <div class="tz-alert tz-alert--error" role="alert">
+                <i class="ph ph-warning-circle" aria-hidden="true"></i>
+                <span>{{ message }}</span>
+              </div>
+            }
+
+            <ion-button tzHaptic="medium" type="submit" expand="block" class="tz-submit" [disabled]="loading()">
+              @if (loading()) {
+                <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+                <span>Enviando verificación...</span>
+              } @else {
+                <span>Verificar correo</span>
+              }
+            </ion-button>
+          </form>
+        }
+
+        <!-- ================= Paso 2: verificación del correo ================= -->
+        @case ('verificacion') {
+          <div class="register__card register__verify">
+            <div class="register__verify-icon" aria-hidden="true">
+              <i class="ph ph-envelope-simple-open"></i>
+            </div>
+            <h2 class="register__subtitle">Revisa tu correo</h2>
+            <p class="register__lead">
+              {{ infoMessage() }}
+            </p>
+            <p class="register__email">{{ datosForm.controls.correo.value }}</p>
+            <ol class="register__howto">
+              <li>Abre el correo de Tiozihuatl, revisa también spam.</li>
+              <li>Toca el enlace de verificación. Vence en 1 hora.</li>
+              <li>Regresa a la app y continúa.</li>
+            </ol>
+
+            @if (errorMessage(); as message) {
+              <div class="tz-alert tz-alert--error" role="alert">
+                <i class="ph ph-warning-circle" aria-hidden="true"></i>
+                <span>{{ message }}</span>
+              </div>
+            }
+
+            <ion-button tzHaptic="medium" expand="block" class="tz-submit" [disabled]="loading()" (click)="continueToSecurity()">
+              Ya verifiqué mi correo
+            </ion-button>
+
+            <div class="register__verify-actions">
+              <button
+                type="button"
+                class="tz-link"
+                [disabled]="loading() || resendIn() > 0"
+                (click)="resend()"
+              >
+                @if (loading()) {
+                  Enviando...
+                } @else {
+                  {{ resendLabel() }}
+                }
+              </button>
+              <button type="button" class="tz-link" [disabled]="loading()" (click)="editDatos()">
+                Corregir mis datos
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ================= Paso 3: seguridad de la cuenta ================= -->
+        @case ('seguridad') {
+          <form class="register__card" [formGroup]="seguridadForm" (ngSubmit)="submitSeguridad()" novalidate>
+            <p class="register__lead">Crea la contraseña y la palabra secreta de tu cuenta.</p>
+
+            <ion-input
+              class="tz-field"
+              formControlName="contrasena"
+              label="Contraseña"
+              labelPlacement="stacked"
+              placeholder="8 caracteres"
+              [type]="showPassword() ? 'text' : 'password'"
+              autocomplete="new-password"
+              autocapitalize="off"
+              [maxlength]="8"
+              [errorText]="passwordError"
+              [readonly]="loading()"
+              (ionInput)="errorMessage.set(null)"
+            >
+              <i slot="start" class="ph ph-lock tz-field__icon" aria-hidden="true"></i>
+              <button
+                slot="end"
+                type="button"
+                class="tz-field__toggle"
+                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                (click)="showPassword.set(!showPassword())"
+              >
+                <i class="ph" [class.ph-eye]="!showPassword()" [class.ph-eye-slash]="showPassword()" aria-hidden="true"></i>
+              </button>
+            </ion-input>
+
+            <ul class="register__rules" aria-label="Requisitos de la contraseña">
+              <li [class.is-ok]="rules().length">
+                <i class="ph" [class.ph-check-circle]="rules().length" [class.ph-circle]="!rules().length" aria-hidden="true"></i>
+                8 caracteres
+              </li>
+              <li [class.is-ok]="rules().upper">
+                <i class="ph" [class.ph-check-circle]="rules().upper" [class.ph-circle]="!rules().upper" aria-hidden="true"></i>
+                Una mayúscula
+              </li>
+              <li [class.is-ok]="rules().lower">
+                <i class="ph" [class.ph-check-circle]="rules().lower" [class.ph-circle]="!rules().lower" aria-hidden="true"></i>
+                Una minúscula
+              </li>
+              <li [class.is-ok]="rules().number">
+                <i class="ph" [class.ph-check-circle]="rules().number" [class.ph-circle]="!rules().number" aria-hidden="true"></i>
+                Un número
+              </li>
+              <li [class.is-ok]="rules().special">
+                <i class="ph" [class.ph-check-circle]="rules().special" [class.ph-circle]="!rules().special" aria-hidden="true"></i>
+                Un símbolo &#64;$!%*?&amp;
+              </li>
+            </ul>
+
+            <ion-input
+              class="tz-field"
+              [class.tz-field--invalid]="confirmInvalid"
+              formControlName="confirmar"
+              label="Confirmar contraseña"
+              labelPlacement="stacked"
+              placeholder="Repite tu contraseña"
+              [type]="showConfirm() ? 'text' : 'password'"
+              autocomplete="new-password"
+              autocapitalize="off"
+              [maxlength]="8"
+              [readonly]="loading()"
+              (ionInput)="errorMessage.set(null)"
+            >
+              <i slot="start" class="ph ph-lock tz-field__icon" aria-hidden="true"></i>
+              <button
+                slot="end"
+                type="button"
+                class="tz-field__toggle"
+                [attr.aria-label]="showConfirm() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                (click)="showConfirm.set(!showConfirm())"
+              >
+                <i class="ph" [class.ph-eye]="!showConfirm()" [class.ph-eye-slash]="showConfirm()" aria-hidden="true"></i>
+              </button>
+            </ion-input>
+            @if (confirmInvalid) {
+              <p class="tz-field__error">{{ confirmError }}</p>
+            }
+
+            <ion-input
+              class="tz-field"
+              formControlName="palabraSecreta"
+              label="Palabra secreta"
+              labelPlacement="stacked"
+              placeholder="Ej. miMascota123"
+              autocomplete="off"
+              autocapitalize="off"
+              [maxlength]="30"
+              helperText="Te servirá para recuperar tu cuenta si olvidas la contraseña."
+              [errorText]="secretError"
+              [readonly]="loading()"
+              (ionInput)="errorMessage.set(null)"
+            >
+              <i slot="start" class="ph ph-key tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+
+            <div class="register__terms">
+              <ion-checkbox formControlName="terminos" labelPlacement="end" justify="start">
+                Acepto los
+                <a [href]="webUrl + '/terminos'" target="_blank" rel="noopener noreferrer" (click)="$event.stopPropagation()">Términos y Condiciones</a>
+              </ion-checkbox>
+              <ion-checkbox formControlName="privacidad" labelPlacement="end" justify="start">
+                Acepto la
+                <a [href]="webUrl + '/privacidad'" target="_blank" rel="noopener noreferrer" (click)="$event.stopPropagation()">Política de Privacidad</a>
+              </ion-checkbox>
+              <ion-checkbox formControlName="seguridad" labelPlacement="end" justify="start">
+                Acepto las
+                <a [href]="webUrl + '/seguridad'" target="_blank" rel="noopener noreferrer" (click)="$event.stopPropagation()">Políticas de Seguridad</a>
+              </ion-checkbox>
+            </div>
+
+            @if (errorMessage(); as message) {
+              <div class="tz-alert tz-alert--error" role="alert">
+                <i class="ph ph-warning-circle" aria-hidden="true"></i>
+                <span>{{ message }}</span>
+              </div>
+            }
+
+            <ion-button tzHaptic="medium" type="submit" expand="block" class="tz-submit" [disabled]="loading()">
+              @if (loading()) {
+                <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+                <span>Creando cuenta...</span>
+              } @else {
+                <span>Crear cuenta</span>
+              }
+            </ion-button>
+          </form>
+        }
+      }
+
+      <p class="register__footer">
+        ¿Ya tienes cuenta?
+        <button type="button" class="tz-link tz-link--strong" [disabled]="loading()" (click)="goToLogin()">Inicia sesión</button>
+      </p>
+    </section>
+  </main>
+</ion-content>
