@@ -19,7 +19,7 @@ module.exports = tseslint.config(
       ],
       "@angular-eslint/directive-selector": [
         "error",
-        { type: "attribute", prefix: "app", style: "camelCase" },
+        { type: "attribute", prefix: ["app", "tz"], style: "camelCase" },
       ],
     },
   },
