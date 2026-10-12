@@ -1,0 +1,28 @@
+[
+  {
+    "caso": "correo y teléfono disponibles",
+    "correo": "ci.disponible.hu01@example.com",
+    "correoRegistrado": false,
+    "telefono": "7710000001",
+    "telefonoRegistrado": false,
+    "nombreInvalido": "J",
+    "apaternoInvalido": "Pérez1",
+    "correoInvalido": "juan.correo.com",
+    "telefonoInvalido": "77112",
+    "contrasena": "Segura1!",
+    "palabraSecreta": "tiozi"
+  },
+  {
+    "caso": "campos vacíos",
+    "correo": "ci.otro.hu01@example.com",
+    "correoRegistrado": false,
+    "telefono": "7710000002",
+    "telefonoRegistrado": false,
+    "nombreInvalido": "",
+    "apaternoInvalido": "",
+    "correoInvalido": "",
+    "telefonoInvalido": "",
+    "contrasena": "Segura1!",
+    "palabraSecreta": "tiozi"
+  }
+]

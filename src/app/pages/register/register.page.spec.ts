@@ -194,4 +194,162 @@ describe('RegisterPage (HU-01 Registro de visitante)', () => {
       expect(page.loading()).toBe(false);
     });
   });
+
+  describe('mensajes de error por campo', () => {
+    it('pide los campos obligatorios vacíos', () => {
+      expect(page.nameError('nombre')).toBe('Este campo es obligatorio.');
+      expect(page.emailError).toBe('Ingresa tu correo electrónico.');
+      expect(page.phoneError).toBe('Ingresa tu teléfono.');
+      expect(page.passwordError).toBe('Crea una contraseña.');
+      expect(page.confirmError).toBe('Confirma tu contraseña.');
+      expect(page.secretError).toBe('Ingresa una palabra secreta.');
+    });
+
+    it('no muestra mensajes cuando los datos son válidos', () => {
+      llenarDatos();
+      llenarSeguridad();
+
+      expect(page.nameError('amaterno')).toBe('');
+      expect(page.emailError).toBe('');
+      expect(page.phoneError).toBe('');
+      expect(page.passwordError).toBe('');
+      expect(page.confirmError).toBe('');
+      expect(page.secretError).toBe('');
+      expect(page.confirmInvalid).toBe(false);
+    });
+
+    it('explica por qué la contraseña o la palabra secreta no son válidas', () => {
+      page.seguridadForm.controls.contrasena.setValue('<script>');
+      expect(page.passwordError).toBe('No uses los caracteres < > " \' `.');
+
+      page.seguridadForm.controls.contrasena.setValue('debil');
+      expect(page.passwordError).toBe('La contraseña no cumple los requisitos.');
+      expect(page.rules().upper).toBe(false);
+
+      page.seguridadForm.controls.palabraSecreta.setValue('abc');
+      expect(page.secretError).toBe('Debe tener entre 4 y 30 caracteres.');
+
+      page.seguridadForm.controls.palabraSecreta.setValue('<abc>');
+      expect(page.secretError).toBe('No uses los caracteres < > " \' `.');
+    });
+
+    it('marca la confirmación como inválida al tocarla si no coincide', () => {
+      llenarSeguridad();
+      page.seguridadForm.controls.confirmar.setValue('Otra123!');
+      page.seguridadForm.controls.confirmar.markAsTouched();
+
+      expect(page.confirmInvalid).toBe(true);
+    });
+
+    it('avisa cuando el teléfono ya está registrado', () => {
+      auth.checkContactAvailability.mockReturnValue(of({ emailTaken: false, phoneTaken: true }));
+      llenarDatos();
+
+      page.submitDatos();
+
+      expect(page.phoneError).toBe('Este teléfono ya está registrado.');
+      expect(page.errorMessage()).toBe('Este teléfono ya está registrado.');
+    });
+
+    it('avisa cuando el correo ya está registrado', () => {
+      auth.checkContactAvailability.mockReturnValue(of({ emailTaken: true, phoneTaken: false }));
+      llenarDatos();
+
+      page.submitDatos();
+
+      expect(page.emailError).toBe('Este correo ya está registrado.');
+    });
+  });
+
+  describe('paso 2: verificación del correo', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it('cuenta el tiempo para reenviar el correo y lo habilita al terminar', () => {
+      auth.preRegister.mockReturnValue(of({ kind: 'sent', message: 'Enviado.', retryAfterSeconds: 2 }));
+      llenarDatos();
+      page.submitDatos();
+
+      expect(page.resendLabel()).toBe('Reenviar en 0:02');
+      page.resend();
+      expect(auth.preRegister).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(2000);
+      expect(page.resendIn()).toBe(0);
+      expect(page.resendLabel()).toBe('Reenviar correo');
+
+      page.resend();
+      expect(auth.preRegister).toHaveBeenCalledTimes(2);
+    });
+
+    it('pasa directo a la seguridad si el correo ya estaba verificado', () => {
+      auth.preRegister.mockReturnValue(of({ kind: 'alreadyVerified', message: 'Ya verificado.' }));
+      llenarDatos();
+
+      page.submitDatos();
+
+      expect(page.step()).toBe('seguridad');
+      expect(page.infoMessage()).toBe('Ya verificado.');
+    });
+
+    it('permite regresar a editar los datos personales', () => {
+      llenarDatos();
+      page.submitDatos();
+
+      page.editDatos();
+
+      expect(page.step()).toBe('datos');
+    });
+  });
+
+  describe('navegación', () => {
+    it('regresa paso por paso y al final vuelve a iniciar sesión', () => {
+      page.step.set('seguridad');
+      page.goBack();
+      expect(page.step()).toBe('verificacion');
+
+      page.goBack();
+      expect(page.step()).toBe('datos');
+
+      page.goBack();
+      expect(router.navigateByUrl).toHaveBeenCalledWith('/login', { replaceUrl: true });
+    });
+
+    it('no navega mientras hay una petición en curso', () => {
+      page.loading.set(true);
+
+      page.goBack();
+      page.submitDatos();
+      page.submitSeguridad();
+
+      expect(router.navigateByUrl).not.toHaveBeenCalled();
+      expect(auth.checkContactAvailability).not.toHaveBeenCalled();
+      expect(auth.finishRegister).not.toHaveBeenCalled();
+    });
+
+    it('lleva a iniciar sesión', () => {
+      page.goToLogin();
+
+      expect(router.navigateByUrl).toHaveBeenCalledWith('/login', { replaceUrl: true });
+    });
+
+    it('muestra un mensaje genérico ante un error inesperado', () => {
+      auth.checkContactAvailability.mockReturnValue(throwError(() => new Error('boom')));
+      llenarDatos();
+
+      page.submitDatos();
+
+      expect(page.errorMessage()).toBe('No fue posible completar el registro. Intenta nuevamente.');
+    });
+  });
+
+  describe('paso 3 con datos incompletos', () => {
+    it('pide revisar los campos si faltan la contraseña o la palabra secreta', () => {
+      page.seguridadForm.patchValue({ terminos: true, privacidad: true, seguridad: true });
+
+      page.submitSeguridad();
+
+      expect(page.errorMessage()).toBe('Revisa los campos marcados.');
+    });
+  });
 });

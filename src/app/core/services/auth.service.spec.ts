@@ -128,4 +128,40 @@ describe('AuthService - registro de visitante (HU-01)', () => {
       await expect(result).rejects.toEqual(new AuthError('Este correo ya está registrado.'));
     });
   });
+
+  describe('errores comunes del registro', () => {
+    const casos: { status: number; error: object; mensaje: string }[] = [
+      { status: 503, error: {}, mensaje: 'No fue posible enviar el correo de verificación en este momento. Intenta nuevamente en unos minutos.' },
+      { status: 502, error: {}, mensaje: 'No fue posible conectar con el servidor. Revisa tu conexión e intenta nuevamente.' },
+      { status: 400, error: {}, mensaje: 'Revisa los datos ingresados.' },
+      { status: 409, error: { error: 'El teléfono ya está registrado.' }, mensaje: 'El teléfono ya está registrado.' },
+      { status: 429, error: {}, mensaje: 'Realizaste demasiados intentos. Espera un momento e intenta nuevamente.' },
+      { status: 500, error: {}, mensaje: 'Ocurrió un problema en el servidor. Intenta más tarde.' },
+    ];
+
+    for (const caso of casos) {
+      it(`traduce el estado ${caso.status} de la consulta de correo y teléfono`, async () => {
+        const result = firstValueFrom(service.checkContactAvailability(DATOS.correo, DATOS.telefono));
+
+        http.expectOne((r) => r.url === `${API}/check-email`).flush(caso.error, { status: caso.status, statusText: 'Error' });
+        http.match((r) => r.url === `${API}/check-phone`);
+
+        await expect(result).rejects.toEqual(new AuthError(caso.mensaje));
+      });
+    }
+
+    it('usa mensajes por defecto cuando el backend no envía texto', async () => {
+      const pre = firstValueFrom(service.preRegister(DATOS));
+      http.expectOne(`${API}/pre-registro`).flush({});
+      expect(await pre).toEqual({
+        kind: 'sent',
+        message: 'Te enviamos un enlace para verificar tu correo. Puede tardar unos minutos.',
+        retryAfterSeconds: 300,
+      });
+
+      const fin = firstValueFrom(service.finishRegister({ correo: DATOS.correo, contrasena: 'Segura1!', palabra_secreta: 'tiozi' }));
+      http.expectOne(`${API}/finalizar-registro`).flush({});
+      expect(await fin).toBe('Cuenta creada exitosamente.');
+    });
+  });
 });

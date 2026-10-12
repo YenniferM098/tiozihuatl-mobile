@@ -102,11 +102,15 @@
           "options": {
             "tsConfig": "tsconfig.spec.json",
             "buildTarget": "::development",
-            "setupFiles": ["src/test-setup.ts"]
+            "setupFiles": ["src/test-setup.ts"],
+            "coverageInclude": ["src/app/pages/register/**/*.ts", "src/app/core/validators/**/*.ts"],
+            "coverageReporters": ["text-summary", "html", "lcov"],
+            "coverageThresholds": { "statements": 70, "branches": 70, "functions": 70, "lines": 70 }
           },
           "configurations": {
             "ci": {
-              "watch": false
+              "watch": false,
+              "coverage": true
             }
           }
         },

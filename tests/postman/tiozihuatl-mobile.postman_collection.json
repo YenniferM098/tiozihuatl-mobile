@@ -1,0 +1,193 @@
+{
+  "info": {
+    "name": "Tiozihuatl Mobile",
+    "description": "Pruebas de integración de la app móvil contra la API. Cada carpeta es una historia de usuario y se ejecuta con su archivo de datos de tests/postman/datos/<carpeta>.json.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "hu01-registro",
+      "description": "HU-01 Registro de visitante. Solo usa casos que no crean cuentas ni envían correos.",
+      "item": [
+        {
+          "name": "Consultar si el correo ya está registrado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const caso = pm.iterationData.get('caso');",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "pm.test(`[${caso}] indica si el correo existe`, () => {",
+                  "  pm.expect(pm.response.json().exists).to.eql(pm.iterationData.get('correoRegistrado'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/check-email?correo={{correo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "check-email"
+              ],
+              "query": [
+                {
+                  "key": "correo",
+                  "value": "{{correo}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar si el teléfono ya está registrado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const caso = pm.iterationData.get('caso');",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "pm.test(`[${caso}] indica si el teléfono existe`, () => {",
+                  "  pm.expect(pm.response.json().exists).to.eql(pm.iterationData.get('telefonoRegistrado'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/check-phone?telefono={{telefono}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "check-phone"
+              ],
+              "query": [
+                {
+                  "key": "telefono",
+                  "value": "{{telefono}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pre-registro con datos inválidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const caso = pm.iterationData.get('caso');",
+                  "pm.test(`[${caso}] rechaza los datos con 400`, () => pm.response.to.have.status(400));",
+                  "pm.test(`[${caso}] explica el error al usuario`, () => {",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/pre-registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "pre-registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{nombreInvalido}}\",\n  \"apaterno\": \"{{apaternoInvalido}}\",\n  \"amaterno\": \"\",\n  \"correo\": \"{{correoInvalido}}\",\n  \"telefono\": \"{{telefonoInvalido}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Finalizar registro sin pre-registro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const caso = pm.iterationData.get('caso');",
+                  "pm.test(`[${caso}] no crea la cuenta sin verificar el correo (400)`, () => pm.response.to.have.status(400));",
+                  "pm.test(`[${caso}] indica que falta el pre-registro`, () => {",
+                  "  pm.expect(String(pm.response.json().error).toLowerCase()).to.include('pre-registro');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/finalizar-registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "finalizar-registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correo}}\",\n  \"contrasena\": \"{{contrasena}}\",\n  \"palabra_secreta\": \"{{palabraSecreta}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
