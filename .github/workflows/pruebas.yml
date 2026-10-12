@@ -168,3 +168,11 @@ jobs:
           path: www/
       - name: Medir con Lighthouse CI
         run: npx --yes @lhci/cli@0.15.x autorun
+      - name: Guardar reporte de rendimiento
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-rendimiento
+          path: .lighthouseci/
+          include-hidden-files: true
+          if-no-files-found: ignore
