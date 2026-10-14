@@ -24,13 +24,16 @@ const IOS_STYLES: Record<HapticStrength, ImpactStyle> = {
 @Injectable({ providedIn: 'root' })
 export class HapticsService {
   private readonly platform = Capacitor.getPlatform();
+  // Referencias a los plugins en propiedades para poder sustituirlos en las pruebas unitarias.
+  private readonly touchFeedback = TouchFeedback;
+  private readonly haptics = Haptics;
 
   tap(strength: HapticStrength = 'light'): void {
     // Si el dispositivo no lo admite o el usuario lo desactivó, se ignora en silencio.
     if (this.platform === 'android') {
-      TouchFeedback.perform({ strength }).catch(() => undefined);
+      this.touchFeedback.perform({ strength }).catch(() => undefined);
     } else if (this.platform === 'ios') {
-      Haptics.impact({ style: IOS_STYLES[strength] }).catch(() => undefined);
+      this.haptics.impact({ style: IOS_STYLES[strength] }).catch(() => undefined);
     }
   }
 }

@@ -1,0 +1,256 @@
+.login-content {
+  --background: var(--ion-color-primary);
+}
+
+.login {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--ion-color-primary);
+}
+
+/* ---------- Cabecera azul con logo ---------- */
+.login__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(40px + var(--ion-safe-area-top, 0px)) 20px 56px;
+}
+
+.login__logo {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border: 0;
+  box-shadow: none;
+  background: none;
+}
+
+/* ---------- Hoja blanca con curva ---------- */
+.login__sheet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 36px 20px calc(24px + var(--ion-safe-area-bottom, 0px));
+  background: #ffffff;
+  border-top-left-radius: 56px;
+}
+
+.login__title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--tz-font-display);
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--tz-text);
+}
+
+.login__subtitle {
+  margin: 6px 0 28px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--tz-text-muted);
+}
+
+/* ---------- Formulario ---------- */
+.login__card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--tz-text);
+}
+
+.login__roles {
+  --background: #eef6fd;
+  border-radius: 14px;
+
+  ion-segment-button {
+    --color: var(--tz-text-muted);
+    --color-checked: var(--ion-color-primary-shade);
+    --indicator-color: #ffffff;
+    --padding-start: 2px;
+    --padding-end: 2px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    min-height: 72px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+
+    ion-label {
+      margin: 0;
+    }
+  }
+}
+
+/* Iconos Phosphor de los tipos de usuario */
+.login__role-icon {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* ---------- Inputs: limpios, borde fino, sin sombras ---------- */
+ion-input.login__field {
+  --background: transparent;
+  --border-width: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --color: var(--tz-text);
+  --placeholder-color: #a3b0bb;
+  --placeholder-opacity: 1;
+  --highlight-height: 0;
+  min-height: 0;
+  font-size: 0.95rem;
+
+  ::ng-deep .input-wrapper {
+    min-height: 56px;
+    padding: 8px 12px 8px 16px;
+    border: 1px solid #d9e1e8;
+    border-radius: 12px;
+    background: #ffffff;
+    transition: border-color 0.2s ease;
+  }
+
+  &.has-focus ::ng-deep .input-wrapper {
+    border-color: var(--ion-color-primary);
+  }
+
+  &.ion-touched.ion-invalid ::ng-deep .input-wrapper {
+    border-color: #e5484d;
+  }
+
+  ::ng-deep .label-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--tz-text-muted);
+  }
+
+  ::ng-deep .native-input::placeholder {
+    font-size: 0.9rem;
+  }
+
+  ::ng-deep .input-bottom {
+    padding: 4px 4px 0;
+    border: 0;
+  }
+
+  ::ng-deep .input-clear-icon {
+    color: #8a99a6;
+  }
+}
+
+.login__field-icon {
+  margin-inline-end: 10px;
+  font-size: 20px;
+  color: #8a99a6;
+}
+
+/* Mostrar/ocultar contraseña */
+.login__toggle {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 32px;
+  border: 0;
+  background: none;
+  color: #8a99a6;
+  font-size: 20px;
+}
+
+.login__forgot {
+  text-align: end;
+}
+
+.login__link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ion-color-primary-shade);
+
+  &--strong {
+    font-weight: 700;
+    color: var(--tz-text);
+  }
+}
+
+.login__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fdecec;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: #b42318;
+
+  i {
+    flex-shrink: 0;
+    font-size: 20px;
+  }
+}
+
+/* Botón azul oscuro */
+.login__submit {
+  --background: var(--ion-color-primary-shade);
+  --background-activated: var(--ion-color-primary-shade);
+  --background-hover: var(--ion-color-primary-shade);
+  --color: #ffffff;
+  --border-radius: 14px;
+  --box-shadow: none;
+  margin: 8px 0 0;
+  height: 50px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+
+  ion-spinner {
+    width: 20px;
+    height: 20px;
+    margin-inline-end: 10px;
+  }
+}
+
+/* ---------- Divisor "O" ---------- */
+.login__divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ion-color-primary-shade);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--ion-color-primary-shade);
+    opacity: 0.45;
+  }
+}
+
+.login__register {
+  margin: 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--tz-text-muted);
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "caso": "Estudiante con matrícula inexistente",
+    "rol": "Estudiante",
+    "credencialInexistente": "CI-NOEXISTE-0001",
+    "contrasena": "Prueba1!",
+    "tokenAlterado": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MH0.firma-alterada"
+  },
+  {
+    "caso": "Docente con correo inexistente",
+    "rol": "Docente",
+    "credencialInexistente": "ci.docente.noexiste.hu02@example.com",
+    "contrasena": "Prueba1!",
+    "tokenAlterado": "token-que-no-es-jwt"
+  },
+  {
+    "caso": "Visitante con correo inexistente",
+    "rol": "Visitante",
+    "credencialInexistente": "ci.visitante.noexiste.hu02@example.com",
+    "contrasena": "Prueba1!",
+    "tokenAlterado": "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjF9.vencido"
+  }
+]

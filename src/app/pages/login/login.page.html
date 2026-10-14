@@ -1,0 +1,106 @@
+<ion-content class="login-content">
+  <main class="login">
+    <header class="login__brand">
+      <img
+        class="login__logo"
+        src="https://res.cloudinary.com/dazzy4wzq/image/upload/v1772194846/BackgroundEraser_20260227_061324945_bqx6yv.png"
+        alt="Tiozihuatl"
+      />
+    </header>
+
+    <section class="login__sheet">
+      <h1 class="login__title">Iniciar sesión</h1>
+      <br>
+
+      <form class="login__card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <span class="login__label" id="role-label">Tipo de usuario</span>
+        <ion-segment
+          class="login__roles"
+          aria-labelledby="role-label"
+          [value]="form.controls.rol.value"
+          [disabled]="loading()"
+          (ionChange)="onRoleChange($event.detail.value)"
+        >
+          @for (role of roles; track role.value) {
+            <ion-segment-button tzHaptic [value]="role.value" layout="icon-top">
+              <i class="ph login__role-icon" [class]="role.icon" aria-hidden="true"></i>
+              <ion-label>{{ role.label }}</ion-label>
+            </ion-segment-button>
+          }
+        </ion-segment>
+
+        <ion-input
+          class="login__field"
+          formControlName="credential"
+          label="Matrícula o correo"
+          labelPlacement="stacked"
+          placeholder="matricula o correo@ejemplo.com"
+          type="text"
+          inputmode="email"
+          autocomplete="username"
+          autocapitalize="off"
+          [clearInput]="true"
+          [errorText]="credentialError"
+          [readonly]="loading()"
+          (ionInput)="errorMessage.set(null)"
+        >
+          <i slot="start" class="ph ph-identification-card login__field-icon" aria-hidden="true"></i>
+        </ion-input>
+
+        <ion-input
+          class="login__field"
+          formControlName="contrasena"
+          label="Contraseña"
+          labelPlacement="stacked"
+          placeholder="••••••••"
+          [type]="showPassword() ? 'text' : 'password'"
+          autocomplete="current-password"
+          errorText="Ingresa tu contraseña."
+          [readonly]="loading()"
+          (ionInput)="errorMessage.set(null)"
+          (keyup.enter)="submit()"
+        >
+          <i slot="start" class="ph ph-lock login__field-icon" aria-hidden="true"></i>
+          <button
+            slot="end"
+            type="button"
+            class="login__toggle"
+            [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            (click)="showPassword.set(!showPassword())"
+          >
+            <i class="ph" [class.ph-eye]="!showPassword()" [class.ph-eye-slash]="showPassword()" aria-hidden="true"></i>
+          </button>
+        </ion-input>
+
+        <div class="login__forgot">
+          <button type="button" class="login__link" (click)="goToForgotPassword()">¿Olvidaste tu contraseña?</button>
+        </div>
+
+        @if (errorMessage(); as message) {
+          <div class="login__error" role="alert">
+            <i class="ph ph-warning-circle" aria-hidden="true"></i>
+            <span>{{ message }}</span>
+          </div>
+        }
+
+        <ion-button tzHaptic="medium" type="submit" expand="block" class="login__submit" [disabled]="loading()">
+          @if (loading()) {
+            <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+            <span>Iniciando sesión...</span>
+          } @else {
+            <span>Iniciar sesión</span>
+          }
+        </ion-button>
+      </form>
+
+      <div class="login__divider" aria-hidden="true"><span>O</span></div>
+
+      <p class="login__register">
+        ¿No perteneces a la institución?
+        <button type="button" class="login__link login__link--strong" (click)="goToRegister()">
+          Regístrate como visitante
+        </button>
+      </p>
+    </section>
+  </main>
+</ion-content>

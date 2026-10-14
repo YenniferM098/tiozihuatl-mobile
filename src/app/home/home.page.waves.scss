@@ -1,0 +1,80 @@
+/*
+ * Inicio (tercera hoja de estilos): secciones alternas blanco / azul institucional,
+ * separadas por una ola arriba y abajo de cada sección azul. Se cuentan solo las
+ * secciones que se muestran, así el orden blanco-azul se conserva aunque un rol
+ * no tenga libros o materiales. Sobre azul, iconos y textos van en blanco.
+ */
+.home__section:nth-of-type(even) {
+  position: relative;
+  margin: 58px 0 46px;
+  padding: 4px 0 16px;
+  background: var(--ion-color-primary);
+
+  // Misma ola arriba y abajo (la de abajo, invertida); toma el azul de la sección.
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 26px;
+    background: inherit;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 48' preserveAspectRatio='none'%3E%3Cpath d='M0 26C240 44 480 44 720 26S1200 8 1440 26V48H0Z'/%3E%3C/svg%3E") 0 0 / 100% 100%;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 48' preserveAspectRatio='none'%3E%3Cpath d='M0 26C240 44 480 44 720 26S1200 8 1440 26V48H0Z'/%3E%3C/svg%3E") 0 0 / 100% 100%;
+  }
+
+  // 1px de traslape para que no se vea una línea entre la ola y la sección.
+  &::before {
+    bottom: calc(100% - 1px);
+  }
+
+  &::after {
+    top: calc(100% - 1px);
+    transform: scaleY(-1);
+  }
+
+  .heading,
+  .heading i,
+  .event__title,
+    .magazine__title,
+  .material__title,
+  .material__icon {
+    color: #fff;
+  }
+
+    .material__detail {
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .book__cover,
+  .magazine__cover {
+    background: #fff;
+  }
+
+  .material + .material {
+    border-top-color: rgba(255, 255, 255, 0.25);
+  }
+
+  ion-skeleton-text {
+    --background: rgba(255, 255, 255, 0.28);
+  }
+}
+
+// Si la última sección es azul (Materiales, o Revistas para Visitante), no lleva ola
+// abajo: el azul continúa hasta el final de la pantalla.
+.home__section:nth-of-type(even):last-of-type {
+  margin-bottom: 0;
+  padding-bottom: 32px;
+
+  &::after {
+    display: none;
+  }
+}
+
+.home:has(> .home__section:nth-of-type(even):last-of-type) {
+  padding-bottom: 0;
+}
+
+.home-content:has(.home__section:nth-of-type(even):last-of-type) {
+  --background: var(--ion-color-primary);
+}
