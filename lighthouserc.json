@@ -3,7 +3,7 @@
     "collect": {
       "staticDistDir": "./www",
       "isSinglePageApplication": true,
-      "url": ["http://localhost/register"],
+      "url": ["http://localhost/register", "http://localhost/login"],
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop",
@@ -11,13 +11,28 @@
       }
     },
     "assert": {
-      "assertions": {
-        "categories:performance": ["error", { "minScore": 0.7 }],
-        "categories:accessibility": ["error", { "minScore": 0.8 }],
-        "categories:best-practices": ["warn", { "minScore": 0.8 }],
-        "first-contentful-paint": ["error", { "maxNumericValue": 3000 }],
-        "interactive": ["error", { "maxNumericValue": 5000 }]
-      }
+      "assertMatrix": [
+        {
+          "matchingUrlPattern": ".*/register$",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.7 }],
+            "categories:accessibility": ["error", { "minScore": 0.8 }],
+            "categories:best-practices": ["warn", { "minScore": 0.8 }],
+            "first-contentful-paint": ["error", { "maxNumericValue": 3000 }],
+            "interactive": ["error", { "maxNumericValue": 5000 }]
+          }
+        },
+        {
+          "matchingUrlPattern": ".*/login$",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.8 }],
+            "categories:accessibility": ["error", { "minScore": 0.8 }],
+            "categories:best-practices": ["warn", { "minScore": 0.8 }],
+            "first-contentful-paint": ["error", { "maxNumericValue": 3000 }],
+            "interactive": ["error", { "maxNumericValue": 3000 }]
+          }
+        }
+      ]
     },
     "upload": {
       "target": "temporary-public-storage"
