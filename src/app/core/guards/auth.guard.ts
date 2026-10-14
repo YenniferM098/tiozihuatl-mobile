@@ -3,6 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { map } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { OnboardingService } from '../services/onboarding.service';
+import { SessionService } from '../services/session.service';
 
 /** Permite el acceso solo con sesión válida; si no, envía al login. */
 export const authGuard: CanActivateFn = () => {
@@ -49,4 +50,10 @@ export const welcomeGuard: CanActivateFn = () => {
         return onboarding.hasSeenWelcome ? router.createUrlTree(['/login']) : true;
       }),
     );
+};
+
+/** Biblioteca y Materiales son solo para Estudiante y Docente; Visitante vuelve a Inicio. */
+export const memberGuard: CanActivateFn = () => {
+  const rol = inject(SessionService).user()?.rol;
+  return rol === 'Estudiante' || rol === 'Docente' || inject(Router).createUrlTree(['/home']);
 };
