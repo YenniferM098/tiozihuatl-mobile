@@ -21,6 +21,8 @@ concurrency:
 
 env:
   NODE_VERSION: '24'
+  # URL de la API (Settings > Secrets and variables > Actions > Variables).
+  API_URL: ${{ vars.API_URL }}
 
 jobs:
   analisis-estatico:
@@ -33,6 +35,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
+      - run: npm run configurar:api
       - name: Ejecutar ESLint
         run: npx ng lint
 
@@ -46,6 +49,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
+      - run: npm run configurar:api
       - name: Ejecutar pruebas unitarias con cobertura mínima
         run: npx ng test --configuration ci
       - name: Guardar reporte de cobertura
@@ -75,6 +79,7 @@ jobs:
             echo "::group::$hu"
             newman run tests/postman/tiozihuatl-mobile.postman_collection.json \
               -e tests/postman/ci.postman_environment.json \
+              --env-var "baseUrl=$API_URL" \
               --folder "$hu" \
               -d "$datos" \
               --delay-request 700 \

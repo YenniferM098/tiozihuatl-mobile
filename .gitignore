@@ -72,3 +72,12 @@ Thumbs.db
 # Reportes de pruebas (los genera el pipeline)
 /reportes
 /.lighthouseci
+
+# Llaves de firma de Android (nunca se suben al repositorio)
+*.jks
+*.keystore
+keystore.properties
+
+# URL de la API: se genera desde .env o desde la variable API_URL
+.env
+src/environments/api.config.ts

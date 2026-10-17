@@ -1,4 +1,22 @@
+import groovy.json.JsonSlurper
+
 apply plugin: 'com.android.application'
+
+// Versión de la app: versionName se toma de package.json (se actualiza en cada rama release/*)
+// y versionCode se recibe en el pipeline con -PversionCode=<número de ejecución>; en local vale 1.
+def paqueteNpm = new JsonSlurper().parse(file('../../package.json'))
+def codigoVersion = (project.findProperty('versionCode') ?: '1').toString().toInteger()
+
+// Firma de release: se lee de android/keystore.properties (equipo local, fuera de git)
+// o de variables de entorno (GitHub Actions, a partir de los secretos del environment produccion).
+def propiedadesFirma = new Properties()
+def archivoFirma = rootProject.file('keystore.properties')
+if (archivoFirma.exists()) {
+    archivoFirma.withInputStream { propiedadesFirma.load(it) }
+}
+def valorFirma = { String clave, String variable ->
+    propiedadesFirma.getProperty(clave) ?: System.getenv(variable)
+}
 
 android {
     namespace = "com.tiozihuatl.app"
@@ -7,8 +25,8 @@ android {
         applicationId "com.tiozihuatl.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode codigoVersion
+        versionName paqueteNpm.version
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +34,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            def rutaKeystore = valorFirma('storeFile', 'ANDROID_KEYSTORE_PATH')
+            if (rutaKeystore) {
+                storeFile rootProject.file(rutaKeystore)
+                storePassword valorFirma('storePassword', 'ANDROID_KEYSTORE_PASSWORD')
+                keyAlias valorFirma('keyAlias', 'ANDROID_KEY_ALIAS')
+                keyPassword valorFirma('keyPassword', 'ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            // Sin llave configurada el build release queda sin firmar (Play lo rechaza).
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
