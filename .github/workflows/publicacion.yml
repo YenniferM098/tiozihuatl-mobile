@@ -1,0 +1,153 @@
+# Pipeline de liberación y despliegue de Tiozihuatl Mobile en Google Play.
+# Se ejecuta al subir un tag de versión (vX.Y.Z) creado sobre main al cerrar una
+# rama release/* de GitFlow. También puede lanzarse a mano desde la pestaña Actions.
+#
+#   pruebas-api-produccion ─┐
+#   generar-aab ─> verificar-aab ─┴─> desplegar-play (prueba cerrada)
+#
+# Los secretos de firma y de Play viven en el environment `produccion` del repositorio;
+# la URL de la API, en la variable API_URL del repositorio.
+# El paso a producción en Play se aprueba manualmente en Play Console.
+
+name: Publicación en Google Play
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+concurrency:
+  group: publicacion-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '24'
+  # URL de la API (Settings > Secrets and variables > Actions > Variables).
+  API_URL: ${{ vars.API_URL }}
+  JAVA_VERSION: '21'
+  BUNDLETOOL_VERSION: '1.18.1'
+  AAB: android/app/build/outputs/bundle/release/app-release.aab
+
+jobs:
+  pruebas-api-produccion:
+    name: Pruebas en el entorno de liberación (API de producción)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Instalar Newman
+        run: npm install --global newman@6 newman-reporter-htmlextra@1
+      - name: Probar la API de producción
+        run: bash scripts/liberacion/probar-api.sh
+      - name: Guardar reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-liberacion-api
+          path: reportes/
+          if-no-files-found: ignore
+
+  generar-aab:
+    name: Generar AAB firmado
+    runs-on: ubuntu-latest
+    environment: produccion
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Leer la versión y compararla con el tag
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::El tag $GITHUB_REF_NAME no coincide con package.json ($version)."
+            exit 1
+          fi
+      - run: npm ci
+      - name: Compilar la aplicación web (producción)
+        run: npm run build -- --configuration production
+      - name: Copiar la aplicación web al proyecto Android
+        run: npx cap sync android
+      - name: Preparar el entorno de liberación (llave de firma)
+        run: bash scripts/liberacion/preparar-entorno.sh
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      - name: Generar AAB
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease -PversionCode=${{ github.run_number }}
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aab-${{ steps.version.outputs.version }}
+          path: ${{ env.AAB }}
+          if-no-files-found: error
+
+  verificar-aab:
+    name: Pruebas del AAB de liberación
+    needs: generar-aab
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: aab-${{ needs.generar-aab.outputs.version }}
+          path: android/app/build/outputs/bundle/release/
+      - name: Descargar bundletool
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/bundletool.jar" \
+            "https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar"
+          echo "BUNDLETOOL_JAR=$RUNNER_TEMP/bundletool.jar" >> "$GITHUB_ENV"
+      - name: Verificar firma, paquete y versión
+        run: bash scripts/liberacion/verificar-aab.sh "$AAB" "${{ needs.generar-aab.outputs.version }}"
+
+  desplegar-play:
+    name: Desplegar en Google Play (prueba cerrada)
+    needs: [generar-aab, verificar-aab, pruebas-api-produccion]
+    runs-on: ubuntu-latest
+    environment: produccion
+    env:
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: aab-${{ needs.generar-aab.outputs.version }}
+          path: aab/
+      - name: Subir a la pista de prueba cerrada
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.tiozihuatl.app
+          releaseFiles: aab/app-release.aab
+          releaseName: v${{ needs.generar-aab.outputs.version }}
+          track: alpha
+          status: completed
+      - name: Subida manual pendiente
+        if: env.PLAY_SERVICE_ACCOUNT_JSON == ''
+        run: |
+          echo "### Subida manual a Play Console" >> "$GITHUB_STEP_SUMMARY"
+          echo "Aún no existe el secreto PLAY_SERVICE_ACCOUNT_JSON. Descarga el artefacto" >> "$GITHUB_STEP_SUMMARY"
+          echo "aab-${{ needs.generar-aab.outputs.version }} y súbelo en Play Console > Pruebas > Prueba cerrada." >> "$GITHUB_STEP_SUMMARY"

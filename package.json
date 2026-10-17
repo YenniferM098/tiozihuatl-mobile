@@ -5,6 +5,11 @@
   "homepage": "https://ionicframework.com/",
   "scripts": {
     "ng": "ng",
+    "configurar:api": "node scripts/configurar-api.mjs",
+    "prestart": "npm run configurar:api",
+    "prebuild": "npm run configurar:api",
+    "pretest": "npm run configurar:api",
+    "prewatch": "npm run configurar:api",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
