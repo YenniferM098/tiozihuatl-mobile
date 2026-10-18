@@ -1,0 +1,22 @@
+[
+  {
+    "caso": "Libro con contenido digital y ejemplares físicos",
+    "busquedaTitulo": "Anatomía",
+    "busquedaAutor": "Campohermoso",
+    "materia": "Anatomía",
+    "semestreId": "1",
+    "busquedaSinResultados": "zzqx-sin-resultados-hu04",
+    "libroId": 52,
+    "esperaDigital": true
+  },
+  {
+    "caso": "Libro solo físico",
+    "busquedaTitulo": "enfermería",
+    "busquedaAutor": "Salas",
+    "materia": "Enfermería",
+    "semestreId": "2",
+    "busquedaSinResultados": "libro-inexistente-hu04-0000",
+    "libroId": 62,
+    "esperaDigital": false
+  }
+]
