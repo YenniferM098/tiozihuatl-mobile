@@ -459,6 +459,618 @@
           }
         }
       ]
+    },
+    {
+      "name": "hu04-biblioteca",
+      "description": "HU-04 Consulta de Biblioteca Digital. Endpoints públicos del catálogo (GET /catalog, /catalog/materias y /catalog/semestres): listado, búsqueda por título o autor, filtros por materia, semestre y formato, ordenamiento por autor, disponibilidad física y contenido digital. La API no tiene un endpoint de detalle por ID: igual que la app, el detalle se obtiene del catálogo. Solo consulta datos; no modifica nada.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Valores por defecto para el modo Performance de Postman, que no recibe el archivo de datos.",
+              "const porDefecto = { busquedaTitulo: 'Anatomía', busquedaAutor: 'Campohermoso', materia: 'Anatomía', semestreId: '1',",
+              "  busquedaSinResultados: 'zzqx-sin-resultados-hu04', libroId: 52, esperaDigital: true };",
+              "Object.entries(porDefecto).forEach(([clave, valor]) => {",
+              "  if (!pm.iterationData.has(clave)) pm.variables.set(clave, valor);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Consultar el catálogo completo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const libros = pm.response.json();",
+                  "pm.test(`[${caso}] devuelve al menos 1 libro`, () => {",
+                  "  pm.expect(libros).to.be.an('array');",
+                  "  pm.expect(libros.length).to.be.at.least(1);",
+                  "});",
+                  "pm.test(`[${caso}] cada libro trae sus datos bibliográficos`, () => {",
+                  "  libros.forEach((libro) => {",
+                  "    pm.expect(libro.id).to.be.a('number');",
+                  "    pm.expect(libro.titulo).to.be.a('string').and.not.empty;",
+                  "    pm.expect(libro).to.include.keys('autores', 'editorial', 'materias', 'semestres');",
+                  "  });",
+                  "});",
+                  "pm.test(`[${caso}] cada libro indica la disponibilidad de ejemplares físicos`, () => {",
+                  "  libros.forEach((libro) => {",
+                  "  pm.expect(libro.tiene_fisico, 'tiene_fisico').to.be.oneOf([0, 1]);",
+                  "  if (libro.tiene_fisico === 1) {",
+                  "    pm.expect(libro.total, 'total').to.be.a('number');",
+                  "    pm.expect(libro.disponibles, 'disponibles').to.be.a('number');",
+                  "    pm.expect(libro.disponibles).to.be.within(0, libro.total);",
+                  "  }",
+                  "  });",
+                  "});",
+                  "pm.test(`[${caso}] cada libro indica si tiene contenido digital`, () => {",
+                  "  libros.forEach((libro) => {",
+                  "    pm.expect(libro.tiene_digital).to.be.oneOf([0, 1]);",
+                  "    pm.expect(libro).to.have.property('pdf_url');",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar libros por título",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const libros = pm.response.json();",
+                  "pm.test(`[${caso}] devuelve al menos 1 libro`, () => {",
+                  "  pm.expect(libros).to.be.an('array');",
+                  "  pm.expect(libros.length).to.be.at.least(1);",
+                  "});",
+                  "const norm = (texto) => String(texto ?? '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();",
+                  "const termino = norm(pm.variables.get('busquedaTitulo'));",
+                  "pm.test(`[${caso}] cada resultado coincide por título o autor`, () => {",
+                  "  libros.forEach((libro) => pm.expect(norm(libro.titulo).includes(termino) || norm(libro.autores).includes(termino), libro.titulo).to.be.true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog?search={{busquedaTitulo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "{{busquedaTitulo}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar libros por autor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const libros = pm.response.json();",
+                  "pm.test(`[${caso}] devuelve al menos 1 libro`, () => {",
+                  "  pm.expect(libros).to.be.an('array');",
+                  "  pm.expect(libros.length).to.be.at.least(1);",
+                  "});",
+                  "const norm = (texto) => String(texto ?? '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();",
+                  "const termino = norm(pm.variables.get('busquedaAutor'));",
+                  "pm.test(`[${caso}] cada resultado coincide por título o autor`, () => {",
+                  "  libros.forEach((libro) => pm.expect(norm(libro.titulo).includes(termino) || norm(libro.autores).includes(termino), libro.titulo).to.be.true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog?search={{busquedaAutor}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "{{busquedaAutor}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar libros por materia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const libros = pm.response.json();",
+                  "pm.test(`[${caso}] devuelve al menos 1 libro`, () => {",
+                  "  pm.expect(libros).to.be.an('array');",
+                  "  pm.expect(libros.length).to.be.at.least(1);",
+                  "});",
+                  "const norm = (texto) => String(texto ?? '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();",
+                  "const materia = norm(pm.variables.get('materia'));",
+                  "pm.test(`[${caso}] cada resultado pertenece a la materia`, () => {",
+                  "  libros.forEach((libro) => pm.expect(String(libro.materias ?? '').split(',').map(norm), libro.titulo).to.include(materia));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog?materia={{materia}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ],
+              "query": [
+                {
+                  "key": "materia",
+                  "value": "{{materia}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar libros por semestre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const libros = pm.response.json();",
+                  "pm.test(`[${caso}] devuelve al menos 1 libro`, () => {",
+                  "  pm.expect(libros).to.be.an('array');",
+                  "  pm.expect(libros.length).to.be.at.least(1);",
+                  "});",
+                  "const semestre = String(pm.variables.get('semestreId'));",
+                  "pm.test(`[${caso}] cada resultado pertenece al semestre`, () => {",
+                  "  libros.forEach((libro) => pm.expect(String(libro.semestres_ids ?? '').split(','), libro.titulo).to.include(semestre));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog?semestre={{semestreId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ],
+              "query": [
+                {
+                  "key": "semestre",
+                  "value": "{{semestreId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar libros con contenido digital",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const libros = pm.response.json();",
+                  "pm.test(`[${caso}] devuelve al menos 1 libro`, () => {",
+                  "  pm.expect(libros).to.be.an('array');",
+                  "  pm.expect(libros.length).to.be.at.least(1);",
+                  "});",
+                  "pm.test(`[${caso}] cada resultado tiene contenido digital`, () => {",
+                  "  libros.forEach((libro) => pm.expect(libro.tiene_digital, libro.titulo).to.eql(1));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog?formato=DIGITAL",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "DIGITAL"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ordenar por autor de la A a la Z",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const libros = pm.response.json();",
+                  "pm.test(`[${caso}] devuelve al menos 2 libros`, () => {",
+                  "  pm.expect(libros).to.be.an('array');",
+                  "  pm.expect(libros.length).to.be.at.least(2);",
+                  "});",
+                  "const primero = libros[0].autores ?? '';",
+                  "const ultimo = libros[libros.length - 1].autores ?? '';",
+                  "pm.test(`[${caso}] ordena por autor de la A a la Z`, () => {",
+                  "  pm.expect(primero.localeCompare(ultimo, 'es', { sensitivity: 'base' })).to.be.at.most(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog?ordenAutor=ASC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ],
+              "query": [
+                {
+                  "key": "ordenAutor",
+                  "value": "ASC"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ordenar por autor de la Z a la A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const libros = pm.response.json();",
+                  "pm.test(`[${caso}] devuelve al menos 2 libros`, () => {",
+                  "  pm.expect(libros).to.be.an('array');",
+                  "  pm.expect(libros.length).to.be.at.least(2);",
+                  "});",
+                  "const primero = libros[0].autores ?? '';",
+                  "const ultimo = libros[libros.length - 1].autores ?? '';",
+                  "pm.test(`[${caso}] ordena por autor de la Z a la A`, () => {",
+                  "  pm.expect(primero.localeCompare(ultimo, 'es', { sensitivity: 'base' })).to.be.at.least(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog?ordenAutor=DESC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ],
+              "query": [
+                {
+                  "key": "ordenAutor",
+                  "value": "DESC"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Búsqueda sin coincidencias",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "pm.test(`[${caso}] devuelve una lista vacía`, () => pm.expect(pm.response.json()).to.be.an('array').that.is.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog?search={{busquedaSinResultados}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "{{busquedaSinResultados}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar las materias para los filtros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const materias = pm.response.json();",
+                  "pm.test(`[${caso}] devuelve materias con id y nombre`, () => {",
+                  "  pm.expect(materias).to.be.an('array').that.is.not.empty;",
+                  "  materias.forEach((materia) => {",
+                  "    pm.expect(materia.id).to.be.a('number');",
+                  "    pm.expect(materia.nombre).to.be.a('string').and.not.empty;",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/materias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "materias"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar los semestres para los filtros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const semestres = pm.response.json();",
+                  "pm.test(`[${caso}] devuelve semestres con id y nombre`, () => {",
+                  "  pm.expect(semestres).to.be.an('array').that.is.not.empty;",
+                  "  semestres.forEach((semestre) => {",
+                  "    pm.expect(semestre.id_semestre).to.be.a('number');",
+                  "    pm.expect(semestre.nombre_semestre).to.be.a('string').and.not.empty;",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/semestres",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "semestres"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar el detalle de un libro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const id = Number(pm.variables.get('libroId'));",
+                  "const libro = pm.response.json().find((item) => Number(item.id) === id);",
+                  "pm.test(`[${caso}] el libro existe en el catálogo`, () => pm.expect(libro, `libro ${id}`).to.be.an('object'));",
+                  "pm.test(`[${caso}] trae título, autoría, editorial y materias`, () => {",
+                  "  pm.expect(libro.titulo).to.be.a('string').and.not.empty;",
+                  "  pm.expect(libro).to.include.keys('autores', 'editorial', 'materias', 'semestres');",
+                  "});",
+                  "pm.test(`[${caso}] indica la disponibilidad de ejemplares físicos`, () => {",
+                  "  pm.expect(libro.tiene_fisico, 'tiene_fisico').to.be.oneOf([0, 1]);",
+                  "  if (libro.tiene_fisico === 1) {",
+                  "    pm.expect(libro.total, 'total').to.be.a('number');",
+                  "    pm.expect(libro.disponibles, 'disponibles').to.be.a('number');",
+                  "    pm.expect(libro.disponibles).to.be.within(0, libro.total);",
+                  "  }",
+                  "});",
+                  "pm.test(`[${caso}] indica si tiene contenido digital`, () => {",
+                  "  const esperaDigital = String(pm.variables.get('esperaDigital')) === 'true';",
+                  "  pm.expect(libro.tiene_digital).to.eql(esperaDigital ? 1 : 0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog"
+              ]
+            },
+            "description": "La API no tiene GET por ID: igual que la app, el detalle se busca en el catálogo."
+          }
+        }
+      ]
     }
   ]
 }
