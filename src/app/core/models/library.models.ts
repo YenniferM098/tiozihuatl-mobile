@@ -8,6 +8,9 @@ export interface LibraryBook {
   semestres?: string | null;
   tiene_digital: number;
   tiene_fisico: number;
+  /** Ejemplares físicos registrados y disponibles; null cuando el libro no tiene formato físico. */
+  total?: number | null;
+  disponibles?: number | null;
   pdf_url: string | null;
 }
 export interface LibraryFilters {
