@@ -58,11 +58,24 @@ export const routes: Routes = [
         path: 'home',
         loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
       },
-      comingSoon('biblioteca', {
-        title: 'Biblioteca',
-        icon: 'books',
-        description: 'Muy pronto podrás consultar el acervo de la biblioteca digital desde aquí.',
-      }, { canActivate: [memberGuard] }),
+      {
+        // Biblioteca Digital (solo Estudiante y Docente): catálogo y detalle del libro.
+        // Los guards también protegen las rutas hijas al abrir su URL directamente.
+        path: 'biblioteca',
+        canActivate: [authGuard, memberGuard],
+        canActivateChild: [authGuard, memberGuard],
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () => import('./pages/biblioteca/library.page').then((m) => m.LibraryPage),
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./pages/biblioteca/book-detail.page').then((m) => m.BookDetailPage),
+          },
+        ],
+      },
       comingSoon('revistas', {
         title: 'Revistas',
         icon: 'newspaper',
