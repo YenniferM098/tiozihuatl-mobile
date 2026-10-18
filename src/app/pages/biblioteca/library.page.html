@@ -1,0 +1,33 @@
+<ion-header><ion-toolbar color="primary"><ion-title>Biblioteca Digital</ion-title></ion-toolbar></ion-header>
+<ion-content>
+  <section class="search-area">
+    <p>Consulta el acervo institucional</p>
+    <ion-searchbar aria-label="Buscar libros por título o autor" placeholder="Buscar por título o autor" [debounce]="400" [maxlength]="200" [(ngModel)]="filters.search" (ionInput)="load()" />
+  </section>
+  <main class="library-body">
+    <details class="filters" open>
+      <summary><i class="ph ph-sliders-horizontal" aria-hidden="true"></i> Filtros y ordenamiento</summary>
+      <div class="filter-grid">
+        <ion-select label="Materia" interface="alert" [(ngModel)]="filters.materia" (ionChange)="load()"><ion-select-option value="">Todas</ion-select-option>@for (subject of subjects(); track subject.id) { <ion-select-option [value]="subject.nombre">{{ subject.nombre }}</ion-select-option> }</ion-select>
+        <ion-select label="Semestre" interface="alert" [(ngModel)]="filters.semestre" (ionChange)="load()"><ion-select-option value="">Todos</ion-select-option>@for (semester of semesters(); track semester.id_semestre) { <ion-select-option [value]="'' + semester.id_semestre">{{ semester.nombre_semestre }}</ion-select-option> }</ion-select>
+        <ion-select label="Formato" interface="alert" [(ngModel)]="filters.formato" (ionChange)="load()"><ion-select-option value="">Todos</ion-select-option><ion-select-option value="DIGITAL">Digital</ion-select-option><ion-select-option value="FISICO">Físico</ion-select-option></ion-select>
+        <ion-select label="Orden por autor" interface="alert" [(ngModel)]="filters.ordenAutor" (ionChange)="load()"><ion-select-option value="">Predeterminado</ion-select-option><ion-select-option value="ASC">A–Z</ion-select-option><ion-select-option value="DESC">Z–A</ion-select-option></ion-select>
+      </div>
+      @if (filtered) { <ion-button fill="clear" (click)="reset()">Limpiar búsqueda y filtros</ion-button> }
+    </details>
+    @if (optionsError()) { <app-library-state [message]="optionsError()" [retry]="true" (retryClick)="loadOptions()" /> }
+    @if (loading()) { <app-library-state [message]="books().length ? 'Actualizando catálogo…' : 'Cargando catálogo…'" [loading]="true" /> }
+    @if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load(true)" /> }
+    @else if (!loading() && !books().length) { <app-library-state [message]="filtered ? 'No se encontraron libros para esta búsqueda o filtros.' : 'El catálogo no tiene libros disponibles.'" /> }
+    @else if (books().length) {
+      <p class="result-count" role="status">{{ books().length }} libros encontrados</p>
+      <div class="book-list">@for (book of visibleBooks; track book.id) {
+        <a class="book-card" [routerLink]="['/biblioteca', book.id]">
+          <app-book-cover [id]="book.id" [title]="book.titulo" [digital]="!!book.tiene_digital" />
+          <div><h2>{{ book.titulo }}</h2>@if (book.autores) { <p>{{ book.autores }}</p> }@if (book.materias) { <p class="category">{{ book.materias }}</p> }<span class="badge">{{ book.tiene_digital ? 'Contenido digital' : 'Información bibliográfica' }}</span>@if (book.semestres) { <p>{{ book.semestres }}</p> }</div>
+        </a>
+      }</div>
+      @if (totalPages > 1) { <nav class="pagination" aria-label="Páginas del catálogo"><ion-button [disabled]="page() === 1" (click)="changePage(-1)">Anterior</ion-button><span aria-live="polite">{{ page() }} / {{ totalPages }}</span><ion-button [disabled]="page() === totalPages" (click)="changePage(1)">Siguiente</ion-button></nav> }
+    }
+  </main>
+</ion-content>
