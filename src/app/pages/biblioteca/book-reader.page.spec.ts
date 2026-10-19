@@ -1,9 +1,12 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ElementRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { LibraryService } from '../../core/services/library.service';
+import { PDF_READER_SOURCE } from '../../core/services/pdf-reader-source';
 import { BookReaderPage } from './book-reader.page';
 import { layoutPdfPages, visiblePdfWindow } from './pdf-layout';
 
@@ -174,6 +177,92 @@ describe('Lector continuo: scroll, carga progresiva y recursos', () => {
     await internal.prepareDocument(new ArrayBuffer(0), 'Libro', 0);
     expect(reader.loading()).toBe(false);
     expect(reader.error()).toContain('No fue posible preparar el PDF');
+  });
+});
+
+describe('Lector: apertura autorizada y bloqueo de contenido no disponible', () => {
+  let id: string;
+  let pdf: ReturnType<typeof vi.fn>;
+  function create(): BookReaderPage {
+    TestBed.configureTestingModule({ providers: [
+      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => id } } } },
+      { provide: PDF_READER_SOURCE, useValue: { pdf } },
+    ] });
+    const reader = TestBed.runInInjectionContext(() => new BookReaderPage());
+    const container = document.createElement('div');
+    Object.defineProperty(container, 'clientWidth', { value: 320, configurable: true });
+    (reader as unknown as ReaderInternals).container = new ElementRef(container);
+    return reader;
+  }
+  beforeEach(() => { id = '52'; pdf = vi.fn(); });
+  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it('abre el PDF autorizado del libro y muestra su título y número de páginas', async () => {
+    pdf.mockReturnValue(of({ data: new ArrayBuffer(8), titulo: 'Atlas de Anatomía' }));
+    const page = pdfPage();
+    const document = { numPages: 2, getPage: vi.fn(async () => page), destroy: vi.fn(async () => undefined) };
+    vi.mocked(getDocument).mockReturnValueOnce({ promise: Promise.resolve(document), destroy: vi.fn(async () => undefined) } as unknown as ReturnType<typeof getDocument>);
+    const reader = create();
+    vi.spyOn(reader, 'onScroll').mockImplementation(() => undefined);
+    reader.load();
+    await vi.waitFor(() => expect(reader.loading()).toBe(false));
+    expect(pdf).toHaveBeenCalledWith(52);
+    expect(reader.title()).toBe('Atlas de Anatomía');
+    expect(reader.totalPages()).toBe(2);
+    expect(reader.error()).toBe('');
+    reader.ngOnDestroy();
+  });
+  it('no pide el archivo con un identificador inválido', () => {
+    id = 'abc';
+    const reader = create();
+    reader.load();
+    expect(pdf).not.toHaveBeenCalled();
+    expect(reader.loading()).toBe(false);
+    expect(reader.error()).toBe('El archivo no está disponible.');
+    reader.ngOnDestroy();
+  });
+  it('bloquea el contenido no autorizado, inexistente o fuera de Cloudinary con un mensaje claro', () => {
+    const reader = create();
+    pdf.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 403 })));
+    reader.load();
+    expect(reader.error()).toContain('Contenido no disponible para este usuario');
+    pdf.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 404 })));
+    reader.load();
+    expect(reader.error()).toBe('El archivo no está disponible.');
+    pdf.mockReturnValueOnce(throwError(() => new Error('URL de archivo inválida')));
+    reader.load();
+    expect(reader.error()).toBe('Este libro no tiene un archivo digital disponible.');
+    expect(reader.loading()).toBe(false);
+    reader.ngOnDestroy();
+  });
+  it('al entrar prepara el scroll de Ionic, observa el ancho y carga el archivo', async () => {
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    vi.stubGlobal('ResizeObserver', class { observe = observe; disconnect = disconnect; });
+    pdf.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+    const reader = create();
+    (reader as unknown as { content: unknown }).content = { getScrollElement: async () => document.createElement('div') };
+    await reader.ionViewDidEnter();
+    expect(observe).toHaveBeenCalled();
+    expect(pdf).toHaveBeenCalledWith(52);
+    reader.ngOnDestroy();
+    expect(disconnect).toHaveBeenCalled();
+  });
+  it('aplica el desplazamiento pendiente en el siguiente frame', () => {
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { callback(0); return 0; });
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    const reader = create();
+    const internal = reader as unknown as ReaderInternals;
+    internal.scrollElement = document.createElement('div');
+    internal.document = {};
+    reader.loading.set(false);
+    internal.pendingScrollTop = 300;
+    const update = vi.spyOn(internal, 'updateWindow').mockImplementation(() => undefined);
+    reader.onScroll();
+    expect(internal.scrollElement.scrollTop).toBe(300);
+    expect(internal.pendingScrollTop).toBeNull();
+    expect(update).toHaveBeenCalled();
+    reader.ngOnDestroy();
   });
 });
 

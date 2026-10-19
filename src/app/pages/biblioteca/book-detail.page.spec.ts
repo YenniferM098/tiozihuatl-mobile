@@ -41,6 +41,15 @@ describe('Detalle: datos bibliográficos, disponibilidad física y contenido dig
     expect(text).toContain('1 de 2 ejemplares disponibles');
     expect(text).toContain('cuenta con contenido digital');
   });
+  it('ofrece abrir el lector solo cuando el libro tiene contenido digital', async () => {
+    const fixture = TestBed.createComponent(BookDetailPage);
+    await fixture.whenStable();
+    fixture.componentInstance.ionViewWillEnter();
+    response.next([BOOK]);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('Abrir lector digital');
+    expect(fixture.nativeElement.querySelector('ion-button[href="/biblioteca/52/lector"]')).toBeTruthy();
+  });
   it('muestra información sin contenido digital cuando no existe archivo', async () => {
     const text = await open([{ ...BOOK, tiene_digital: 0, pdf_url: null }]);
     expect(text).toContain('no tiene contenido digital disponible');
