@@ -33,6 +33,7 @@
     "@ionic/angular": "^9.0.0",
     "@phosphor-icons/web": "^2.1.2",
     "ionicons": "^8.1.0",
+    "pdfjs-dist": "4.10.38",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
