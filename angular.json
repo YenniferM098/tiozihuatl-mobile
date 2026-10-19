@@ -138,7 +138,10 @@
               "src/app/pages/biblioteca/library.page.ts",
               "src/app/pages/biblioteca/book-detail.page.ts",
               "src/app/pages/biblioteca/book-cover.component.ts",
-              "src/app/pages/biblioteca/library-state.component.ts"
+              "src/app/pages/biblioteca/library-state.component.ts",
+              "src/app/pages/biblioteca/book-reader.page.ts",
+              "src/app/pages/biblioteca/pdf-layout.ts",
+              "src/app/core/services/pdf-reader-source.ts"
             ],
             "coverageReporters": ["text-summary", "html", "lcov"],
             "coverageThresholds": { "statements": 70, "branches": 70, "functions": 70, "lines": 70 }
