@@ -1071,6 +1071,220 @@
           }
         }
       ]
+    },
+    {
+      "name": "hu05-lector-libros",
+      "description": "HU-05 Lectura de libros digitales. GET /catalog/libros/:id/pdf-url entrega una URL firmada de Cloudinary solo para libros con contenido digital; la app descarga el PDF desde esa URL sin enviar el token. Para libros sin contenido digital, inexistentes o con identificador inválido responde 404 y no entrega URL. Solo consulta datos; no modifica nada.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Valores por defecto para el modo Performance de Postman, que no recibe el archivo de datos.",
+              "const porDefecto = { libroDigitalId: 56, libroFisicoId: 62, libroInexistenteId: 999999 };",
+              "Object.entries(porDefecto).forEach(([clave, valor]) => {",
+              "  if (!pm.iterationData.has(clave)) pm.variables.set(clave, valor);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Obtener la URL del PDF de un libro digital",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "// La siguiente petición descarga el archivo desde esta URL.",
+                  "pm.variables.set('pdfUrlFirmada', body.url);",
+                  "pm.test(`[${caso}] entrega el título del libro`, () => pm.expect(body.titulo).to.be.a('string').and.not.empty);",
+                  "pm.test(`[${caso}] la URL es HTTPS de Cloudinary y está firmada`, () => {",
+                  "  pm.expect(body.url).to.match(/^https:\\/\\/res\\.cloudinary\\.com\\/[^/]+\\/image\\/upload\\/s--[^/]+--\\//);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/libros/{{libroDigitalId}}/pdf-url",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "libros",
+                "{{libroDigitalId}}",
+                "pdf-url"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Descargar el PDF firmado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "pm.test(`[${caso}] entrega un PDF`, () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf');",
+                  "  pm.expect(pm.response.stream.slice(0, 5).toString()).to.eql('%PDF-');",
+                  "});",
+                  "pm.test(`[${caso}] no se envía el token a Cloudinary`, () => pm.expect(pm.request.headers.has('Authorization')).to.be.false);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{pdfUrlFirmada}}",
+            "description": "Igual que la app: el archivo se descarga de la URL firmada, sin el token de la API."
+          }
+        },
+        {
+          "name": "Libro sin contenido digital",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 404`, () => pm.response.to.have.status(404));",
+                  "pm.test(`[${caso}] indica que el libro no está disponible`, () => pm.expect(pm.response.json().message).to.eql('Libro no disponible'));",
+                  "pm.test(`[${caso}] no entrega una URL del archivo`, () => pm.expect(pm.response.json()).to.not.have.property('url'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/libros/{{libroFisicoId}}/pdf-url",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "libros",
+                "{{libroFisicoId}}",
+                "pdf-url"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Libro inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 404`, () => pm.response.to.have.status(404));",
+                  "pm.test(`[${caso}] indica que el libro no está disponible`, () => pm.expect(pm.response.json().message).to.eql('Libro no disponible'));",
+                  "pm.test(`[${caso}] no entrega una URL del archivo`, () => pm.expect(pm.response.json()).to.not.have.property('url'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/libros/{{libroInexistenteId}}/pdf-url",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "libros",
+                "{{libroInexistenteId}}",
+                "pdf-url"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Identificador inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 404`, () => pm.response.to.have.status(404));",
+                  "pm.test(`[${caso}] indica que el libro no está disponible`, () => pm.expect(pm.response.json().message).to.eql('Libro no disponible'));",
+                  "pm.test(`[${caso}] no entrega una URL del archivo`, () => pm.expect(pm.response.json()).to.not.have.property('url'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/libros/abc/pdf-url",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "libros",
+                "abc",
+                "pdf-url"
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }

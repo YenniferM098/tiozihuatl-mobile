@@ -68,6 +68,38 @@ describe('Biblioteca: contratos HTTP y sesión', () => {
     await expect(firstValueFrom(service.catalog())).rejects.toMatchObject({ status: 403 });
     http.expectNone(API);
   });
+  it('rechaza sesión inválida antes de obtener el PDF', async () => {
+    valid = false;
+    await expect(firstValueFrom(service.pdf(1))).rejects.toMatchObject({ status: 403 });
+    http.expectNone(`${API}/libros/1/pdf-url`);
+  });
+  it('descarga el archivo firmado sin enviar token a Cloudinary', async () => {
+    const promise = firstValueFrom(service.pdf(3));
+    const url = 'https://res.cloudinary.com/instituto/image/upload/s--firma--/libro.pdf';
+    http.expectOne(`${API}/libros/3/pdf-url`).flush({ url, titulo: 'Libro' });
+    const request = http.expectOne(url);
+    expect(request.request.headers.has('Authorization')).toBe(false);
+    expect(request.request.responseType).toBe('arraybuffer');
+    request.flush(new ArrayBuffer(8));
+    expect((await promise).data.byteLength).toBe(8);
+  });
+  it('no abre recursos externos ajenos al proveedor del backend', async () => {
+    const promise = firstValueFrom(service.pdf(3));
+    http.expectOne(`${API}/libros/3/pdf-url`).flush({ url: 'https://otro.example/libro.pdf', titulo: 'Libro' });
+    await expect(promise).rejects.toThrow('URL de archivo inválida');
+  });
+  it('explica que el libro no tiene archivo cuando la URL no es de Cloudinary', async () => {
+    const promise = firstValueFrom(service.pdf(3)).catch(error => libraryError(error, true));
+    http.expectOne(`${API}/libros/3/pdf-url`).flush({ url: 'https://biblioteca.example/libro.pdf', titulo: 'Libro' });
+    expect(await promise).toBe('Este libro no tiene un archivo digital disponible.');
+  });
+  it('distingue archivo inexistente, acceso restringido y falla de conexión al abrir el PDF', async () => {
+    const promise = firstValueFrom(service.pdf(3)).catch(error => libraryError(error, true));
+    http.expectOne(`${API}/libros/3/pdf-url`).flush({}, { status: 404, statusText: 'Not Found' });
+    expect(await promise).toBe('El archivo no está disponible.');
+    expect(libraryError(new HttpErrorResponse({ status: 403 }), true)).toContain('Contenido no disponible para este usuario');
+    expect(libraryError(new HttpErrorResponse({ status: 0 }), true)).toContain('No fue posible abrir el archivo');
+  });
   it('identifica el contenido digital autorizado solo si el archivo está en Cloudinary', () => {
     expect(hasDigitalFile({ tiene_digital: 1, pdf_url: 'libros/catalogo-001' })).toBe(true);
     expect(hasDigitalFile({ tiene_digital: 1, pdf_url: 'https://res.cloudinary.com/demo/image/upload/libro.pdf' })).toBe(true);
