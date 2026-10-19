@@ -49,6 +49,13 @@ export const routes: Routes = [
     children: [],
   },
   {
+    // Lector de libros digitales a pantalla completa (sin barra inferior), solo Estudiante y Docente.
+    // Se declara antes de las pestañas para que /biblioteca/:id/lector no llegue a sus rutas hijas.
+    path: 'biblioteca/:id/lector',
+    canActivate: [authGuard, memberGuard],
+    loadComponent: () => import('./pages/biblioteca/book-reader.page').then((m) => m.BookReaderPage),
+  },
+  {
     // App autenticada con barra inferior: /home, /biblioteca, /revistas, /materiales, /perfil.
     path: '',
     canActivate: [authGuard],

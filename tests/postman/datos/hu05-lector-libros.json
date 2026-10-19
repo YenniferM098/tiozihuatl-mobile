@@ -1,0 +1,14 @@
+[
+  {
+    "caso": "Libro digital de Anatomía",
+    "libroDigitalId": 56,
+    "libroFisicoId": 62,
+    "libroInexistenteId": 999999
+  },
+  {
+    "caso": "Libro digital de Enfermería Básica",
+    "libroDigitalId": 54,
+    "libroFisicoId": 63,
+    "libroInexistenteId": 888888
+  }
+]

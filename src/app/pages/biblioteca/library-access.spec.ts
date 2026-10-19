@@ -29,4 +29,8 @@ describe('Biblioteca: acceso directo y roles', () => {
     expect(library?.canActivateChild).toEqual([authGuard, memberGuard]);
     expect(library?.children?.map(route => route.path)).toEqual(['', ':id']);
   });
+  it('protege el lector al abrir su URL directamente', () => {
+    const reader = routes.find(route => route.path === 'biblioteca/:id/lector');
+    expect(reader?.canActivate).toEqual([authGuard, memberGuard]);
+  });
 });

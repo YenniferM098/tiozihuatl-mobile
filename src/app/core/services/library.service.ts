@@ -1,15 +1,18 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, shareReplay, switchMap, throwError, timeout } from 'rxjs';
+import { Observable, catchError, map, shareReplay, switchMap, throwError, timeout } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LibraryBook, LibraryFilters, LibrarySemester, LibrarySubject } from '../models/library.models';
 import { AuthService } from './auth.service';
 import { SessionService } from './session.service';
 
+/** Mensaje del servicio cuando el archivo del libro no proviene de Cloudinary. */
+const INVALID_FILE = 'URL de archivo inválida';
+
 /**
- * Indica si el libro tiene contenido digital autorizado: un public_id o una URL
+ * Indica si el libro tiene un archivo digital que el lector puede abrir: un public_id o una URL
  * de Cloudinary. Algunos registros guardan una URL externa de ejemplo (p. ej. biblioteca.example)
- * que no corresponde a ningún archivo; esos se muestran sin contenido digital.
+ * que no corresponde a ningún archivo; para esos no se ofrece el lector.
  */
 export function hasDigitalFile(book: Pick<LibraryBook, 'tiene_digital' | 'pdf_url'>): boolean {
   const ref = (book.pdf_url ?? '').trim();
@@ -18,12 +21,13 @@ export function hasDigitalFile(book: Pick<LibraryBook, 'tiene_digital' | 'pdf_ur
   try { return new URL(ref).hostname === 'res.cloudinary.com'; } catch { return false; }
 }
 
-export function libraryError(error: unknown): string {
+export function libraryError(error: unknown, file = false): string {
+  if (error instanceof Error && error.message === INVALID_FILE) return 'Este libro no tiene un archivo digital disponible.';
   if (error instanceof HttpErrorResponse) {
     if (error.status === 401 || error.status === 403) return 'Contenido no disponible para este usuario. Revisa tu sesión.';
-    if (error.status === 404) return 'El libro no está disponible.';
+    if (error.status === 404) return file ? 'El archivo no está disponible.' : 'El libro no está disponible.';
   }
-  return 'No fue posible conectar con el servidor. Revisa tu conexión e intenta nuevamente.';
+  return file ? 'No fue posible abrir el archivo. Revisa tu conexión e intenta nuevamente.' : 'No fue posible conectar con el servidor. Revisa tu conexión e intenta nuevamente.';
 }
 
 /** Solo utiliza contratos existentes del catálogo institucional. */
@@ -73,6 +77,17 @@ export class LibraryService {
       }
       return preview;
     });
+  }
+  pdf(id: number): Observable<{ data: ArrayBuffer; titulo: string }> {
+    return this.authorized(() => this.http.get<{ url: string; titulo: string }>(`${this.api}/libros/${id}/pdf-url`)).pipe(
+      switchMap(({ url, titulo }) => {
+        // El backend firma el recurso en Cloudinary. Nunca enviamos el token a ese host.
+        if (!this.safeResource(url)) return throwError(() => new Error(INVALID_FILE));
+        return this.authorized(() => this.http.get(url, { responseType: 'arraybuffer' })).pipe(
+          map(data => ({ data, titulo }))
+        );
+      })
+    );
   }
   safeResource(value: string): boolean {
     try { const url = new URL(value); return url.protocol === 'https:' && url.hostname === 'res.cloudinary.com' && !url.username && !url.password; }
