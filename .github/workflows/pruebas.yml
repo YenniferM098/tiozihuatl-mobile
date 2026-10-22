@@ -1,0 +1,183 @@
+# Pipeline de pruebas de Tiozihuatl Mobile.
+# Se ejecuta solo al subir cualquier rama; no requiere ningún paso manual.
+#
+#   analisis-estatico ─┐
+#   unitarias ─────────┼─> compilacion ─┬─> apk-aceptacion         (solo develop)
+#   integracion ───────┘                └─> rendimiento-lighthouse  (solo develop)
+#
+# Los tres primeros corren en paralelo. Si alguno falla, la compilación y los
+# siguientes no se ejecutan. La regresión son estos mismos jobs ejecutando las
+# pruebas de todas las historias ya integradas. Las pruebas de esfuerzo son manuales.
+
+name: Pipeline de pruebas
+
+on:
+  push:
+    branches: ['**']
+
+concurrency:
+  group: pruebas-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+  # URL de la API (Settings > Secrets and variables > Actions > Variables).
+  API_URL: ${{ vars.API_URL }}
+
+jobs:
+  analisis-estatico:
+    name: Análisis de código estático (ESLint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run configurar:api
+      - name: Ejecutar ESLint
+        run: npx ng lint
+
+  unitarias:
+    name: Pruebas unitarias (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run configurar:api
+      - name: Ejecutar pruebas unitarias con cobertura mínima
+        run: npx ng test --configuration ci
+      - name: Guardar reporte de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-cobertura
+          path: coverage/
+          if-no-files-found: ignore
+
+  integracion:
+    name: Pruebas de integración (Newman)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Instalar Newman
+        run: npm install --global newman@6 newman-reporter-htmlextra@1
+      - name: Ejecutar la colección con cada archivo de datos
+        run: |
+          mkdir -p reportes
+          estado=0
+          for datos in tests/postman/datos/*.json; do
+            hu=$(basename "$datos" .json)
+            echo "::group::$hu"
+            newman run tests/postman/tiozihuatl-mobile.postman_collection.json \
+              -e tests/postman/ci.postman_environment.json \
+              --env-var "baseUrl=$API_URL" \
+              --folder "$hu" \
+              -d "$datos" \
+              --delay-request 700 \
+              --timeout-request 60000 \
+              -r cli,htmlextra --reporter-htmlextra-export "reportes/$hu.html" || estado=1
+            echo "::endgroup::"
+          done
+          exit $estado
+      - name: Guardar reporte de integración
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-integracion
+          path: reportes/
+          if-no-files-found: ignore
+
+  compilacion:
+    name: Compilación
+    needs: [analisis-estatico, unitarias, integracion]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Compilar la aplicación
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: www
+          path: www/
+
+  apk-aceptacion:
+    name: APK para pruebas de aceptación
+    needs: compilacion
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: www
+          path: www/
+      - name: Copiar la aplicación web al proyecto Android
+        run: npx cap sync android
+      - name: Generar APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-aceptacion
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Enviar APK a los testers (Firebase App Distribution)
+        if: env.FIREBASE_APP_ID != ''
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: testers
+          file: android/app/build/outputs/apk/debug/app-debug.apk
+          releaseNotes: 'Commit ${{ github.sha }}. Realizar la aceptación según el checklist de la historia.'
+
+  rendimiento-lighthouse:
+    name: Pruebas de rendimiento (Lighthouse CI)
+    needs: compilacion
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: www
+          path: www/
+      - name: Medir con Lighthouse CI
+        run: npx --yes @lhci/cli@0.15.x autorun
+      - name: Guardar reporte de rendimiento
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-rendimiento
+          path: .lighthouseci/
+          include-hidden-files: true
+          if-no-files-found: ignore

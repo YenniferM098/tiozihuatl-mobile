@@ -1,0 +1,31 @@
+<ion-content class="welcome-content" [scrollY]="false">
+  <main class="welcome">
+    <section class="welcome__hero">
+      <div class="welcome__logo-wrap">
+        <img
+          class="welcome__logo"
+          src="assets/brand/iest-logo.png"
+          alt="Instituto de Estudios Superiores Tiozihuatl"
+        />
+      </div>
+
+      <h1 class="welcome__title">Bienvenido a Instituto de Estudios Superiores Tiozihuatl</h1>
+      <p class="welcome__text">
+        Consulta la biblioteca digital, las revistas y los materiales del Instituto de Estudios Superiores
+        Tiozihuatl desde tu celular.
+      </p>
+    </section>
+
+    <footer class="welcome__actions">
+      <ion-button expand="block" class="welcome__start" (click)="start()">
+        <span>Empezar</span>
+        <i class="ph ph-arrow-right welcome__start-icon" aria-hidden="true"></i>
+      </ion-button>
+
+      <p class="welcome__register">
+        ¿Eres visitante?
+        <button type="button" class="welcome__link" (click)="goToRegister()">Regístrate</button>
+      </p>
+    </footer>
+  </main>
+</ion-content>

@@ -1,20 +1,156 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content class="home-content">
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <!-- ---------- Saludo sobre el azul institucional (como en Login) ---------- -->
+  <header class="hero">
+    <div class="hero__inner">
+      <div>
+        <h1 class="hero__title">Hola{{ firstName() ? ', ' + firstName() : '' }}</h1>
+        <p class="hero__subtitle">Qué gusto verte. Esto es lo más reciente en Tiozihuatl.</p>
+      </div>
+      <button type="button" class="hero__logout" tzHaptic (click)="logout()" aria-label="Cerrar sesión">
+        <i class="ph ph-sign-out" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-  </div>
+  <!-- Las secciones alternan blanco y azul, separadas por una ola (home.page.waves.scss). -->
+  <main class="home">
+    <!-- ---------- Eventos destacados ---------- -->
+    @if (events() === null) {
+      <section class="home__section" aria-hidden="true">
+        <ion-skeleton-text class="sk-heading" [animated]="true"></ion-skeleton-text>
+        <div class="rail">
+          @for (i of skeletonCards; track i) {
+            <div class="event">
+              <ion-skeleton-text class="sk-media" [animated]="true"></ion-skeleton-text>
+            </div>
+          }
+        </div>
+      </section>
+    } @else if (events()!.length) {
+      <section class="home__section" aria-labelledby="home-events">
+        <h2 id="home-events" class="heading">
+          <i class="ph ph-star" aria-hidden="true"></i>Destacados
+        </h2>
+        <div class="rail" [class.rail--single]="events()!.length === 1">
+          @for (event of events(); track event.id) {
+            <article class="event">
+              <div class="event__media" [attr.data-count]="event.images.length">
+                @for (src of event.images; track src; let first = $first) {
+                  <img [src]="src" alt="" [attr.loading]="first ? 'eager' : 'lazy'" decoding="async" />
+                } @empty {
+                  <i class="ph ph-calendar-star" aria-hidden="true"></i>
+                }
+              </div>
+              <h3 class="event__title">{{ event.title }}</h3>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- ---------- Libros (Estudiante y Docente) ---------- -->
+    @if (books() === null) {
+      <section class="home__section" aria-hidden="true">
+        <ion-skeleton-text class="sk-heading" [animated]="true"></ion-skeleton-text>
+        <div class="pair">
+          @for (i of skeletonCards; track i) {
+            <ion-skeleton-text class="sk-cover" [animated]="true"></ion-skeleton-text>
+          }
+        </div>
+      </section>
+    } @else if (books()!.length) {
+      <section class="home__section" aria-labelledby="home-books">
+        <h2 id="home-books" class="heading">
+          <i class="ph ph-books" aria-hidden="true"></i>Libros recientes
+        </h2>
+        <ul class="pair">
+          @for (book of books(); track book.id) {
+            <li>
+              @if (book.cover && !brokenCovers().has(book.cover)) {
+                <!-- Libro con PDF válido: portada (primera página) y título debajo, como revistas. -->
+                <div class="magazine__cover">
+                  <img [src]="book.cover" alt="" loading="lazy" decoding="async" (error)="coverFailed(book.cover)" />
+                </div>
+                <p class="magazine__title">{{ book.title }}</p>
+              } @else {
+                <div class="book__cover">
+                  <i class="ph ph-book-open-text" aria-hidden="true"></i>
+                  <span class="book__cover-title">{{ book.title }}</span>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <!-- ---------- Revistas más recientes ---------- -->
+    @if (magazines() === null) {
+      <section class="home__section" aria-hidden="true">
+        <ion-skeleton-text class="sk-heading" [animated]="true"></ion-skeleton-text>
+        <div class="pair">
+          @for (i of skeletonCards; track i) {
+            <ion-skeleton-text class="sk-cover" [animated]="true"></ion-skeleton-text>
+          }
+        </div>
+      </section>
+    } @else if (magazines()!.length) {
+      <section class="home__section" aria-labelledby="home-magazines">
+        <h2 id="home-magazines" class="heading">
+          <i class="ph ph-newspaper" aria-hidden="true"></i>Revistas recientes
+        </h2>
+        <ul class="pair">
+          @for (magazine of magazines(); track magazine.id) {
+            <li>
+              <div class="magazine__cover">
+                @if (magazine.cover) {
+                  <img [src]="magazine.cover" alt="" loading="lazy" decoding="async" />
+                } @else {
+                  <i class="ph ph-newspaper" aria-hidden="true"></i>
+                }
+              </div>
+              <p class="magazine__title">{{ magazine.title }}</p>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <!-- ---------- Materiales (Estudiante y Docente) ---------- -->
+    @if (materials() === null) {
+      <section class="home__section" aria-hidden="true">
+        <ion-skeleton-text class="sk-heading" [animated]="true"></ion-skeleton-text>
+        @for (i of skeletonRows; track i) {
+          <ion-skeleton-text class="sk-row" [animated]="true"></ion-skeleton-text>
+        }
+      </section>
+    } @else if (materials()!.length) {
+      <section class="home__section" aria-labelledby="home-materials">
+        <h2 id="home-materials" class="heading">
+          <i class="ph ph-files" aria-hidden="true"></i>{{ isTeacher() ? 'Tus materiales recientes' : 'Materiales recientes' }}
+        </h2>
+        <ul class="materials">
+          @for (material of materials(); track material.id) {
+            <li class="material">
+              <span class="material__icon">
+                <i class="ph ph-{{ material.icon }}" aria-hidden="true"></i>
+              </span>
+              <div class="material__body">
+                <p class="material__title">{{ material.title }}</p>
+                <p class="material__detail">
+                  {{ material.type }}@if (material.detail) {
+                    <span> · {{ material.detail }}</span>
+                  }
+                </p>
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </main>
 </ion-content>

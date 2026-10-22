@@ -1,0 +1,87 @@
+/*
+ * Inicio (segunda hoja de estilos): texto compartido, estados de carga y ajustes
+ * para pantallas amplias. Separada de home.page.scss por el presupuesto del build.
+ */
+/* ---------- Texto compartido ---------- */
+.heading,
+.event__title,
+.book__cover-title,
+.magazine__title,
+.material__title {
+  color: var(--tz-text);
+}
+
+.material__detail {
+  color: var(--tz-text-muted);
+}
+
+// Recorte a varias líneas (2 por defecto).
+.event__title,
+.book__cover-title,
+.magazine__title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.book__cover-title {
+  -webkit-line-clamp: 4;
+}
+
+// En revistas el número de edición suele ir al final del título.
+.magazine__title {
+  -webkit-line-clamp: 3;
+}
+
+// Una sola línea con puntos suspensivos.
+.material__title,
+.material__detail {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Carga ---------- */
+ion-skeleton-text {
+  --background: #e6ecf1;
+  margin: 0;
+  border-radius: 14px;
+}
+
+.sk-heading {
+  width: 150px;
+  height: 24px;
+  margin: 0 var(--gutter) 14px;
+}
+
+.sk-media,
+.sk-cover {
+  height: auto;
+  aspect-ratio: 16 / 10;
+}
+
+.sk-cover {
+  aspect-ratio: 3 / 4;
+}
+
+.sk-row {
+  width: auto;
+  height: 52px;
+  margin: 0 var(--gutter) 10px;
+}
+
+.hero__logout:active {
+  background: rgba(255, 255, 255, 0.34);
+}
+
+/* ---------- Tablet ---------- */
+@media (min-width: 768px) {
+  :host {
+    --gutter: 32px;
+  }
+
+  .pair {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

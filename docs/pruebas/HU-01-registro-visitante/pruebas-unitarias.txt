@@ -1,0 +1,21 @@
+> Building...
+One or more browsers which are configured in the project's Browserslist configuration fall outside Angular's browser support for this version.
+Unsupported browsers:
+chrome 118, chrome 117, chrome 116, chrome 115, chrome 114, chrome 113, chrome 112, chrome 111, chrome 110, chrome 109, chrome 108, chrome 107, edge 118, edge 117, edge 116, edge 115, edge 114, edge 113, edge 112, edge 111, edge 110, edge 109, edge 108, edge 107, firefox 118, firefox 117, firefox 116, firefox 115, firefox 114, firefox 113, firefox 112, firefox 111, firefox 110, firefox 109, firefox 108, firefox 107, firefox 106, ios_saf 16.6-16.7, ios_saf 16.5, ios_saf 16.4, ios_saf 16.3, ios_saf 16.2, ios_saf 16.1, safari 16.6, safari 16.5, safari 16.4, safari 16.3, safari 16.2, safari 16.1
+√ Building...
+Application bundle generation complete. [4.946 seconds] - 2026-10-05T05:53:03.731Z
+
+
+ RUN  v4.0.18 C:/Users/moyra/OneDrive/Documentos/proyect/movil/2/tiozihuatl-mobile
+
+ ✓ |app| src/app/core/validators/form.validators.spec.ts (21 tests) 38ms
+ ✓ |app| src/app/core/services/auth.service.spec.ts (9 tests) 133ms
+ ✓ |app| src/app/app.component.spec.ts (1 test) 157ms
+ ✓ |app| src/app/home/home.page.spec.ts (1 test) 235ms
+ ✓ |app| src/app/pages/register/register.page.spec.ts (11 tests) 518ms
+
+ Test Files  5 passed (5)
+      Tests  43 passed (43)
+   Start at  23:53:07
+   Duration  26.93s (transform 14.54s, setup 8.39s, import 31.70s, tests 1.08s, environment 66.50s)
+

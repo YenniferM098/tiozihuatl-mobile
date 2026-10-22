@@ -1,2 +1,89 @@
 // For information on how to create your own theme, please refer to:
 // https://ionicframework.com/docs/theming/
+
+// Identidad institucional Tiozihuatl
+:root {
+  --ion-font-family: 'Montserrat', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  // Títulos grandes de pantalla (Iniciar sesión, Registro)
+  --tz-font-display: 'Nunito', 'Montserrat', -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --ion-color-primary: #3fa6e8;
+  --ion-color-primary-rgb: 63, 166, 232;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #1c78b5;
+  --ion-color-primary-tint: #52afea;
+
+  --ion-background-color: #ffffff;
+  --ion-text-color: #1d2b36;
+
+  --tz-text: #1d2b36;
+  --tz-text-muted: #5b6b78;
+
+  // Efecto "toque" de los botones
+  --tz-press-scale: 0.96;
+  --tz-press-in: 0.12s ease-out;
+  --tz-press-out: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); // rebote suave al soltar
+}
+
+/* ============================================================
+   Ocultar los controles nativos del navegador en los inputs
+   (ojo de "mostrar contraseña" de Edge y botón de autocompletado
+   de Safari). Solo se usan los de Ionic.
+   Aplica a todos los inputs de tipo contraseña del proyecto.
+   ============================================================ */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}
+
+input[type='password']::-webkit-credentials-auto-fill-button,
+input[type='password']::-webkit-contacts-auto-fill-button {
+  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Efecto de toque global para TODOS los botones
+   - Al presionar: se hunde ligeramente.
+   - Al soltar: regresa con un rebote muy suave.
+   ============================================================ */
+ion-button,
+ion-fab-button,
+ion-segment-button,
+ion-tab-button,
+ion-back-button,
+button,
+[role='button'],
+.ion-activatable {
+  transition: transform var(--tz-press-out);
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+}
+
+ion-button:not([disabled]):active,
+ion-fab-button:not([disabled]):active,
+ion-segment-button:not([disabled]):active,
+ion-tab-button:not([disabled]):active,
+ion-back-button:active,
+button:not(:disabled):active,
+[role='button']:not([aria-disabled='true']):active,
+.ion-activatable:active {
+  transform: scale(var(--tz-press-scale));
+  transition: transform var(--tz-press-in);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ion-button,
+  ion-fab-button,
+  ion-segment-button,
+  ion-tab-button,
+  ion-back-button,
+  button,
+  [role='button'],
+  .ion-activatable {
+    transition: none;
+    transform: none !important;
+  }
+}

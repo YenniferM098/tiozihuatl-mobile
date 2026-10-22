@@ -1,0 +1,226 @@
+// Misma identidad visual que login.page.scss. Inputs, botón, alertas y enlaces: src/theme/forms.scss.
+
+.register-content {
+  --background: var(--ion-color-primary);
+}
+
+.register {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--ion-color-primary);
+}
+
+/* ---------- Cabecera azul: regresar + título ---------- */
+.register__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: calc(20px + var(--ion-safe-area-top, 0px)) 12px 44px;
+  color: #ffffff;
+}
+
+.register__back,
+.register__back-spacer {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
+
+.register__back {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 24px;
+}
+
+.register__title {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+  font-family: var(--tz-font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+/* ---------- Hoja blanca con curva ---------- */
+.register__sheet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 20px calc(24px + var(--ion-safe-area-bottom, 0px));
+  background: #ffffff;
+  border-top-left-radius: 56px;
+}
+
+/* ---------- Indicador de pasos ---------- */
+.register__steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #a3b0bb;
+
+    i {
+      font-size: 24px;
+    }
+
+    &.is-active {
+      color: var(--ion-color-primary-shade);
+
+      .register__step-bar {
+        background: var(--ion-color-primary);
+      }
+    }
+  }
+}
+
+.register__step-bar {
+  align-self: stretch;
+  height: 4px;
+  border-radius: 4px;
+  background: #e4ebf1;
+}
+
+.register__card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.register__lead {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--tz-text-muted);
+}
+
+/* ---------- Paso de verificación ---------- */
+.register__verify {
+  align-items: center;
+  text-align: center;
+
+  ion-button {
+    align-self: stretch;
+  }
+}
+
+.register__verify-icon {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #eef6fd;
+  color: var(--ion-color-primary);
+  font-size: 36px;
+}
+
+.register__subtitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--tz-text);
+}
+
+.register__email {
+  margin: -6px 0 0;
+  font-weight: 600;
+  color: var(--tz-text);
+  word-break: break-all;
+}
+
+.register__howto {
+  align-self: stretch;
+  margin: 0;
+  padding: 14px 16px 14px 34px;
+  border: 1px solid #d9e1e8;
+  border-radius: 12px;
+  text-align: start;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--tz-text-muted);
+}
+
+.register__verify-actions {
+  display: flex;
+  justify-content: space-between;
+  align-self: stretch;
+  gap: 12px;
+}
+
+/* ---------- Requisitos de contraseña ---------- */
+.register__rules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  margin: -4px 0 0;
+  padding: 0 4px;
+  list-style: none;
+  font-size: 0.78rem;
+  color: var(--tz-text-muted);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    &.is-ok {
+      color: #1e8e5a;
+    }
+  }
+
+  i {
+    font-size: 16px;
+  }
+}
+
+/* ---------- Términos ---------- */
+.register__terms {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 2px;
+
+  ion-checkbox {
+    --size: 20px;
+    --border-radius: 6px;
+    --checkbox-background-checked: var(--ion-color-primary);
+    --border-color-checked: var(--ion-color-primary);
+    font-size: 0.85rem;
+    color: var(--tz-text);
+
+    &::part(label) {
+      white-space: normal;
+    }
+  }
+
+  a {
+    font-weight: 600;
+    color: var(--ion-color-primary-shade);
+  }
+}
+
+.register__footer {
+  margin: 24px 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--tz-text-muted);
+}

@@ -1,27 +1,231 @@
-#container {
-  text-align: center;
-
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+/*
+ * Inicio: saludo sobre el azul institucional y una hoja blanca con curva (como Login).
+ * Iconos en azul institucional; libros, revistas y materiales son informativos
+ * y no tienen estados de toque. El texto compartido y los estados de carga viven en
+ * home.page.common.scss para respetar el presupuesto de estilos por archivo del build.
+ */
+:host {
+  --gutter: 20px;
 }
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
+/* ---------- Saludo ---------- */
+.hero {
+  padding: calc(28px + var(--ion-safe-area-top, 0px)) var(--gutter) 56px;
+  background: var(--ion-color-primary);
+  color: #fff;
 }
 
-#container p {
-  font-size: 16px;
-  line-height: 22px;
+.hero__inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
 
-  color: #8c8c8c;
-
+.hero__title {
   margin: 0;
+  font: 800 2rem/1.15 var(--tz-font-display);
+  overflow-wrap: anywhere;
 }
 
-#container a {
-  text-decoration: none;
+.hero__subtitle {
+  margin: 6px 0 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  opacity: 0.92;
+}
+
+.hero__logout {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 22px;
+}
+
+/* ---------- Hoja blanca ---------- */
+.home {
+  position: relative;
+  max-width: 720px;
+  margin: -32px auto 0;
+  padding: 4px 0 32px;
+  background: #fff;
+  border-top-left-radius: 40px;
+}
+
+.home__section {
+  margin-top: 26px;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 var(--gutter) 14px;
+  font-size: 1.1rem;
+  font-weight: 700;
+
+  i {
+    font-size: 24px;
+  }
+}
+
+// Los iconos solo llevan color (azul institucional), sin fondo ni borde.
+.heading i,
+.material__icon,
+.book__cover,
+.magazine__cover {
+  color: var(--ion-color-primary-shade);
+}
+
+.book__cover,
+.magazine__cover {
+  background: #e3f2fc;
+}
+
+// Carriles horizontales con "snap": se ve el inicio de la siguiente tarjeta.
+.rail {
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  padding: 2px var(--gutter) 12px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter);
+  scrollbar-width: none;
+
+  > * {
+    flex: none;
+    scroll-snap-align: start;
+  }
+}
+
+/* ---------- Eventos destacados ---------- */
+.event {
+  width: min(82vw, 340px);
+}
+
+// Un solo destacado ocupa todo el ancho disponible.
+.rail--single .event {
+  width: 100%;
+}
+
+.event__media {
+  display: grid;
+  gap: 4px;
+  aspect-ratio: 16 / 10;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(29, 43, 54, 0.1);
+
+  // 2 imágenes: dos columnas. 3 imágenes: la principal a la izquierda y dos apiladas.
+  &[data-count='2'],
+  &[data-count='3'] {
+    grid-template-columns: 3fr 2fr;
+  }
+
+  &[data-count='3'] {
+    grid-template-rows: 1fr 1fr;
+
+    img:first-child {
+      grid-row: span 2;
+    }
+  }
+}
+
+.event__media,
+.magazine__cover {
+  overflow: hidden;
+  place-items: center;
+  font-size: 40px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    object-fit: cover;
+  }
+}
+
+.event__title {
+  margin: 12px 4px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* ---------- Libros y revistas: 2 columnas, sin desplazamiento lateral ---------- */
+.pair,
+.materials {
+  margin: 0 var(--gutter);
+  padding: 0;
+  list-style: none;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.book__cover,
+.magazine__cover {
+  display: grid;
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
+}
+
+.book__cover {
+  align-content: space-between;
+  padding: 16px 14px;
+  font-size: 28px;
+}
+
+.book__cover-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+// Título debajo de la portada (revistas y libros con PDF).
+.magazine__title {
+  margin: 8px 2px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ---------- Materiales: lista sin tarjetas ---------- */
+
+.material {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+
+  & + & {
+    border-top: 1px solid rgba(29, 43, 54, 0.08);
+  }
+}
+
+.material__icon {
+  flex: none;
+  font-size: 28px;
+}
+
+.material__body {
+  min-width: 0;
+}
+
+.material__title {
+  margin: 0;
+  font-size: 0.925rem;
+  font-weight: 600;
+}
+
+.material__detail {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
 }

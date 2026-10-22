@@ -1,0 +1,159 @@
+.welcome-content {
+  --background: var(--ion-color-primary);
+}
+
+.welcome {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: calc(24px + var(--ion-safe-area-top, 0px)) 24px calc(28px + var(--ion-safe-area-bottom, 0px));
+  overflow: hidden;
+  color: #ffffff;
+  background: var(--ion-color-primary);
+
+  /* Círculos decorativos suaves en blanco */
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: #ffffff;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+
+  &::before {
+    width: 320px;
+    height: 320px;
+    top: -120px;
+    right: -140px;
+  }
+
+  &::after {
+    width: 240px;
+    height: 240px;
+    bottom: 120px;
+    left: -150px;
+  }
+}
+
+/* ---------- Logo, título y texto ---------- */
+.welcome__hero {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.welcome__logo-wrap {
+  display: grid;
+  place-items: center;
+  width: 188px;
+  height: 188px;
+  margin-bottom: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  animation: welcome-in 0.6s ease-out both;
+}
+
+.welcome__logo {
+  display: block;
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+}
+
+.welcome__title {
+  margin: 0;
+  font-family: var(--tz-font-display);
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #ffffff;
+  animation: welcome-in 0.6s 0.1s ease-out both;
+}
+
+.welcome__text {
+  max-width: 300px;
+  margin: 14px 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  animation: welcome-in 0.6s 0.2s ease-out both;
+}
+
+/* ---------- Acciones ---------- */
+.welcome__actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: welcome-in 0.6s 0.3s ease-out both;
+}
+
+/* Botón blanco con texto azul oscuro */
+.welcome__start {
+  --background: #ffffff;
+  --background-activated: #ffffff;
+  --background-hover: #ffffff;
+  --color: var(--ion-color-primary-shade);
+  --border-radius: 14px;
+  --box-shadow: 0 8px 20px rgba(17, 72, 110, 0.22);
+  margin: 0;
+  height: 54px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.welcome__start-icon {
+  margin-inline-start: 10px;
+  font-size: 20px;
+}
+
+.welcome__register {
+  margin: 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.welcome__link {
+  border: 0;
+  background: none;
+  padding: 4px 2px;
+  font: inherit;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@keyframes welcome-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome__logo-wrap,
+  .welcome__title,
+  .welcome__text,
+  .welcome__actions {
+    animation: none;
+  }
+}

@@ -1,0 +1,135 @@
+/*
+ * Controles de formulario de las pantallas de autenticación (registro de visitante).
+ * Mismos valores que los inputs del login: fondo blanco, borde gris fino, 12px de radio
+ * y borde #3FA6E8 al enfocar.
+ */
+ion-input.tz-field {
+  --background: transparent;
+  --border-width: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --color: var(--tz-text);
+  --placeholder-color: #a3b0bb;
+  --placeholder-opacity: 1;
+  --highlight-height: 0;
+  min-height: 0;
+  font-size: 0.95rem;
+
+  .input-wrapper {
+    min-height: 56px;
+    padding: 8px 8px 8px 14px;
+    border: 1px solid #d9e1e8;
+    border-radius: 12px;
+    background: #ffffff;
+    transition: border-color 0.2s ease;
+  }
+
+  &.has-focus .input-wrapper {
+    border-color: var(--ion-color-primary);
+  }
+
+  &.ion-touched.ion-invalid .input-wrapper,
+  &.tz-field--invalid .input-wrapper {
+    border-color: #e5484d;
+  }
+
+  .label-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--tz-text-muted);
+  }
+
+  .native-input::placeholder {
+    font-size: 0.9rem;
+  }
+
+  .input-bottom {
+    padding: 4px 4px 0;
+    border: 0;
+  }
+}
+
+.tz-field__icon {
+  margin-inline-end: 10px;
+  font-size: 20px;
+  color: #8a99a6;
+}
+
+.tz-field__toggle {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: none;
+  color: #8a99a6;
+  font-size: 20px;
+}
+
+.tz-field__error {
+  margin: -10px 4px 0;
+  font-size: 0.75rem;
+  color: #e5484d;
+}
+
+.tz-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  text-align: start;
+
+  i {
+    flex-shrink: 0;
+    font-size: 20px;
+  }
+
+  &--error {
+    background: #fdecec;
+    color: #b42318;
+  }
+}
+
+.tz-submit {
+  --background: var(--ion-color-primary-shade);
+  --background-activated: var(--ion-color-primary-shade);
+  --background-hover: var(--ion-color-primary-shade);
+  --color: #ffffff;
+  --border-radius: 14px;
+  --box-shadow: none;
+  margin: 8px 0 0;
+  height: 50px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+
+  ion-spinner {
+    width: 20px;
+    height: 20px;
+    margin-inline-end: 10px;
+  }
+}
+
+.tz-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ion-color-primary-shade);
+
+  &:disabled {
+    color: #a3b0bb;
+  }
+
+  &--strong {
+    font-weight: 700;
+    color: var(--tz-text);
+  }
+}
