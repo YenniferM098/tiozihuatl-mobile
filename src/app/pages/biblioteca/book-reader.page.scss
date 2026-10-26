@@ -2,4 +2,5 @@ ion-content { --background:#eef2f6; }
 .page-container { width:calc(100% - 24px); max-width:860px; margin:12px auto; }
 .page-slot { position:relative; width:100%; margin-bottom:12px; background:white; box-shadow:0 2px 12px #0001; overflow:hidden; }
 .page-placeholder { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:12px; color:var(--tz-text-muted); text-align:center; }
-.page-counter { display:flex; align-items:center; justify-content:center; min-height:28px; padding:4px 12px; box-sizing:border-box; background:var(--ion-background-color, #fff); color:var(--tz-text-muted); font-size:13px; line-height:20px; }
+.page-counter { display:flex; align-items:center; justify-content:center; gap:12px; min-height:28px; padding:4px 12px; box-sizing:border-box; background:var(--ion-background-color, #fff); color:var(--tz-text-muted); font-size:13px; line-height:20px; }
+.resume-message { color:var(--ion-color-primary); font-weight:600; }

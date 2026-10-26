@@ -7,6 +7,7 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { LibraryService } from '../../core/services/library.service';
 import { PDF_READER_SOURCE } from '../../core/services/pdf-reader-source';
+import { ReadingProgressStore } from '../../data/storage/reading-progress.storage';
 import { BookReaderPage } from './book-reader.page';
 import { layoutPdfPages, visiblePdfWindow } from './pdf-layout';
 
@@ -24,6 +25,8 @@ interface ReaderInternals {
   width: number;
   ratios: number[];
   pendingScrollTop: number | null;
+  bookId: number;
+  resume(slots: ReturnType<typeof layoutPdfPages>): void;
   jobs: Map<number, symbol>;
   renderPage(number: number, version: number): Promise<void>;
   prepareDocument(data: ArrayBuffer, title: string, version: number): Promise<void>;
@@ -66,7 +69,7 @@ describe('Lector continuo: scroll, carga progresiva y recursos', () => {
     reader.loading.set(false);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as CanvasRenderingContext2D);
   });
-  afterEach(() => { reader.ngOnDestroy(); vi.restoreAllMocks(); });
+  afterEach(() => { reader.ngOnDestroy(); vi.restoreAllMocks(); vi.useRealTimers(); localStorage.clear(); });
 
   it('reserva alturas exactas y deja el mismo scroll al renderizar, sin páginas duplicadas', async () => {
     internal.document = { getPage: async () => pdfPage() };
@@ -143,6 +146,39 @@ describe('Lector continuo: scroll, carga progresiva y recursos', () => {
     fixture.componentInstance.page.set(7); await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('ion-header .page-counter').textContent).toContain('7 / 10');
     fixture.destroy();
+  });
+  it('abre el libro en la última página leída y avisa unos segundos dónde continúa', () => {
+    vi.useFakeTimers();
+    TestBed.inject(ReadingProgressStore).save(52, 5);
+    internal.bookId = 52;
+    internal.resume(reader.slots());
+    expect(internal.pendingScrollTop).toBe(reader.slots()[4].top);
+    expect(reader.resumeMessage()).toBe('Continuando en la página 5');
+    vi.advanceTimersByTime(4000);
+    expect(reader.resumeMessage()).toBe('');
+  });
+  it('empieza desde el inicio sin lectura previa o si la página guardada ya no existe', () => {
+    const progress = TestBed.inject(ReadingProgressStore);
+    internal.bookId = 52;
+    internal.resume(reader.slots());
+    expect(internal.pendingScrollTop).toBeNull();
+    progress.save(52, 40);
+    internal.resume(reader.slots());
+    expect(internal.pendingScrollTop).toBeNull();
+    expect(reader.resumeMessage()).toBe('');
+  });
+  it('guarda la página visible cada vez que cambia al desplazarse', () => {
+    const progress = TestBed.inject(ReadingProgressStore);
+    const save = vi.spyOn(progress, 'save');
+    internal.bookId = 52;
+    internal.document = {};
+    vi.spyOn(internal, 'pump').mockImplementation(() => undefined);
+    internal.scrollElement.scrollTop = reader.slots()[3].top;
+    internal.updateWindow();
+    internal.updateWindow();
+    expect(reader.page()).toBe(4);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(progress.lastPage(52)).toBe(4);
   });
   it('ignora cambios de altura cuando el ancho permanece igual', () => {
     internal.document = {};
