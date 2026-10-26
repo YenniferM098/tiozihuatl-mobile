@@ -1,7 +1,7 @@
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, shareReplay, switchMap, throwError, timeout } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { LIBRARY_REPOSITORY } from '../../domain/repositories/library.repository';
 import { LibraryBook, LibraryFilters, LibrarySemester, LibrarySubject } from '../models/library.models';
 import { AuthService } from './auth.service';
 import { SessionService } from './session.service';
@@ -33,11 +33,10 @@ export function libraryError(error: unknown, file = false): string {
 /** Solo utiliza contratos existentes del catálogo institucional. */
 @Injectable({ providedIn: 'root' })
 export class LibraryService {
-  private readonly http = inject(HttpClient);
+  private readonly repository = inject(LIBRARY_REPOSITORY);
   private readonly auth = inject(AuthService);
   private readonly session = inject(SessionService);
   private readonly previews = new Map<number, Observable<{ previewUrl: string }>>();
-  private readonly api = `${environment.apiUrl}/catalog`;
 
   private authorized<T>(request: () => Observable<T>): Observable<T> {
     return this.auth.ensureValidSession().pipe(switchMap(valid => {
@@ -50,23 +49,19 @@ export class LibraryService {
   }
 
   catalog(filters?: LibraryFilters): Observable<LibraryBook[]> {
-    let params = new HttpParams();
-    if (filters) for (const [key, value] of Object.entries(filters)) {
-      if (value) params = params.set(key, value);
-    }
-    return this.authorized(() => this.http.get<LibraryBook[]>(this.api, { params }));
+    return this.authorized(() => this.repository.catalog(filters));
   }
   subjects(): Observable<LibrarySubject[]> {
-    return this.authorized(() => this.http.get<LibrarySubject[]>(`${this.api}/materias`));
+    return this.authorized(() => this.repository.subjects());
   }
   semesters(): Observable<LibrarySemester[]> {
-    return this.authorized(() => this.http.get<LibrarySemester[]>(`${this.api}/semestres`));
+    return this.authorized(() => this.repository.semesters());
   }
   preview(id: number): Observable<{ previewUrl: string }> {
     return this.authorized(() => {
       let preview = this.previews.get(id);
       if (!preview) {
-        preview = this.http.get<{ previewUrl: string }>(`${this.api}/libros/${id}/preview`).pipe(
+        preview = this.repository.preview(id).pipe(
           timeout(45000),
           catchError(error => { this.previews.delete(id); return throwError(() => error); }),
           // La respuesta HTTP corta termina y queda disponible aunque un consumidor se retire tras next.
@@ -79,11 +74,11 @@ export class LibraryService {
     });
   }
   pdf(id: number): Observable<{ data: ArrayBuffer; titulo: string }> {
-    return this.authorized(() => this.http.get<{ url: string; titulo: string }>(`${this.api}/libros/${id}/pdf-url`)).pipe(
+    return this.authorized(() => this.repository.pdfUrl(id)).pipe(
       switchMap(({ url, titulo }) => {
         // El backend firma el recurso en Cloudinary. Nunca enviamos el token a ese host.
         if (!this.safeResource(url)) return throwError(() => new Error(INVALID_FILE));
-        return this.authorized(() => this.http.get(url, { responseType: 'arraybuffer' })).pipe(
+        return this.authorized(() => this.repository.file(url)).pipe(
           map(data => ({ data, titulo }))
         );
       })
