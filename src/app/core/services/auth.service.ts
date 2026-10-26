@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import {
   Observable,
@@ -13,23 +13,10 @@ import {
   throwError,
   timeout,
 } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { AuthResponse, AuthSession, LoginRequest } from '../models/auth.models';
-import {
-  ForgotPasswordRequest,
-  ForgotPasswordResponse,
-  ResetPasswordRequest,
-  ResetPasswordResponse,
-  ValidateRecoveryTokenResponse,
-} from '../models/password.models';
-import {
-  ExistsResponse,
-  FinishRegisterRequest,
-  FinishRegisterResponse,
-  PreRegisterRequest,
-  PreRegisterResponse,
-  PreRegisterResult,
-} from '../models/register.models';
+import { AUTH_REPOSITORY } from '../../domain/repositories/auth.repository';
+import { AuthSession, LoginRequest } from '../models/auth.models';
+import { ForgotPasswordRequest, ResetPasswordRequest } from '../models/password.models';
+import { FinishRegisterRequest, PreRegisterRequest, PreRegisterResult } from '../models/register.models';
 import { SessionService } from './session.service';
 
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -48,15 +35,13 @@ export class AuthError extends Error {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
+  private readonly repository = inject(AUTH_REPOSITORY);
   private readonly session = inject(SessionService);
-  private readonly api = `${environment.apiUrl}/auth`;
-  private readonly passwordApi = `${environment.apiUrl}/password`;
 
   private refreshRequest$: Observable<boolean> | null = null;
 
   login(data: LoginRequest): Observable<AuthSession> {
-    return this.http.post<AuthResponse>(`${this.api}/login`, data).pipe(
+    return this.repository.login(data).pipe(
       timeout(REQUEST_TIMEOUT_MS),
       map((res) => {
         if (!res?.accessToken || !res?.refreshToken || !res?.user) {
@@ -86,11 +71,8 @@ export class AuthService {
     const current = this.session.current;
     if (!current) return of(false);
 
-    this.refreshRequest$ = this.http
-      .post<AuthResponse>(`${this.api}/refresh`, {
-        id_usuario: current.user.id_usuario,
-        refreshToken: current.refreshToken,
-      })
+    this.refreshRequest$ = this.repository
+      .refresh(current.user.id_usuario, current.refreshToken)
       .pipe(
         timeout(REQUEST_TIMEOUT_MS),
         map((res) => {
@@ -122,12 +104,8 @@ export class AuthService {
     this.session.clear();
     if (!current) return;
 
-    this.http
-      .post(
-        `${this.api}/logout`,
-        { id_usuario: current.user.id_usuario },
-        { headers: { Authorization: `Bearer ${current.accessToken}` } },
-      )
+    this.repository
+      .logout(current.user.id_usuario, current.accessToken)
       .pipe(timeout(REQUEST_TIMEOUT_MS), catchError(() => of(null)))
       .subscribe();
   }
@@ -138,8 +116,8 @@ export class AuthService {
 
   /** Indica si el correo y el teléfono ya pertenecen a una cuenta existente. */
   checkContactAvailability(correo: string, telefono: string): Observable<{ emailTaken: boolean; phoneTaken: boolean }> {
-    const email$ = this.http.get<ExistsResponse>(`${this.api}/check-email`, { params: { correo } });
-    const phone$ = this.http.get<ExistsResponse>(`${this.api}/check-phone`, { params: { telefono } });
+    const email$ = this.repository.emailExists(correo);
+    const phone$ = this.repository.phoneExists(telefono);
 
     return forkJoin([email$, phone$]).pipe(
       timeout(REQUEST_TIMEOUT_MS),
@@ -150,7 +128,7 @@ export class AuthService {
 
   /** Paso 1: guarda los datos personales y solicita el correo de verificación. */
   preRegister(data: PreRegisterRequest): Observable<PreRegisterResult> {
-    return this.http.post<PreRegisterResponse>(`${this.api}/pre-registro`, data).pipe(
+    return this.repository.preRegister(data).pipe(
       timeout(REQUEST_TIMEOUT_MS),
       map(
         (res): PreRegisterResult => ({
@@ -185,7 +163,7 @@ export class AuthService {
 
   /** Paso 2: crea la cuenta de visitante una vez verificado el correo. */
   finishRegister(data: FinishRegisterRequest): Observable<string> {
-    return this.http.post<FinishRegisterResponse>(`${this.api}/finalizar-registro`, data).pipe(
+    return this.repository.finishRegister(data).pipe(
       timeout(REQUEST_TIMEOUT_MS),
       map((res) => res?.message || 'Cuenta creada exitosamente.'),
       catchError((err) => {
@@ -215,7 +193,7 @@ export class AuthService {
    * Devuelve el mensaje general del backend ("Si los datos son correctos, se envió un enlace...").
    */
   requestPasswordRecovery(data: ForgotPasswordRequest): Observable<string> {
-    return this.http.post<ForgotPasswordResponse>(`${this.passwordApi}/forgot`, data).pipe(
+    return this.repository.forgotPassword(data).pipe(
       timeout(REQUEST_TIMEOUT_MS),
       map((res) => {
         const message = typeof res?.message === 'string' ? res.message : '';
@@ -235,8 +213,8 @@ export class AuthService {
 
   /** Paso 2: indica si el token del enlace de recuperación sigue vigente. */
   validateRecoveryToken(token: string): Observable<boolean> {
-    return this.http
-      .get<ValidateRecoveryTokenResponse>(`${this.passwordApi}/validate`, { params: { token } })
+    return this.repository
+      .validateRecoveryToken(token)
       .pipe(
         timeout(REQUEST_TIMEOUT_MS),
         map((res) => res?.valid === true),
@@ -249,7 +227,7 @@ export class AuthService {
 
   /** Paso 3: guarda la nueva contraseña usando el token del enlace. */
   resetPassword(data: ResetPasswordRequest): Observable<string> {
-    return this.http.post<ResetPasswordResponse>(`${this.passwordApi}/reset`, data).pipe(
+    return this.repository.resetPassword(data).pipe(
       timeout(REQUEST_TIMEOUT_MS),
       map((res) => res?.message || 'Contraseña restablecida correctamente.'),
       catchError((err) => throwError(() => this.toRecoveryError(err))),
