@@ -101,7 +101,7 @@ jobs:
   analisis-apk-mobsf:
     name: Análisis del APK con MobSF
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/develop' || github.event_name != 'push'
     env:
       API_URL: ${{ vars.API_URL }}
       MOBSF_API_KEY: clave-local-del-pipeline
