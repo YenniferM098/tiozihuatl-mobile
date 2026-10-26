@@ -105,13 +105,6 @@ jobs:
     env:
       API_URL: ${{ vars.API_URL }}
       MOBSF_API_KEY: clave-local-del-pipeline
-    services:
-      mobsf:
-        image: opensecurity/mobile-security-framework-mobsf:latest
-        ports:
-          - 8000:8000
-        env:
-          MOBSF_API_KEY: clave-local-del-pipeline
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -130,12 +123,18 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
+      - name: Iniciar MobSF
+        run: |
+          docker run -d --name mobsf -p 8000:8000 \
+            -e MOBSF_API_KEY="$MOBSF_API_KEY" \
+            opensecurity/mobile-security-framework-mobsf:latest
       - name: Esperar a que MobSF esté listo
         run: |
           for intento in $(seq 1 60); do
             curl -sf http://localhost:8000/api/v1/scans -H "Authorization: $MOBSF_API_KEY" > /dev/null && exit 0
             sleep 5
           done
+          docker logs mobsf | tail -50
           echo "MobSF no respondió" && exit 1
       - name: Analizar el APK
         run: |
