@@ -1,0 +1,71 @@
+{
+  "repo_notes": [
+    {
+      "content": "Aplicación móvil del Instituto de Estudios Superiores Tiozihuatl hecha con Ionic 9, Angular 22 y Capacitor 8 (Android, paquete com.tiozihuatl.app). Consume la API REST institucional con autenticación JWT. Toda la documentación debe escribirse en español."
+    },
+    {
+      "content": "La documentación oficial del proyecto está en README.md y en docs/ (metodologia-y-planeacion.md, arquitectura.md, seguridad.md, pruebas.md, perfil-arco.md, publicacion-play.md). Úsala como fuente principal y no la contradigas."
+    },
+    {
+      "content": "Estado de los módulos: Registro de visitante (HU-01) e Inicio de sesión (HU-02) liberados en 0.1.0; Biblioteca Digital (HU-04) se libera en 0.2.0; Lector de libros (HU-05) en 0.3.0. Materiales Complementarios (HU-06) y Revistas Digitales (HU-07 y HU-08) están pendientes. Gestión del perfil y derechos ARCO (HU-03) ya está desarrollada pero se integra en la iteración 8 (4–10 de noviembre de 2026); no la describas como disponible en la app."
+    },
+    {
+      "content": "Metodología Mobile-D con tablero Kanban en GitHub Projects, iteraciones semanales y GitFlow (feature/*, develop, release/*, main con tags vX.Y.Z). Las evidencias de pruebas están en Google Drive, no en el repositorio."
+    }
+  ],
+  "pages": [
+    {
+      "title": "Visión general",
+      "purpose": "Qué es la app, usuarios y roles (Estudiante, Docente, Visitante), estado de cada módulo y cómo ejecutar el proyecto."
+    },
+    {
+      "title": "Metodología y planeación",
+      "purpose": "Mobile-D por fases, tablero Kanban en GitHub Projects, iteraciones, versiones de 0.1.0 a 1.0.0 y flujo GitFlow."
+    },
+    {
+      "title": "Arquitectura",
+      "purpose": "Capas MVVM con Clean Architecture: vistas, ViewModels, servicios, contratos de repositorio en domain/ y repositorios HTTP en data/; patrones de diseño usados."
+    },
+    {
+      "title": "Módulos",
+      "purpose": "Resumen de los módulos de la app y cuáles están liberados, en desarrollo o pendientes (Materiales Complementarios y Revistas Digitales)."
+    },
+    {
+      "title": "Autenticación",
+      "purpose": "Registro de visitante, inicio de sesión, recuperación de contraseña, guards por rol, sesión JWT y refresco del token.",
+      "parent": "Módulos"
+    },
+    {
+      "title": "Biblioteca Digital",
+      "purpose": "Catálogo de libros con búsqueda, filtros y ordenamiento, detalle del libro y control de acceso por rol (HU-04).",
+      "parent": "Módulos"
+    },
+    {
+      "title": "Lector de libros",
+      "purpose": "Visualización y navegación de libros digitales en PDF y control de acceso al contenido (HU-05).",
+      "parent": "Módulos"
+    },
+    {
+      "title": "Gestión del perfil y ARCO",
+      "purpose": "Funcionalidad desarrollada pero aún no integrada: requerimientos RF-M09 a RF-M14, derechos ARCO y plan de integración en la iteración 8.",
+      "parent": "Módulos"
+    },
+    {
+      "title": "Seguridad",
+      "purpose": "JWT Bearer, interceptor de refresco por 401, almacenamiento cifrado de la sesión, certificate pinning, ofuscación R8 y permisos de Android."
+    },
+    {
+      "title": "Pruebas",
+      "purpose": "Las 7 pruebas por historia (unitarias, estático, integración, regresión, aceptación, rendimiento y esfuerzo), caja blanca y caja negra, y su ejecución."
+    },
+    {
+      "title": "Pipelines de CI/CD",
+      "purpose": "Workflows pruebas.yml, seguridad.yml y publicacion.yml: jobs, herramientas (Vitest, ESLint, Newman, Lighthouse, CodeQL, Semgrep, MobSF) y artefactos.",
+      "parent": "Pruebas"
+    },
+    {
+      "title": "Publicación en Google Play",
+      "purpose": "Liberación con ramas release/*, tag, AAB firmado y verificado, notas de la versión y despliegue continuo a la prueba cerrada."
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Sistema Integral Tiozihuatl Mobile
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/YenniferM098/tiozihuatl-mobile)
+
 Aplicación móvil del Instituto de Estudios Superiores Tiozihuatl para que estudiantes, docentes y visitantes accedan desde su celular a los servicios académicos digitales: autenticación, perfil, Biblioteca Digital, Materiales Complementarios y Revistas Digitales.
 
 - **Paquete:** `com.tiozihuatl.app` (Android 7.0 o superior, API 24–36)
