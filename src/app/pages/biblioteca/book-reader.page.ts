@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonSpinner, IonTitle, IonToolbar } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { getDocument, GlobalWorkerOptions, PDFDocumentProxy, PDFDocumentLoadingTask, PDFPageProxy, RenderTask } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { ReadingProgressStore } from '../../data/storage/reading-progress.storage';
 import { libraryError } from '../../core/services/library.service';
 import { PDF_READER_SOURCE } from '../../core/services/pdf-reader-source';
 import { LibraryStateComponent } from './library-state.component';
@@ -19,6 +20,7 @@ export class BookReaderPage implements OnDestroy {
   @ViewChild(IonContent, { static: true }) private content!: IonContent;
   private readonly route = inject(ActivatedRoute);
   private readonly service = inject(PDF_READER_SOURCE);
+  private readonly progress = inject(ReadingProgressStore);
   private request?: Subscription;
   private document?: PDFDocumentProxy;
   private loadingTask?: PDFDocumentLoadingTask;
@@ -28,6 +30,8 @@ export class BookReaderPage implements OnDestroy {
   private enterVersion = 0;
   private frame = 0;
   private pendingScrollTop: number | null = null;
+  private bookId = 0;
+  private resumeTimer?: ReturnType<typeof setTimeout>;
   private loadVersion = 0;
   private renderVersion = 0;
   private width = 0;
@@ -40,6 +44,7 @@ export class BookReaderPage implements OnDestroy {
   readonly error = signal('');
   readonly page = signal(1);
   readonly totalPages = signal(0);
+  readonly resumeMessage = signal('');
   readonly slots = signal<PdfPageSlot[]>([]);
   readonly activePages = signal<Set<number>>(new Set());
   readonly readyPages = signal<Set<number>>(new Set());
@@ -70,6 +75,7 @@ export class BookReaderPage implements OnDestroy {
     if (this.scrollElement) this.scrollElement.scrollTop = 0;
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!Number.isSafeInteger(id) || id <= 0) { this.loading.set(false); this.error.set('El archivo no está disponible.'); return; }
+    this.bookId = id;
     GlobalWorkerOptions.workerSrc = new URL('assets/pdfjs/pdf.worker.min.mjs', document.baseURI).href;
     this.request = this.service.pdf(id).subscribe({
       next: ({ data, titulo }) => { void this.prepareDocument(data, titulo, version); },
@@ -105,14 +111,25 @@ export class BookReaderPage implements OnDestroy {
       }
       this.ratios = ratios;
       this.width = this.container.nativeElement.clientWidth;
-      this.slots.set(layoutPdfPages(ratios, this.width));
+      const slots = layoutPdfPages(ratios, this.width);
+      this.slots.set(slots);
       this.loading.set(false);
+      this.resume(slots);
       this.onScroll();
     } catch {
       if (version !== this.loadVersion) return;
       this.loading.set(false);
       this.error.set('No fue posible preparar el PDF. El documento o el lector no están disponibles. Intenta nuevamente.');
     }
+  }
+
+  /** Abre el libro en la última página leída y lo avisa unos segundos. */
+  private resume(slots: PdfPageSlot[]): void {
+    const saved = this.progress.lastPage(this.bookId);
+    if (saved <= 1 || !slots[saved - 1]) return;
+    this.pendingScrollTop = this.container.nativeElement.offsetTop + slots[saved - 1].top;
+    this.resumeMessage.set(`Continuando en la página ${saved}`);
+    this.resumeTimer = setTimeout(() => this.resumeMessage.set(''), 4000);
   }
 
   /** Usa el scroll interno de Ionic, no window.scroll, con un trabajo por frame. */
@@ -131,6 +148,7 @@ export class BookReaderPage implements OnDestroy {
     if (!this.scrollElement || !this.slots().length || !this.width) return;
     const top = Math.max(0, this.scrollElement.scrollTop - this.container.nativeElement.offsetTop);
     const window = visiblePdfWindow(this.slots(), top, this.scrollElement.clientHeight);
+    if (window.current !== this.page()) this.progress.save(this.bookId, window.current);
     this.page.set(window.current);
     const active = new Set(window.pages);
     this.activePages.set(active);
@@ -240,6 +258,8 @@ export class BookReaderPage implements OnDestroy {
     if (this.frame) cancelAnimationFrame(this.frame);
     this.frame = 0;
     this.pendingScrollTop = null;
+    clearTimeout(this.resumeTimer);
+    this.resumeMessage.set('');
     this.cancelRenders();
     void this.loadingTask?.destroy().catch(() => undefined);
     this.loadingTask = undefined;

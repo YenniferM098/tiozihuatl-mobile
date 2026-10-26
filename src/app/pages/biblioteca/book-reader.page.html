@@ -1,6 +1,6 @@
 <ion-header><ion-toolbar color="primary"><ion-buttons slot="start"><ion-back-button [defaultHref]="detailUrl" text="Volver" /></ion-buttons><ion-title>{{ title() }}</ion-title></ion-toolbar>
   @if (totalPages() && !loading() && !error()) {
-    <nav class="page-counter" aria-label="Páginas del documento"><span aria-live="polite">{{ page() + ' / ' + totalPages() }}</span></nav>
+    <nav class="page-counter" aria-label="Páginas del documento">@if (resumeMessage()) { <span class="resume-message" role="status">{{ resumeMessage() }}</span> }<span aria-live="polite">{{ page() + ' / ' + totalPages() }}</span></nav>
   }
 </ion-header>
 <ion-content [scrollEvents]="true" (ionScroll)="onScroll()">
