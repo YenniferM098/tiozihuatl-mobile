@@ -137,10 +137,18 @@ jobs:
     env:
       PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
     steps:
+      - name: Obtener las notas de la versión
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: distribucion/novedades
       - uses: actions/download-artifact@v5
         with:
           name: aab-${{ needs.generar-aab.outputs.version }}
           path: aab/
+      - uses: actions/download-artifact@v5
+        with:
+          name: mapping-${{ needs.generar-aab.outputs.version }}
+          path: mapping/
       - name: Subir a la pista de prueba cerrada
         if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
         uses: r0adkll/upload-google-play@v1
@@ -151,6 +159,8 @@ jobs:
           releaseName: v${{ needs.generar-aab.outputs.version }}
           track: alpha
           status: completed
+          whatsNewDirectory: distribucion/novedades
+          mappingFile: mapping/mapping.txt
       - name: Subida manual pendiente
         if: env.PLAY_SERVICE_ACCOUNT_JSON == ''
         run: |
