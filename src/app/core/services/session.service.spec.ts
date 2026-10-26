@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { SESSION_STORE, SessionStore } from '../../data/storage/session.storage';
 import { AuthSession } from '../models/auth.models';
 import { SessionService } from './session.service';
 
@@ -118,5 +119,55 @@ describe('SessionService (HU-02 Inicio de sesión)', () => {
 
     setItem.mockRestore();
     removeItem.mockRestore();
+  });
+  describe('restauración desde el almacén cifrado', () => {
+    const conAlmacen = (store: SessionStore) => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({ providers: [{ provide: SESSION_STORE, useValue: store }] });
+      return TestBed.inject(SessionService);
+    };
+    const almacen = (guardado: string | null, falla = false): SessionStore => ({
+      readSync: () => null,
+      load: () => (falla ? Promise.reject(new Error('Keystore')) : Promise.resolve(guardado)),
+      write: vi.fn().mockRejectedValue(new Error('Keystore')),
+      remove: vi.fn().mockRejectedValue(new Error('Keystore')),
+    });
+
+    it('inicia sin sesión y la recupera al llamar restore()', async () => {
+      const service = conAlmacen(almacen(JSON.stringify(sesion())));
+      expect(service.isAuthenticated()).toBe(false);
+
+      await service.restore();
+
+      expect(service.user()?.correo).toBe('ana@correo.com');
+    });
+
+    it('no reemplaza una sesión iniciada mientras se restauraba', async () => {
+      const service = conAlmacen(almacen(JSON.stringify(sesion())));
+      const nueva = { ...sesion(), refreshToken: 'nuevo' };
+      service.save(nueva);
+
+      await service.restore();
+
+      expect(service.current?.refreshToken).toBe('nuevo');
+    });
+
+    it('queda sin sesión si el almacén falla o tiene datos dañados', async () => {
+      const conFalla = conAlmacen(almacen(null, true));
+      await conFalla.restore();
+      expect(conFalla.current).toBeNull();
+
+      const danado = conAlmacen(almacen('{no es json'));
+      await danado.restore();
+      expect(danado.current).toBeNull();
+    });
+
+    it('sigue en memoria si el almacén cifrado no puede escribir ni borrar', () => {
+      const service = conAlmacen(almacen(null));
+      service.save(sesion());
+      expect(service.isAuthenticated()).toBe(true);
+      service.clear();
+      expect(service.isAuthenticated()).toBe(false);
+    });
   });
 });

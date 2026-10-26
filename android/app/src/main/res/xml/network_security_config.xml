@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Solo HTTPS: ninguna conexión sin cifrar. -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!--
+      Certificate Pinning de la API institucional (Render).
+      Hashes SHA-256 de la llave pública (SPKI), obtenidos con:
+        node scripts/seguridad/obtener-pines.mjs
+      Se fija la autoridad certificadora y no el certificado del servidor, que Render renueva cada pocos meses.
+      Al llegar a "expiration" Android deja de exigir los pines: hay que revisarlos antes de esa fecha.
+    -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">backend-tiozihuatl-h8ig.onrender.com</domain>
+        <pin-set expiration="2027-06-30">
+            <!-- Intermedio actual: Google Trust Services WE1 (vence 20/02/2029). -->
+            <pin digest="SHA-256">kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=</pin>
+            <!-- Raíz: GTS Root R4. Cubre otros intermedios de Google Trust Services. -->
+            <pin digest="SHA-256">mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=</pin>
+            <!-- Respaldo: ISRG Root X1 (Let's Encrypt), por si Render cambia de autoridad certificadora. -->
+            <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>

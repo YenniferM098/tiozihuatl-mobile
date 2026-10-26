@@ -19,7 +19,8 @@ import { ForgotPasswordRequest, ResetPasswordRequest } from '../models/password.
 import { FinishRegisterRequest, PreRegisterRequest, PreRegisterResult } from '../models/register.models';
 import { SessionService } from './session.service';
 
-const REQUEST_TIMEOUT_MS = 15_000;
+/** Render (plan gratuito) puede tardar cerca de un minuto en despertar el servidor. */
+const REQUEST_TIMEOUT_MS = 60_000;
 /** Espera entre reenvíos del correo de verificación que aplica el backend (5 min). */
 const VERIFICATION_COOLDOWN_SECONDS = 300;
 const CONNECTION_ERROR = 'No fue posible conectar con el servidor. Revisa tu conexión e intenta nuevamente.';

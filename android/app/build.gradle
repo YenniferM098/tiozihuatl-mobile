@@ -51,8 +51,11 @@ android {
             if (signingConfigs.release.storeFile != null) {
                 signingConfig signingConfigs.release
             }
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // R8 ofusca y reduce el código Java/Kotlin, y elimina los recursos que no se usan.
+            // El archivo de desofuscación queda en build/outputs/mapping/release/mapping.txt.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

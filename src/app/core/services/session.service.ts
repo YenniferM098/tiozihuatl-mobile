@@ -1,15 +1,15 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { SESSION_STORE } from '../../data/storage/session.storage';
 import { AuthSession } from '../models/auth.models';
 
-const STORAGE_KEY = 'tiozihuatl.session';
-
 /**
- * Guarda la sesión (tokens y datos básicos del usuario) en el almacenamiento local.
- * Nunca se guarda la contraseña.
+ * Guarda la sesión (tokens y datos básicos del usuario). En el celular se persiste cifrada;
+ * en el navegador, en el almacenamiento local. Nunca se guarda la contraseña.
  */
 @Injectable({ providedIn: 'root' })
 export class SessionService {
-  private readonly session = signal<AuthSession | null>(this.read());
+  private readonly store = inject(SESSION_STORE);
+  private readonly session = signal<AuthSession | null>(this.parse(this.store.readSync()));
 
   readonly user = computed(() => this.session()?.user ?? null);
   readonly isAuthenticated = computed(() => this.session() !== null);
@@ -18,22 +18,23 @@ export class SessionService {
     return this.session();
   }
 
+  /** Recupera la sesión del almacén cifrado al abrir la app; se ejecuta antes de la primera navegación. */
+  async restore(): Promise<void> {
+    if (this.session()) return;
+    const raw = await this.store.load().catch(() => null);
+    const restored = this.parse(raw);
+    if (restored && !this.session()) this.session.set(restored);
+  }
+
   save(session: AuthSession): void {
     this.session.set(session);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-    } catch {
-      // Si el almacenamiento no está disponible, la sesión vive solo en memoria.
-    }
+    // Si el almacenamiento falla, la sesión vive solo en memoria.
+    this.store.write(JSON.stringify(session)).catch(() => undefined);
   }
 
   clear(): void {
     this.session.set(null);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // Sin almacenamiento disponible no hay nada que borrar.
-    }
+    this.store.remove().catch(() => undefined);
   }
 
   /** Indica si el access token ya expiró (o expira en los próximos `skewMs`). */
@@ -45,9 +46,8 @@ export class SessionService {
     return exp === null || exp * 1000 - skewMs <= Date.now();
   }
 
-  private read(): AuthSession | null {
+  private parse(raw: string | null): AuthSession | null {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
 
       const parsed = JSON.parse(raw) as AuthSession;
