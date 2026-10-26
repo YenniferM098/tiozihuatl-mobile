@@ -1,0 +1,177 @@
+# Pipeline de análisis de seguridad de Tiozihuatl Mobile.
+# Es independiente del pipeline de pruebas: si encuentra un problema no detiene
+# la compilación ni las pruebas, pero marca el commit en rojo.
+#
+#   sast-codeql ───────── TypeScript y Java (Android), resultados en Security > Code scanning
+#   sast-semgrep ──────── reglas de TypeScript y detección de secretos
+#   dependencias ──────── npm audit de las dependencias de producción
+#   analisis-apk-mobsf ── compila el APK release con R8 y lo analiza con MobSF (solo develop o manual)
+#
+# Se ejecuta al subir cualquier rama, en cada PR hacia develop o main, cada
+# lunes y de forma manual desde Actions.
+
+name: Análisis de seguridad
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [develop, main]
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: seguridad-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '24'
+
+jobs:
+  sast-codeql:
+    name: SAST con CodeQL (${{ matrix.lenguaje }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        lenguaje: [javascript-typescript, java-kotlin]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Inicializar CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.lenguaje }}
+          build-mode: none
+          queries: security-extended
+      - name: Analizar
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.lenguaje }}
+
+  sast-semgrep:
+    name: SAST con Semgrep
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v5
+      - name: Ejecutar Semgrep
+        run: |
+          semgrep scan \
+            --config p/typescript \
+            --config p/secrets \
+            --metrics off \
+            --sarif --output semgrep.sarif \
+            --severity ERROR --error
+      - name: Guardar reporte de Semgrep
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: reporte-semgrep
+          path: semgrep.sarif
+          if-no-files-found: ignore
+
+  dependencias:
+    name: Auditoría de dependencias (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Generar reporte completo
+        run: npm audit --json > npm-audit.json || true
+      - name: Fallar si hay vulnerabilidades críticas en producción
+        run: npm audit --omit=dev --audit-level=critical
+      - name: Guardar reporte de dependencias
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: reporte-dependencias
+          path: npm-audit.json
+          if-no-files-found: ignore
+
+  analisis-apk-mobsf:
+    name: Análisis del APK con MobSF
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.event_name != 'push'
+    env:
+      API_URL: ${{ vars.API_URL }}
+      MOBSF_API_KEY: clave-local-del-pipeline
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Crear una llave de firma temporal para el análisis
+        run: |
+          keytool -genkeypair -noprompt -keystore "$RUNNER_TEMP/analisis.jks" -alias analisis \
+            -keyalg RSA -keysize 2048 -validity 1 -storepass analisis -keypass analisis \
+            -dname "CN=Analisis MobSF, O=Tiozihuatl"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/analisis.jks" >> "$GITHUB_ENV"
+      - name: Compilar APK release (R8 activado)
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: analisis
+          ANDROID_KEY_ALIAS: analisis
+          ANDROID_KEY_PASSWORD: analisis
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease
+      - name: Iniciar MobSF
+        run: |
+          docker run -d --name mobsf -p 8000:8000 \
+            -e MOBSF_API_KEY="$MOBSF_API_KEY" \
+            opensecurity/mobile-security-framework-mobsf:latest
+      - name: Esperar a que MobSF esté listo
+        run: |
+          for intento in $(seq 1 60); do
+            curl -sf http://localhost:8000/api/v1/scans -H "Authorization: $MOBSF_API_KEY" > /dev/null && exit 0
+            sleep 5
+          done
+          docker logs mobsf | tail -50
+          echo "MobSF no respondió" && exit 1
+      - name: Analizar el APK
+        run: |
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          hash=$(curl -sf -F "file=@$apk" http://localhost:8000/api/v1/upload \
+            -H "Authorization: $MOBSF_API_KEY" | jq -r .hash)
+          curl -sf -X POST http://localhost:8000/api/v1/scan \
+            -H "Authorization: $MOBSF_API_KEY" -d "hash=$hash" > /dev/null
+          mkdir -p reporte-mobsf
+          curl -sf -X POST http://localhost:8000/api/v1/report_json \
+            -H "Authorization: $MOBSF_API_KEY" -d "hash=$hash" -o reporte-mobsf/mobsf.json
+          curl -sf -X POST http://localhost:8000/api/v1/download_pdf \
+            -H "Authorization: $MOBSF_API_KEY" -d "hash=$hash" -o reporte-mobsf/mobsf.pdf
+          jq '{puntaje_seguridad: .appsec.security_score, altas: (.appsec.high | length), advertencias: (.appsec.warning | length)}' \
+            reporte-mobsf/mobsf.json
+      - name: Guardar reporte de MobSF
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: reporte-mobsf
+          path: reporte-mobsf/
+          if-no-files-found: ignore
+      - name: Guardar APK release para probarlo en un celular
+        uses: actions/upload-artifact@v5
+        with:
+          name: apk-release-prueba
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error

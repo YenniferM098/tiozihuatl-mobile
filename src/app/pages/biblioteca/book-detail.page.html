@@ -1,0 +1,16 @@
+<ion-header><ion-toolbar color="primary"><ion-buttons slot="start"><ion-back-button defaultHref="/biblioteca" text="Volver" /></ion-buttons><ion-title>Detalle del libro</ion-title></ion-toolbar></ion-header>
+<ion-content><main class="library-body">
+  @if (loading()) { <app-library-state message="Cargando información del libro…" [loading]="true" /> }
+  @else if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load()" /> }
+  @else if (book(); as book) {
+    <article class="detail-card">
+      <div class="detail-heading"><app-book-cover [id]="book.id" [title]="book.titulo" [digital]="!!book.tiene_digital" /><h1>{{ book.titulo }}</h1></div>
+      <dl>@if (book.autores) { <dt>Autoría</dt><dd>{{ book.autores }}</dd> }@if (book.editorial) { <dt>Editorial</dt><dd>{{ book.editorial }}</dd> }@if (book.materias) { <dt>Materias</dt><dd>{{ book.materias }}</dd> }@if (book.semestres) { <dt>Semestres</dt><dd>{{ book.semestres }}</dd> }<dt>Ejemplares físicos</dt><dd>{{ physicalCopies(book) }}</dd></dl>
+      @if (hasDigitalFile(book)) {
+        <p role="status">Este libro cuenta con contenido digital autorizado.</p>
+        <ion-button expand="block" [routerLink]="['/biblioteca', book.id, 'lector']">Abrir lector digital</ion-button>
+      } @else { <p role="status">Este libro no tiene contenido digital disponible. Puedes consultar su información bibliográfica.</p> }
+    </article>
+  }
+  <ion-button expand="block" fill="clear" routerLink="/biblioteca">Regresar al catálogo</ion-button>
+</main></ion-content>

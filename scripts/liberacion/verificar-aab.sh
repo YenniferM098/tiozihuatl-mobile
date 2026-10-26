@@ -38,7 +38,7 @@ echo "   paquete=$paquete versionName=$version versionCode=$codigo"
 echo "5) El AAB no pide permisos fuera de los declarados"
 permisos=$(leer //uses-permission/@android:name 2>/dev/null | sort -u || true)
 echo "$permisos"
-extra=$(echo "$permisos" | grep -v -x -e 'android.permission.INTERNET' -e '' \
+extra=$(echo "$permisos" | grep -v -x -e 'android.permission.INTERNET' -e 'android.permission.VIBRATE' -e '' \
   -e 'com.tiozihuatl.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION' || true)
 if [ -n "$extra" ]; then
   echo "::warning::Permisos adicionales a revisar en la ficha de Play: $extra"

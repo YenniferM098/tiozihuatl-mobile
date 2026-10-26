@@ -49,6 +49,13 @@ export const routes: Routes = [
     children: [],
   },
   {
+    // Lector de libros digitales a pantalla completa (sin barra inferior), solo Estudiante y Docente.
+    // Se declara antes de las pestañas para que /biblioteca/:id/lector no llegue a sus rutas hijas.
+    path: 'biblioteca/:id/lector',
+    canActivate: [authGuard, memberGuard],
+    loadComponent: () => import('./pages/biblioteca/book-reader.page').then((m) => m.BookReaderPage),
+  },
+  {
     // App autenticada con barra inferior: /home, /biblioteca, /revistas, /materiales, /perfil.
     path: '',
     canActivate: [authGuard],
@@ -58,11 +65,24 @@ export const routes: Routes = [
         path: 'home',
         loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
       },
-      comingSoon('biblioteca', {
-        title: 'Biblioteca',
-        icon: 'books',
-        description: 'Muy pronto podrás consultar el acervo de la biblioteca digital desde aquí.',
-      }, { canActivate: [memberGuard] }),
+      {
+        // Biblioteca Digital (solo Estudiante y Docente): catálogo y detalle del libro.
+        // Los guards también protegen las rutas hijas al abrir su URL directamente.
+        path: 'biblioteca',
+        canActivate: [authGuard, memberGuard],
+        canActivateChild: [authGuard, memberGuard],
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () => import('./pages/biblioteca/library.page').then((m) => m.LibraryPage),
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./pages/biblioteca/book-detail.page').then((m) => m.BookDetailPage),
+          },
+        ],
+      },
       comingSoon('revistas', {
         title: 'Revistas',
         icon: 'newspaper',

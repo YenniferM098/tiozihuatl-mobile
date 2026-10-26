@@ -1,0 +1,21 @@
+<ion-header><ion-toolbar color="primary"><ion-buttons slot="start"><ion-back-button [defaultHref]="detailUrl" text="Volver" /></ion-buttons><ion-title>{{ title() }}</ion-title></ion-toolbar>
+  @if (totalPages() && !loading() && !error()) {
+    <nav class="page-counter" aria-label="Páginas del documento"><span aria-live="polite">{{ page() + ' / ' + totalPages() }}</span></nav>
+  }
+</ion-header>
+<ion-content [scrollEvents]="true" (ionScroll)="onScroll()">
+  @if (loading()) { <app-library-state [message]="loadingMessage()" [loading]="true" /> }
+  @else if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load()" /> }
+  <div class="page-container" #container>
+    @for (slot of slots(); track slot.number) {
+      <section class="page-slot" [attr.data-page]="slot.number" [style.height.px]="slot.height" [attr.aria-label]="'Página ' + slot.number">
+        @if (!readyPages().has(slot.number)) {
+          <div class="page-placeholder">
+            @if (pageErrors().get(slot.number); as message) { <p>{{ message }}</p><ion-button (click)="retryPage(slot.number)">Reintentar página</ion-button> }
+            @else { @if (activePages().has(slot.number)) { <ion-spinner name="crescent" aria-label="Preparando página" /> }<span>Página {{ slot.number }}</span> }
+          </div>
+        }
+      </section>
+    }
+  </div>
+</ion-content>
