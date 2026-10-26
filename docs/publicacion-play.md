@@ -92,6 +92,17 @@ El tag debe coincidir con `package.json`; si no, el pipeline se detiene. La prim
 se descarga del artefacto `aab-0.1.0` y se sube a mano en *Play Console → Pruebas → Prueba
 cerrada*. Las siguientes se suben solas cuando ya existe `PLAY_SERVICE_ACCOUNT_JSON`.
 
+### Notas de la versión
+
+Antes de crear la rama `release/*`, actualizar `distribucion/novedades/whatsnew-es-419` con las
+novedades de la versión (máximo 500 caracteres). El pipeline las sube como texto de
+*Novedades* junto con el AAB, y también sube `mapping.txt` para que Play Console muestre los
+errores sin ofuscar. El nombre del archivo debe usar el idioma de la ficha de Play Store
+(`es-419` es español de Latinoamérica).
+
+La ficha de Play Store (descripción, ícono y capturas) no la cambia el pipeline; se edita a
+mano en *Play Console → Crecer → Presencia en Play Store → Ficha de Play Store principal*.
+
 ## Firmar en un equipo local (opcional)
 
 Copiar `android/keystore.properties.example` a `android/keystore.properties`, llenar los datos y:
