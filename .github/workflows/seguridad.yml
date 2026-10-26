@@ -5,7 +5,7 @@
 #   sast-codeql ───────── TypeScript y Java (Android), resultados en Security > Code scanning
 #   sast-semgrep ──────── reglas de TypeScript y detección de secretos
 #   dependencias ──────── npm audit de las dependencias de producción
-#   analisis-apk-mobsf ── análisis estático del APK con MobSF (solo develop)
+#   analisis-apk-mobsf ── compila el APK release con R8 y lo analiza con MobSF (solo develop o manual)
 #
 # Se ejecuta al subir cualquier rama, en cada PR hacia develop o main, cada
 # lunes y de forma manual desde Actions.
@@ -43,15 +43,15 @@ jobs:
       matrix:
         lenguaje: [javascript-typescript, java-kotlin]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Inicializar CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.lenguaje }}
           build-mode: none
           queries: security-extended
       - name: Analizar
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: /language:${{ matrix.lenguaje }}
 
@@ -61,7 +61,7 @@ jobs:
     container:
       image: semgrep/semgrep
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Ejecutar Semgrep
         run: |
           semgrep scan \
@@ -72,7 +72,7 @@ jobs:
             --severity ERROR --error
       - name: Guardar reporte de Semgrep
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: reporte-semgrep
           path: semgrep.sarif
@@ -82,8 +82,8 @@ jobs:
     name: Auditoría de dependencias (npm audit)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Generar reporte completo
@@ -92,7 +92,7 @@ jobs:
         run: npm audit --omit=dev --audit-level=critical
       - name: Guardar reporte de dependencias
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: reporte-dependencias
           path: npm-audit.json
@@ -101,28 +101,38 @@ jobs:
   analisis-apk-mobsf:
     name: Análisis del APK con MobSF
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/develop' || github.event_name != 'push'
     env:
       API_URL: ${{ vars.API_URL }}
       MOBSF_API_KEY: clave-local-del-pipeline
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
       - run: npm ci
       - run: npm run build
       - run: npx cap sync android
-      - name: Compilar APK
+      - name: Crear una llave de firma temporal para el análisis
+        run: |
+          keytool -genkeypair -noprompt -keystore "$RUNNER_TEMP/analisis.jks" -alias analisis \
+            -keyalg RSA -keysize 2048 -validity 1 -storepass analisis -keypass analisis \
+            -dname "CN=Analisis MobSF, O=Tiozihuatl"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/analisis.jks" >> "$GITHUB_ENV"
+      - name: Compilar APK release (R8 activado)
         working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: analisis
+          ANDROID_KEY_ALIAS: analisis
+          ANDROID_KEY_PASSWORD: analisis
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease
       - name: Iniciar MobSF
         run: |
           docker run -d --name mobsf -p 8000:8000 \
@@ -138,7 +148,7 @@ jobs:
           echo "MobSF no respondió" && exit 1
       - name: Analizar el APK
         run: |
-          apk=android/app/build/outputs/apk/debug/app-debug.apk
+          apk=android/app/build/outputs/apk/release/app-release.apk
           hash=$(curl -sf -F "file=@$apk" http://localhost:8000/api/v1/upload \
             -H "Authorization: $MOBSF_API_KEY" | jq -r .hash)
           curl -sf -X POST http://localhost:8000/api/v1/scan \
@@ -152,8 +162,16 @@ jobs:
             reporte-mobsf/mobsf.json
       - name: Guardar reporte de MobSF
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: reporte-mobsf
           path: reporte-mobsf/
           if-no-files-found: ignore
+      - name: Guardar APK release para probarlo en un celular
+        uses: actions/upload-artifact@v5
+        with:
+          name: apk-release-prueba
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error
