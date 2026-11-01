@@ -6,6 +6,9 @@ import { BookDetailPage } from './pages/biblioteca/book-detail.page';
 import { BookReaderPage } from './pages/biblioteca/book-reader.page';
 import { LibraryPage } from './pages/biblioteca/library.page';
 import { ComingSoonPage } from './pages/coming-soon/coming-soon.page';
+import { MaterialDetailPage } from './pages/materiales/material-detail.page';
+import { MaterialViewerPage } from './pages/materiales/material-viewer.page';
+import { MaterialsPage } from './pages/materiales/materials.page';
 import { LoginPage } from './pages/login/login.page';
 import { RecoverPasswordPage } from './pages/recover-password/recover-password.page';
 import { TabsPage } from './pages/tabs/tabs.page';
@@ -29,13 +32,13 @@ describe('Rutas de la app (HU-02 navegación)', () => {
 
   it('Biblioteca y Materiales son solo para Estudiante y Docente', () => {
     expect(pestana('biblioteca').canActivate).toEqual([authGuard, memberGuard]);
-    expect(pestana('materiales').canActivate).toEqual([memberGuard]);
+    expect(pestana('materiales').canActivate).toEqual([authGuard, memberGuard]);
     expect(pestana('revistas').canActivate).toBeUndefined();
     expect(pestana('perfil').canActivate).toBeUndefined();
   });
 
   it('las pestañas sin contenido muestran "Próximamente" con sus datos', async () => {
-    for (const path of ['revistas', 'materiales', 'perfil']) {
+    for (const path of ['revistas', 'perfil']) {
       expect(await componente(pestana(path))).toBe(ComingSoonPage);
       expect(pestana(path).data).toEqual(
         expect.objectContaining({ title: expect.any(String), icon: expect.any(String), description: expect.any(String) }),
@@ -62,6 +65,21 @@ describe('Rutas de la app (HU-02 navegación)', () => {
     expect(lector.canActivate).toEqual([authGuard, memberGuard]);
     expect(await componente(lector)).toBe(BookReaderPage);
     // Fuera de la barra inferior y declarado antes de las pestañas.
+    expect(routes.indexOf(lector)).toBeLessThan(routes.indexOf(tabs));
+  });
+
+  it('Materiales (HU-06): listado y detalle en la pestaña; lector y visor a pantalla completa', async () => {
+    const materiales = pestana('materiales');
+    const hija = (path: string) => materiales.children!.find((r) => r.path === path)!;
+    expect(materiales.children!.map((r) => r.path)).toEqual(['', ':id']);
+    expect(await componente(hija(''))).toBe(MaterialsPage);
+    expect(await componente(hija(':id'))).toBe(MaterialDetailPage);
+    const lector = ruta('materiales/:id/lector');
+    const visor = ruta('materiales/:id/visor');
+    expect(lector.canActivate).toEqual([authGuard, memberGuard]);
+    expect(visor.canActivate).toEqual([authGuard, memberGuard]);
+    expect(await componente(lector)).toBe(BookReaderPage);
+    expect(await componente(visor)).toBe(MaterialViewerPage);
     expect(routes.indexOf(lector)).toBeLessThan(routes.indexOf(tabs));
   });
 

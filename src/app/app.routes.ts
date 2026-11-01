@@ -1,5 +1,7 @@
 import { Route, Routes } from '@angular/router';
 import { authGuard, guestGuard, memberGuard, startGuard, welcomeGuard } from './core/guards/auth.guard';
+import { MaterialFilesService } from './core/services/material-files.service';
+import { PDF_READER_SOURCE } from './core/services/pdf-reader-source';
 import type { ComingSoonData } from './pages/coming-soon/coming-soon.page';
 
 /** Pestaña aún sin contenido: muestra la pantalla "Próximamente". */
@@ -56,6 +58,19 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/biblioteca/book-reader.page').then((m) => m.BookReaderPage),
   },
   {
+    // Lector PDF de Materiales a pantalla completa: el mismo motor de Biblioteca con el archivo del material.
+    path: 'materiales/:id/lector',
+    canActivate: [authGuard, memberGuard],
+    providers: [{ provide: PDF_READER_SOURCE, useExisting: MaterialFilesService }],
+    loadComponent: () => import('./pages/biblioteca/book-reader.page').then((m) => m.BookReaderPage),
+  },
+  {
+    // Visor de imágenes y video de Materiales a pantalla completa.
+    path: 'materiales/:id/visor',
+    canActivate: [authGuard, memberGuard],
+    loadComponent: () => import('./pages/materiales/material-viewer.page').then((m) => m.MaterialViewerPage),
+  },
+  {
     // App autenticada con barra inferior: /home, /biblioteca, /revistas, /materiales, /perfil.
     path: '',
     canActivate: [authGuard],
@@ -88,11 +103,23 @@ export const routes: Routes = [
         icon: 'newspaper',
         description: 'Muy pronto podrás leer las revistas del Instituto desde tu celular.',
       }),
-      comingSoon('materiales', {
-        title: 'Materiales complementarios',
-        icon: 'files',
-        description: 'Muy pronto podrás consultar los materiales complementarios de tus cursos.',
-      }, { canActivate: [memberGuard] }),
+      {
+        // Materiales Complementarios (solo Estudiante y Docente): listado y detalle del material.
+        path: 'materiales',
+        canActivate: [authGuard, memberGuard],
+        canActivateChild: [authGuard, memberGuard],
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () => import('./pages/materiales/materials.page').then((m) => m.MaterialsPage),
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./pages/materiales/material-detail.page').then((m) => m.MaterialDetailPage),
+          },
+        ],
+      },
       comingSoon('perfil', {
         title: 'Perfil',
         icon: 'user',
