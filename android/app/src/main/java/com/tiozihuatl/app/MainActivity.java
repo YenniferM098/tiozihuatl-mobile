@@ -8,6 +8,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // Plugin propio: debe registrarse antes de que arranque el bridge.
         registerPlugin(TouchFeedbackPlugin.class);
+        registerPlugin(MaterialFilesPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

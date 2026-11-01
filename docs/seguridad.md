@@ -49,4 +49,11 @@ Nunca se guarda la contraseña. Además, `android:allowBackup="false"` y `data_e
 
 ## 6. Permisos
 
-La app solo declara `INTERNET` y, por el plugin de respuesta táctil, `VIBRATE`. Ambos son permisos normales: Android los concede al instalar y no muestra diálogo. La app no usa cámara, ubicación, micrófono, contactos ni archivos, así que no necesita pedir permisos en tiempo de ejecución.
+La app solo declara `INTERNET` y, por el plugin de respuesta táctil, `VIBRATE`. Ambos son permisos normales: Android los concede al instalar y no muestra diálogo. La app no usa cámara, ubicación, micrófono ni contactos, así que no necesita pedir permisos en tiempo de ejecución.
+
+La descarga de Materiales Complementarios tampoco pide permisos de almacenamiento:
+
+- Android 10 o superior: el plugin `MaterialFilesPlugin` guarda el archivo en `Descargas/Tiozihuatl` con `MediaStore.Downloads`, que no requiere permiso.
+- Android 7 a 9: lo guarda en la carpeta de descargas propia de la app (`file_paths.xml`, `material_downloads`), que tampoco requiere permiso.
+- Solo se descargan archivos HTTPS de `res.cloudinary.com`, sin el token de la API, de hasta 100 MB y cuyo contenido coincide con su tipo; una descarga fallida o cancelada no deja archivos parciales.
+- Para abrir el archivo con otra aplicación se usa `ACTION_VIEW` con permiso de lectura temporal solo sobre ese archivo. Por eso `AndroidManifest.xml` declara una consulta (`<queries>`) de las aplicaciones que pueden abrirlo; no es un permiso.
