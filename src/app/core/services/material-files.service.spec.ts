@@ -188,7 +188,11 @@ describe('Plugin nativo de archivos', () => {
     const plugin = TestBed.inject(MATERIAL_FILES_NATIVE);
     expect(Object.keys(plugin)).toEqual(['probe', 'download', 'cancel', 'open']);
     expect('ngOnDestroy' in plugin).toBe(false);
-    // Fuera del celular Capacitor rechaza la llamada: confirma que llega al plugin registrado.
+    // Fuera del celular Capacitor rechaza cada llamada: confirma que los cuatro métodos llegan al plugin registrado.
+    const material = { url: 'https://res.cloudinary.com/demo/raw/upload/guia.pdf', title: 'Guía', kind: 'PDF' };
+    await expect(plugin.probe(material)).rejects.toMatchObject({ code: 'UNIMPLEMENTED' });
+    await expect(plugin.download({ ...material, requestId: 'r1' })).rejects.toMatchObject({ code: 'UNIMPLEMENTED' });
+    await expect(plugin.cancel({ requestId: 'r1' })).rejects.toMatchObject({ code: 'UNIMPLEMENTED' });
     await expect(plugin.open({ uri: 'content://x', mime: 'application/pdf' })).rejects.toMatchObject({ code: 'UNIMPLEMENTED' });
     expect(MaterialFiles).toBeDefined();
   });
