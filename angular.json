@@ -144,7 +144,12 @@
               "src/app/core/services/pdf-reader-source.ts",
               "src/app/domain/**/*.ts",
               "src/app/data/**/*.ts",
-              "src/app/pages/biblioteca/library.view-model.ts"
+              "src/app/pages/biblioteca/library.view-model.ts",
+              "src/app/core/services/materials.service.ts",
+              "src/app/core/services/material-files.service.ts",
+              "src/app/core/services/material-file-validation.ts",
+              "src/app/core/native/**/*.ts",
+              "src/app/pages/materiales/**/*.ts"
             ],
             "coverageReporters": ["text-summary", "html", "lcov"],
             "coverageThresholds": { "statements": 70, "branches": 70, "functions": 70, "lines": 70 }
