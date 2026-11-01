@@ -1,0 +1,28 @@
+<ion-header><ion-toolbar color="primary"><ion-title>Materiales complementarios</ion-title></ion-toolbar></ion-header>
+<ion-content>
+  <section class="search-area"><p>Consulta los recursos académicos publicados por tus docentes.</p><ion-searchbar aria-label="Buscar materiales por título o descripción" placeholder="Buscar por título o descripción" [debounce]="400" [maxlength]="200" [(ngModel)]="filters.search" (ionInput)="load(true)" /></section>
+  <main class="library-body">
+    @if (semesterName()) { <p class="semester">Semestre de tu cuenta: {{ semesterName() }}</p> }
+    <details class="filters" open><summary><i class="ph ph-sliders-horizontal" aria-hidden="true"></i> Filtrar materiales</summary>
+      <div class="filter-grid">
+        <ion-select label="Materia" interface="alert" [(ngModel)]="filters.materia" (ionChange)="load(true)"><ion-select-option value="">Todas</ion-select-option>@for (subject of subjects(); track subject.id) { <ion-select-option [value]="'' + subject.id">{{ subject.nombre }}</ion-select-option> }</ion-select>
+        <ion-select label="Tipo de recurso" interface="alert" [(ngModel)]="filters.tipo" (ionChange)="load(true)"><ion-select-option value="">Todos</ion-select-option>@for (type of types; track type) { <ion-select-option [value]="type">{{ type }}</ion-select-option> }</ion-select>
+        <ion-select label="Docente" interface="alert" [(ngModel)]="filters.docente" (ionChange)="load(true)"><ion-select-option value="">Todos</ion-select-option>@for (teacher of teachers(); track teacher.id_usuario) { <ion-select-option [value]="'' + teacher.id_usuario">{{ teacher.nombre }}</ion-select-option> }</ion-select>
+      </div>@if (filtered) { <ion-button fill="clear" (click)="reset()">Limpiar búsqueda y filtros</ion-button> }
+    </details>
+    @if (optionsError()) { <app-library-state [message]="optionsError()" [retry]="true" (retryClick)="loadOptions()" /> }
+    @if (loading()) { <app-library-state message="Cargando materiales…" [loading]="true" /> }
+    @else if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load()" /> }
+    @else if (!materials().length) { <app-library-state [message]="filtered ? 'No se encontraron materiales para esta búsqueda o filtros.' : 'No hay materiales publicados disponibles para tu cuenta.'" /> }
+    @else {
+      <p class="result-count" role="status">{{ total() }} materiales encontrados</p>
+      <div class="book-list">@for (material of materials(); track material.id_material) {
+        <a class="book-card" [routerLink]="['/materiales', material.id_material]">
+          <span class="resource-icon"><i class="ph ph-{{ icon(material.tipo) }}" aria-hidden="true"></i></span>
+          <div><h2>{{ material.titulo }}</h2><span class="badge">{{ material.tipo }}</span>@if (material.descripcion) { <p class="description-preview">{{ material.descripcion }}</p> }@if (material.nombre_docente) { <p>{{ material.nombre_docente }}</p> }@if (material.materias) { <p>{{ material.materias }}</p> }@if (material.semestres) { <p>{{ material.semestres }}</p> }<span class="detail-label">Consultar detalle</span></div>
+        </a>
+      }</div>
+      @if (totalPages() > 1) { <nav class="pagination" aria-label="Páginas de materiales"><ion-button [disabled]="page() <= 1" (click)="changePage(-1)">Anterior</ion-button><span aria-live="polite">{{ page() }} / {{ totalPages() }}</span><ion-button [disabled]="page() >= totalPages()" (click)="changePage(1)">Siguiente</ion-button></nav> }
+    }
+  </main>
+</ion-content>

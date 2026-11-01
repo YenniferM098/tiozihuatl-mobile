@@ -1,0 +1,28 @@
+[
+  {
+    "caso": "Material PDF del primer semestre",
+    "semestreId": "1",
+    "nombreSemestre": "Primer semestre",
+    "busqueda": "Anatomía",
+    "materiaId": "1",
+    "materiaNombre": "Anatomía",
+    "tipo": "PDF",
+    "docenteId": "68",
+    "busquedaSinResultados": "zzqx-sin-resultados-hu06",
+    "materialId": 40,
+    "tipoMaterial": "PDF"
+  },
+  {
+    "caso": "Material de imagen del tercer semestre",
+    "semestreId": "3",
+    "nombreSemestre": "Tercer semestre",
+    "busqueda": "Nutrición",
+    "materiaId": "2",
+    "materiaNombre": "Fisiología",
+    "tipo": "IMAGEN",
+    "docenteId": "68",
+    "busquedaSinResultados": "material-inexistente-hu06-0000",
+    "materialId": 31,
+    "tipoMaterial": "IMAGEN"
+  }
+]

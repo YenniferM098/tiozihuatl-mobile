@@ -30,7 +30,7 @@ export class BookReaderPage implements OnDestroy {
   private enterVersion = 0;
   private frame = 0;
   private pendingScrollTop: number | null = null;
-  private bookId = 0;
+  private bookId = '';
   private resumeTimer?: ReturnType<typeof setTimeout>;
   private loadVersion = 0;
   private renderVersion = 0;
@@ -75,7 +75,7 @@ export class BookReaderPage implements OnDestroy {
     if (this.scrollElement) this.scrollElement.scrollTop = 0;
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!Number.isSafeInteger(id) || id <= 0) { this.loading.set(false); this.error.set('El archivo no está disponible.'); return; }
-    this.bookId = id;
+    this.bookId = `${this.service.progressPrefix ?? ''}${id}`;
     GlobalWorkerOptions.workerSrc = new URL('assets/pdfjs/pdf.worker.min.mjs', document.baseURI).href;
     this.request = this.service.pdf(id).subscribe({
       next: ({ data, titulo }) => { void this.prepareDocument(data, titulo, version); },

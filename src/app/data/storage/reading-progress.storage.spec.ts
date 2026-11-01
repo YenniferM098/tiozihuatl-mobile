@@ -12,6 +12,13 @@ describe('ReadingProgressStore', () => {
     expect(store.lastPage(7)).toBe(3);
     expect(localStorage.getItem(READING_PROGRESS_KEY + '52')).toBe('34');
   });
+  it('separa la página de un material de la del libro con el mismo número', () => {
+    store.save(40, 12);
+    store.save('material.40', 3);
+    expect(store.lastPage(40)).toBe(12);
+    expect(store.lastPage('material.40')).toBe(3);
+    expect(localStorage.getItem(READING_PROGRESS_KEY + 'material.40')).toBe('3');
+  });
   it('empieza en la primera página sin registro o con un valor inválido', () => {
     expect(store.lastPage(52)).toBe(1);
     localStorage.setItem(READING_PROGRESS_KEY + '52', 'abc');

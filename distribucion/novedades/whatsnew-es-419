@@ -1,5 +1,6 @@
-Versión 0.3.0
-• Nuevo lector de libros digitales: lee los libros de la Biblioteca dentro de la app.
-• Desplazamiento continuo con el número de página siempre visible.
-• Continúa donde te quedaste: cada libro se abre en la última página que leíste.
-• La lectura se adapta al girar el celular sin perder tu página.
+Versión 0.4.0
+• Nuevo módulo Materiales Complementarios para estudiantes y docentes.
+• Busca y filtra materiales por materia, docente y tipo de recurso.
+• Consulta el detalle de cada material de tu semestre.
+• Abre PDF, imágenes y videos dentro de la app.
+• Descarga los materiales y ábrelos con otra aplicación del celular.

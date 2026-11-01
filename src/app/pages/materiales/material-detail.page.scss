@@ -1,0 +1,5 @@
+.download-confirmation { --width:calc(100% - 32px); --max-width:420px; --height:auto; --border-radius:16px; }
+.confirmation-body { padding:24px; text-align:center; color:var(--tz-text); overflow-wrap:anywhere; max-height:80vh; overflow:auto; }
+.confirmation-body > i { font-size:44px; color:var(--ion-color-primary); }
+.confirmation-body h2 { font-size:20px; font-weight:700; }
+.confirmation-body p { color:var(--tz-text-muted); }
