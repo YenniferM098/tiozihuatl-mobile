@@ -1285,6 +1285,704 @@
           }
         }
       ]
+    },
+    {
+      "name": "hu06-materiales",
+      "description": "HU-06 Materiales Complementarios. GET /material/materiales/todos con el semestre de la cuenta: listado paginado, búsqueda por título o descripción, filtros por materia, docente y tipo, catálogos de materias, docentes y semestres, detalle (tomado del listado, porque no existe consulta por ID) y descarga del archivo desde Cloudinary sin enviar el token. Solo se muestran materiales públicos y activos; los privados o inactivos no aparecen. Solo consulta datos; no modifica nada.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Valores por defecto para el modo Performance de Postman, que no recibe el archivo de datos.",
+              "const porDefecto = { semestreId: '1', nombreSemestre: 'Primer semestre', busqueda: 'Anatomía', materiaId: '1', materiaNombre: 'Anatomía',",
+              "  tipo: 'PDF', docenteId: '68', busquedaSinResultados: 'zzqx-sin-resultados-hu06', materialId: 40, tipoMaterial: 'PDF' };",
+              "Object.entries(porDefecto).forEach(([clave, valor]) => {",
+              "  if (!pm.iterationData.has(clave)) pm.variables.set(clave, valor);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Consultar los materiales del semestre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "const materiales = body.data;",
+                  "pm.test(`[${caso}] devuelve la página con sus totales`, () => {",
+                  "  pm.expect(materiales).to.be.an('array');",
+                  "  pm.expect(body.total).to.be.a('number');",
+                  "  pm.expect(body.totalPages).to.be.a('number');",
+                  "  pm.expect(materiales.length).to.be.at.least(1);",
+                  "});",
+                  "pm.test(`[${caso}] solo muestra materiales públicos y activos`, () => {",
+                  "  materiales.forEach((m) => { pm.expect(Number(m.activo), m.titulo).to.eql(1); pm.expect(m.visibilidad, m.titulo).to.eql('PUBLICO'); });",
+                  "});",
+                  "const norm = (texto) => String(texto ?? '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();",
+                  "pm.test(`[${caso}] cada material pertenece al semestre de la cuenta`, () => {",
+                  "  materiales.forEach((m) => pm.expect(norm(m.semestres), m.titulo).to.include(norm(pm.variables.get('nombreSemestre'))));",
+                  "});",
+                  "pm.test(`[${caso}] cada material trae sus datos y un archivo de Cloudinary`, () => {",
+                  "  materiales.forEach((m) => {",
+                  "    pm.expect(m.id_material).to.be.a('number');",
+                  "    pm.expect(m.titulo).to.be.a('string').and.not.empty;",
+                  "    pm.expect(m.tipo).to.be.oneOf(['PDF', 'WORD', 'EXCEL', 'PPT', 'IMAGEN', 'VIDEO', 'ZIP', 'OTRO']);",
+                  "    pm.expect(m.url).to.match(/^https:\\/\\/res\\.cloudinary\\.com\\//);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&page=1&limit=9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "materiales",
+                "todos"
+              ],
+              "query": [
+                {
+                  "key": "semestre",
+                  "value": "{{semestreId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar materiales por título o descripción",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "const materiales = body.data;",
+                  "pm.test(`[${caso}] devuelve la página con sus totales`, () => {",
+                  "  pm.expect(materiales).to.be.an('array');",
+                  "  pm.expect(body.total).to.be.a('number');",
+                  "  pm.expect(body.totalPages).to.be.a('number');",
+                  "  pm.expect(materiales.length).to.be.at.least(1);",
+                  "});",
+                  "const norm = (texto) => String(texto ?? '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();",
+                  "const termino = norm(pm.variables.get('busqueda'));",
+                  "pm.test(`[${caso}] cada resultado coincide por título o descripción`, () => {",
+                  "  materiales.forEach((m) => pm.expect(norm(m.titulo).includes(termino) || norm(m.descripcion).includes(termino), m.titulo).to.be.true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&search={{busqueda}}&page=1&limit=9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "materiales",
+                "todos"
+              ],
+              "query": [
+                {
+                  "key": "semestre",
+                  "value": "{{semestreId}}"
+                },
+                {
+                  "key": "search",
+                  "value": "{{busqueda}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar materiales por materia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "const materiales = body.data;",
+                  "pm.test(`[${caso}] devuelve la página con sus totales`, () => {",
+                  "  pm.expect(materiales).to.be.an('array');",
+                  "  pm.expect(body.total).to.be.a('number');",
+                  "  pm.expect(body.totalPages).to.be.a('number');",
+                  "  pm.expect(materiales.length).to.be.at.least(1);",
+                  "});",
+                  "const norm = (texto) => String(texto ?? '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();",
+                  "const materia = norm(pm.variables.get('materiaNombre'));",
+                  "pm.test(`[${caso}] cada resultado pertenece a la materia`, () => {",
+                  "  materiales.forEach((m) => pm.expect(String(m.materias ?? '').split(',').map(norm), m.titulo).to.include(materia));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&materia={{materiaId}}&page=1&limit=9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "materiales",
+                "todos"
+              ],
+              "query": [
+                {
+                  "key": "semestre",
+                  "value": "{{semestreId}}"
+                },
+                {
+                  "key": "materia",
+                  "value": "{{materiaId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar materiales por docente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "const materiales = body.data;",
+                  "pm.test(`[${caso}] devuelve la página con sus totales`, () => {",
+                  "  pm.expect(materiales).to.be.an('array');",
+                  "  pm.expect(body.total).to.be.a('number');",
+                  "  pm.expect(body.totalPages).to.be.a('number');",
+                  "  pm.expect(materiales.length).to.be.at.least(1);",
+                  "});",
+                  "pm.test(`[${caso}] cada resultado es del docente`, () => {",
+                  "  materiales.forEach((m) => pm.expect(String(m.id_usuario), m.titulo).to.eql(String(pm.variables.get('docenteId'))));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&docente={{docenteId}}&page=1&limit=9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "materiales",
+                "todos"
+              ],
+              "query": [
+                {
+                  "key": "semestre",
+                  "value": "{{semestreId}}"
+                },
+                {
+                  "key": "docente",
+                  "value": "{{docenteId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar materiales por tipo de recurso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "const materiales = body.data;",
+                  "pm.test(`[${caso}] devuelve la página con sus totales`, () => {",
+                  "  pm.expect(materiales).to.be.an('array');",
+                  "  pm.expect(body.total).to.be.a('number');",
+                  "  pm.expect(body.totalPages).to.be.a('number');",
+                  "  pm.expect(materiales.length).to.be.at.least(1);",
+                  "});",
+                  "pm.test(`[${caso}] cada resultado es del tipo solicitado`, () => {",
+                  "  materiales.forEach((m) => pm.expect(m.tipo, m.titulo).to.eql(pm.variables.get('tipo')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&tipo={{tipo}}&page=1&limit=9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "materiales",
+                "todos"
+              ],
+              "query": [
+                {
+                  "key": "semestre",
+                  "value": "{{semestreId}}"
+                },
+                {
+                  "key": "tipo",
+                  "value": "{{tipo}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar la segunda página",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "const materiales = body.data;",
+                  "pm.test(`[${caso}] devuelve la página con sus totales`, () => {",
+                  "  pm.expect(materiales).to.be.an('array');",
+                  "  pm.expect(body.total).to.be.a('number');",
+                  "  pm.expect(body.totalPages).to.be.a('number');",
+                  "  pm.expect(materiales.length).to.be.at.least(1);",
+                  "});",
+                  "pm.test(`[${caso}] devuelve la página 2 con el límite pedido`, () => {",
+                  "  pm.expect(Number(body.page)).to.eql(2);",
+                  "  pm.expect(materiales.length).to.be.at.most(5);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&page=2&limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "materiales",
+                "todos"
+              ],
+              "query": [
+                {
+                  "key": "semestre",
+                  "value": "{{semestreId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "2"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Búsqueda sin coincidencias",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "pm.test(`[${caso}] devuelve una lista vacía`, () => {",
+                  "  pm.expect(pm.response.json().data).to.be.an('array').that.is.empty;",
+                  "  pm.expect(pm.response.json().total).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&search={{busquedaSinResultados}}&page=1&limit=9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "materiales",
+                "todos"
+              ],
+              "query": [
+                {
+                  "key": "semestre",
+                  "value": "{{semestreId}}"
+                },
+                {
+                  "key": "search",
+                  "value": "{{busquedaSinResultados}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar las materias para los filtros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "pm.test(`[${caso}] devuelve materias con id y nombre`, () => {",
+                  "  const materias = pm.response.json();",
+                  "  pm.expect(materias).to.be.an('array').that.is.not.empty;",
+                  "  materias.forEach((m) => { pm.expect(m.id).to.be.a('number'); pm.expect(m.nombre).to.be.a('string').and.not.empty; });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/materias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "materias"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar los docentes para los filtros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "pm.test(`[${caso}] devuelve docentes con id, nombre y total de materiales`, () => {",
+                  "  const docentes = pm.response.json();",
+                  "  pm.expect(docentes).to.be.an('array').that.is.not.empty;",
+                  "  docentes.forEach((d) => { pm.expect(d.id_usuario).to.be.a('number'); pm.expect(d.nombre).to.be.a('string').and.not.empty; pm.expect(d.total_materiales).to.be.a('number'); });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/docentes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "docentes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar los semestres para los filtros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "pm.test(`[${caso}] devuelve semestres con id y nombre`, () => {",
+                  "  const semestres = pm.response.json();",
+                  "  pm.expect(semestres).to.be.an('array').that.is.not.empty;",
+                  "  semestres.forEach((s) => { pm.expect(s.id_semestre).to.be.a('number'); pm.expect(s.nombre_semestre).to.be.a('string').and.not.empty; });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/semestres",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "semestres"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar el detalle de un material",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const id = Number(pm.variables.get('materialId'));",
+                  "const material = pm.response.json().data.find((m) => Number(m.id_material) === id);",
+                  "// La siguiente petición descarga el archivo de este material.",
+                  "if (material) pm.variables.set('materialUrl', material.url);",
+                  "pm.test(`[${caso}] el material está en el listado del semestre`, () => pm.expect(material, `material ${id}`).to.be.an('object'));",
+                  "pm.test(`[${caso}] trae título, tipo, docente, materias y semestres`, () => {",
+                  "  pm.expect(material.titulo).to.be.a('string').and.not.empty;",
+                  "  pm.expect(material.tipo).to.eql(pm.variables.get('tipoMaterial'));",
+                  "  pm.expect(material).to.include.keys('descripcion', 'nombre_docente', 'materias', 'semestres', 'fecha_creacion');",
+                  "});",
+                  "pm.test(`[${caso}] es público y activo`, () => { pm.expect(Number(material.activo)).to.eql(1); pm.expect(material.visibilidad).to.eql('PUBLICO'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&page=1&limit=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "material",
+                "materiales",
+                "todos"
+              ],
+              "query": [
+                {
+                  "key": "semestre",
+                  "value": "{{semestreId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            },
+            "description": "La API no tiene consulta por ID: igual que la app y la web, el detalle se busca en el listado del semestre."
+          }
+        },
+        {
+          "name": "Descargar el archivo del material",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde con el archivo`, () => pm.expect(pm.response.code).to.be.oneOf([200, 206]));",
+                  "pm.test(`[${caso}] el archivo corresponde a su tipo`, () => {",
+                  "  const tipo = pm.variables.get('tipoMaterial');",
+                  "  const mime = pm.response.headers.get('Content-Type') ?? '';",
+                  "  const inicio = pm.response.stream.slice(0, 4);",
+                  "  if (tipo === 'PDF') pm.expect(inicio.toString()).to.eql('%PDF');",
+                  "  else if (tipo === 'IMAGEN') pm.expect(mime).to.match(/^image\\//);",
+                  "  else if (tipo === 'VIDEO') pm.expect(mime).to.match(/^video\\//);",
+                  "  else pm.expect(inicio.toString('hex')).to.match(/^(504b0304|d0cf11e0)/);",
+                  "});",
+                  "pm.test(`[${caso}] no se envía el token a Cloudinary`, () => pm.expect(pm.request.headers.has('Authorization')).to.be.false);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Range",
+                "value": "bytes=0-511"
+              }
+            ],
+            "url": "{{materialUrl}}",
+            "description": "Igual que la app: el archivo se descarga de Cloudinary sin el token de la API. Se piden solo los primeros 512 bytes para validar el tipo."
+          }
+        }
+      ]
     }
   ]
 }
