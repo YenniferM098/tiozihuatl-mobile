@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
-import { Observable, defer, firstValueFrom, from, map, switchMap, throwError, timeout } from 'rxjs';
+import { Observable, TimeoutError, defer, firstValueFrom, from, map, switchMap, throwError, timeout } from 'rxjs';
 import { ComplementaryMaterial } from '../models/material.models';
 import { MATERIALS_REPOSITORY } from '../../domain/repositories/materials.repository';
 import { DownloadedMaterial, MATERIAL_FILES_NATIVE } from '../native/material-files';
@@ -10,6 +10,7 @@ import { MaterialsService } from './materials.service';
 import { SessionService } from './session.service';
 
 export function materialFileError(error: unknown): string {
+  if (error instanceof TimeoutError) return 'La descarga tardó demasiado. Revisa tu conexión e intenta nuevamente.';
   if (error instanceof HttpErrorResponse) {
     if (error.status === 401 || error.status === 403) return 'Contenido no disponible para este usuario. Revisa tu sesión.';
     if (error.status === 404) return 'El archivo ya no está disponible.';
