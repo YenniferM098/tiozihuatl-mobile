@@ -2,7 +2,7 @@ import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Capacitor } from '@capacitor/core';
-import { firstValueFrom, of, throwError } from 'rxjs';
+import { TimeoutError, firstValueFrom, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { MATERIAL_FILES_NATIVE, MaterialFiles } from '../native/material-files';
 import { SessionService } from './session.service';
@@ -101,6 +101,7 @@ describe('Archivos de materiales: autorización y transferencia', () => {
     expect(materialFileError(new HttpErrorResponse({ status: 403 }))).toContain('Contenido no disponible para este usuario');
     expect(materialFileError(new HttpErrorResponse({ status: 404 }))).toBe('El archivo ya no está disponible.');
     expect(materialFileError(new HttpErrorResponse({ status: 0 }))).toContain('No fue posible obtener el archivo');
+    expect(materialFileError(new TimeoutError())).toBe('La descarga tardó demasiado. Revisa tu conexión e intenta nuevamente.');
     expect(materialFileError(new Error('Archivo vacío o demasiado grande.'))).toBe('Archivo vacío o demasiado grande.');
     expect(materialFileError('desconocido')).toContain('Intenta nuevamente');
   });
