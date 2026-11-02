@@ -219,10 +219,11 @@ describe('Lector continuo: scroll, carga progresiva y recursos', () => {
 describe('Lector: apertura autorizada y bloqueo de contenido no disponible', () => {
   let id: string;
   let pdf: ReturnType<typeof vi.fn>;
+  let progressPrefix: string | undefined;
   function create(): BookReaderPage {
     TestBed.configureTestingModule({ providers: [
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => id } } } },
-      { provide: PDF_READER_SOURCE, useValue: { pdf } },
+      { provide: PDF_READER_SOURCE, useValue: { pdf, progressPrefix } },
     ] });
     const reader = TestBed.runInInjectionContext(() => new BookReaderPage());
     const container = document.createElement('div');
@@ -230,7 +231,7 @@ describe('Lector: apertura autorizada y bloqueo de contenido no disponible', () 
     (reader as unknown as ReaderInternals).container = new ElementRef(container);
     return reader;
   }
-  beforeEach(() => { id = '52'; pdf = vi.fn(); });
+  beforeEach(() => { id = '52'; pdf = vi.fn(); progressPrefix = undefined; });
   afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
   it('abre el PDF autorizado del libro y muestra su título y número de páginas', async () => {
@@ -247,6 +248,19 @@ describe('Lector: apertura autorizada y bloqueo de contenido no disponible', () 
     expect(reader.totalPages()).toBe(2);
     expect(reader.error()).toBe('');
     reader.ngOnDestroy();
+  });
+  it('guarda la página de un material con su propia clave y la de un libro sin prefijo', () => {
+    pdf.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+    const book = create();
+    book.load();
+    expect((book as unknown as { bookId: string }).bookId).toBe('52');
+    book.ngOnDestroy();
+    TestBed.resetTestingModule();
+    progressPrefix = 'material.';
+    const material = create();
+    material.load();
+    expect((material as unknown as { bookId: string }).bookId).toBe('material.52');
+    material.ngOnDestroy();
   });
   it('no pide el archivo con un identificador inválido', () => {
     id = 'abc';

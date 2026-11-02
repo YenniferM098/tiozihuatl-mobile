@@ -1,0 +1,9 @@
+<ion-header><ion-toolbar color="primary"><ion-buttons slot="start"><ion-back-button [defaultHref]="detailUrl" text="Volver" /></ion-buttons><ion-title>{{ title() }}</ion-title></ion-toolbar></ion-header>
+<ion-content><main class="library-body">
+  @if (loading()) { <app-library-state message="Preparando archivo…" [loading]="true" /> }
+  @if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load()" /> }
+  @if (source() && !error()) {
+    @if (type() === 'IMAGEN') { <img class="material-image" [src]="source()" [alt]="title()" (load)="ready()" (error)="failed()" /> }
+    @else if (type() === 'VIDEO') { <video #video class="material-video" [src]="source()" controls playsinline preload="metadata" [attr.aria-label]="title()" (loadedmetadata)="ready()" (error)="failed()"></video> }
+  }
+</main></ion-content>

@@ -1,0 +1,5 @@
+.resource-icon { flex-shrink:0; display:grid; place-items:center; width:56px; height:72px; border-radius:12px; background:#edf5fb; color:var(--ion-color-primary-shade); font-size:32px; }
+.description-preview { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-line; }
+.detail-label { display:block; margin-top:12px; font-size:13px; color:var(--ion-color-primary-shade); font-weight:600; }
+.semester { color:var(--tz-text-muted); font-size:13px; }
+.description { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; }

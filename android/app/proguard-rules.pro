@@ -5,6 +5,10 @@
 # Plugin propio de respuesta táctil: se registra por clase en MainActivity.
 -keep class com.tiozihuatl.app.TouchFeedbackPlugin { *; }
 
+# Plugin propio de descarga de Materiales Complementarios y su clase de validación.
+-keep class com.tiozihuatl.app.MaterialFilesPlugin { *; }
+-keep class com.tiozihuatl.app.MaterialFileInfo { *; }
+
 # Métodos expuestos al WebView.
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
