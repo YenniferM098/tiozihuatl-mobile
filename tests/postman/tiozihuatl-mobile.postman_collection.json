@@ -461,6 +461,402 @@
       ]
     },
     {
+      "name": "hu03-perfil",
+      "description": "HU-03 Gestión del perfil. Los endpoints /users/profile exigen una sesión válida. La API es la de producción: no se usan cuentas reales, así que se valida que sin token o con un token alterado se niegue la consulta, la actualización, el cambio de contraseña y la eliminación de la cuenta, sin exponer datos ni modificar nada. La consulta y la edición con sesión de cada rol se validan en la prueba de aceptación.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Valores por defecto para el modo Performance de Postman, que no recibe el archivo de datos.",
+              "const porDefecto = { tokenAlterado: 'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MH0.firma-alterada', correoNuevo: 'ci.perfil.hu03@example.com',",
+              "  telefonoNuevo: '7710000003', contrasena: 'Prueba1!', nuevaContrasena: 'Nueva12@' };",
+              "Object.entries(porDefecto).forEach(([clave, valor]) => {",
+              "  if (!pm.iterationData.has(clave)) pm.variables.set(clave, valor);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Consultar el perfil sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que falta el token`, () => pm.expect(pm.response.json().error).to.eql('Token no proporcionado'));",
+                  "pm.test(`[${caso}] no expone datos de ninguna cuenta`, () => {",
+                  "  const body = pm.response.json();",
+                  "  ['id_usuario', 'correo', 'telefono', 'matricula', 'rol', 'message'].forEach((campo) => pm.expect(body, campo).to.not.have.property(campo));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar el perfil con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que el token no es válido`, () => pm.expect(pm.response.json().error).to.eql('Token invalido o expirado'));",
+                  "pm.test(`[${caso}] no expone datos de ninguna cuenta`, () => {",
+                  "  const body = pm.response.json();",
+                  "  ['id_usuario', 'correo', 'telefono', 'matricula', 'rol', 'message'].forEach((campo) => pm.expect(body, campo).to.not.have.property(campo));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar el perfil sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que falta el token`, () => pm.expect(pm.response.json().error).to.eql('Token no proporcionado'));",
+                  "pm.test(`[${caso}] no expone datos de ninguna cuenta`, () => {",
+                  "  const body = pm.response.json();",
+                  "  ['id_usuario', 'correo', 'telefono', 'matricula', 'rol', 'message'].forEach((campo) => pm.expect(body, campo).to.not.have.property(campo));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoNuevo}}\",\n  \"telefono\": \"{{telefonoNuevo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar el perfil con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que el token no es válido`, () => pm.expect(pm.response.json().error).to.eql('Token invalido o expirado'));",
+                  "pm.test(`[${caso}] no expone datos de ninguna cuenta`, () => {",
+                  "  const body = pm.response.json();",
+                  "  ['id_usuario', 'correo', 'telefono', 'matricula', 'rol', 'message'].forEach((campo) => pm.expect(body, campo).to.not.have.property(campo));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoNuevo}}\",\n  \"telefono\": \"{{telefonoNuevo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cambiar la contraseña sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que falta el token`, () => pm.expect(pm.response.json().error).to.eql('Token no proporcionado'));",
+                  "pm.test(`[${caso}] no expone datos de ninguna cuenta`, () => {",
+                  "  const body = pm.response.json();",
+                  "  ['id_usuario', 'correo', 'telefono', 'matricula', 'rol', 'message'].forEach((campo) => pm.expect(body, campo).to.not.have.property(campo));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrasenaActual\": \"{{contrasena}}\",\n  \"nuevaContrasena\": \"{{nuevaContrasena}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/profile/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile",
+                "change-password"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cambiar la contraseña con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que el token no es válido`, () => pm.expect(pm.response.json().error).to.eql('Token invalido o expirado'));",
+                  "pm.test(`[${caso}] no expone datos de ninguna cuenta`, () => {",
+                  "  const body = pm.response.json();",
+                  "  ['id_usuario', 'correo', 'telefono', 'matricula', 'rol', 'message'].forEach((campo) => pm.expect(body, campo).to.not.have.property(campo));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrasenaActual\": \"{{contrasena}}\",\n  \"nuevaContrasena\": \"{{nuevaContrasena}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/profile/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile",
+                "change-password"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar la cuenta sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que falta el token`, () => pm.expect(pm.response.json().error).to.eql('Token no proporcionado'));",
+                  "pm.test(`[${caso}] no expone datos de ninguna cuenta`, () => {",
+                  "  const body = pm.response.json();",
+                  "  ['id_usuario', 'correo', 'telefono', 'matricula', 'rol', 'message'].forEach((campo) => pm.expect(body, campo).to.not.have.property(campo));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar la cuenta con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que el token no es válido`, () => pm.expect(pm.response.json().error).to.eql('Token invalido o expirado'));",
+                  "pm.test(`[${caso}] no expone datos de ninguna cuenta`, () => {",
+                  "  const body = pm.response.json();",
+                  "  ['id_usuario', 'correo', 'telefono', 'matricula', 'rol', 'message'].forEach((campo) => pm.expect(body, campo).to.not.have.property(campo));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "hu04-biblioteca",
       "description": "HU-04 Consulta de Biblioteca Digital. Endpoints públicos del catálogo (GET /catalog, /catalog/materias y /catalog/semestres): listado, búsqueda por título o autor, filtros por materia, semestre y formato, ordenamiento por autor, disponibilidad física y contenido digital. La API no tiene un endpoint de detalle por ID: igual que la app, el detalle se obtiene del catálogo. Solo consulta datos; no modifica nada.",
       "event": [
