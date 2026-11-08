@@ -110,6 +110,27 @@ describe('ProfileService - Perfil de usuario', () => {
     await expect(result).rejects.toMatchObject({ kind: 'validation', message: 'La contraseña actual es incorrecta.' });
   });
 
+  it('al eliminar la cuenta descarta la sesión local', async () => {
+    const result = firstValueFrom(service.deleteAccount());
+    const req = http.expectOne(API);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ message: 'Tu cuenta fue eliminada correctamente.' });
+
+    await result;
+    expect(TestBed.inject(SessionService).current).toBeNull();
+  });
+
+  it('un rol que no es Visitante no puede eliminar su cuenta (403)', async () => {
+    const result = firstValueFrom(service.deleteAccount());
+    http.expectOne(API).flush(
+      { error: 'Solo las cuentas de tipo Visitante pueden eliminarse desde el perfil.' },
+      { status: 403, statusText: 'Forbidden' },
+    );
+
+    await expect(result).rejects.toMatchObject({ kind: 'forbidden' });
+    expect(TestBed.inject(SessionService).current).not.toBeNull();
+  });
+
   it('informa error de conexión cuando el servidor no responde', async () => {
     const result = firstValueFrom(service.profile());
     http.expectOne(API).error(new ProgressEvent('error'), { status: 0 });

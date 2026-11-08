@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
+import { Provider } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { AlertController, NavController, ToastController } from '@ionic/angular';
 import { of, throwError } from 'rxjs';
 import { Profile, ProfileError } from '../../core/models/profile.models';
+import { AuthService } from '../../core/services/auth.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { ProfilePage } from './profile.page';
 
@@ -34,9 +37,9 @@ const VISITOR: Profile = {
   tienePalabraSecreta: true,
 };
 
-function setup(service: Partial<Record<keyof ProfileService, unknown>>) {
+function setup(service: Partial<Record<keyof ProfileService, unknown>>, providers: Provider[] = []) {
   TestBed.configureTestingModule({
-    providers: [provideRouter([]), { provide: ProfileService, useValue: service }],
+    providers: [provideRouter([]), { provide: ProfileService, useValue: service }, ...providers],
   });
   const fixture = TestBed.createComponent(ProfilePage);
   fixture.detectChanges();
@@ -194,5 +197,75 @@ describe('ProfilePage - Perfil de usuario', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Iniciar sesión');
+  });
+
+  describe('sesión y eliminación de cuenta', () => {
+    /** Simula la alerta de confirmación con el botón que pulsa el usuario y lo que escribe. */
+    function withDialog(role: string, confirm?: string) {
+      const auth = { logout: vi.fn() };
+      const nav = { navigateRoot: vi.fn(() => Promise.resolve(true)) };
+      const toast = { create: vi.fn(() => Promise.resolve({ present: () => Promise.resolve() })) };
+      const alert = {
+        create: vi.fn(() =>
+          Promise.resolve({
+            present: () => Promise.resolve(),
+            onDidDismiss: () => Promise.resolve({ role, data: { values: { confirm } } }),
+          }),
+        ),
+      };
+      const providers: Provider[] = [
+        { provide: AuthService, useValue: auth },
+        { provide: NavController, useValue: nav },
+        { provide: ToastController, useValue: toast },
+        { provide: AlertController, useValue: alert },
+      ];
+      return { auth, nav, toast, providers };
+    }
+
+    it('solo el Visitante ve la opción de eliminar su cuenta', () => {
+      expect(setup({ profile: () => of(STUDENT) }).nativeElement.textContent).not.toContain('Eliminar mi cuenta');
+      TestBed.resetTestingModule();
+      expect(setup({ profile: () => of(VISITOR) }).nativeElement.textContent).toContain('Eliminar mi cuenta');
+    });
+
+    it('cierra la sesión solo después de confirmarlo', async () => {
+      const cancel = withDialog('cancel');
+      await setup({ profile: () => of(STUDENT) }, cancel.providers).componentInstance.logout();
+      expect(cancel.auth.logout).not.toHaveBeenCalled();
+
+      TestBed.resetTestingModule();
+      const confirm = withDialog('confirm');
+      await setup({ profile: () => of(STUDENT) }, confirm.providers).componentInstance.logout();
+      expect(confirm.auth.logout).toHaveBeenCalled();
+      expect(confirm.nav.navigateRoot).toHaveBeenCalledWith('/login');
+    });
+
+    it('no elimina la cuenta si no se escribe ELIMINAR', async () => {
+      const deleteAccount = vi.fn(() => of('ok'));
+      const dialog = withDialog('destructive', 'borrar');
+      await setup({ profile: () => of(VISITOR), deleteAccount }, dialog.providers).componentInstance.deleteAccount();
+
+      expect(deleteAccount).not.toHaveBeenCalled();
+      expect(dialog.toast.create).toHaveBeenCalledWith(expect.objectContaining({ color: 'warning' }));
+    });
+
+    it('Visitante: al escribir ELIMINAR elimina la cuenta y vuelve al inicio de sesión', async () => {
+      const deleteAccount = vi.fn(() => of('Tu cuenta fue eliminada correctamente.'));
+      const dialog = withDialog('destructive', ' eliminar ');
+      await setup({ profile: () => of(VISITOR), deleteAccount }, dialog.providers).componentInstance.deleteAccount();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(deleteAccount).toHaveBeenCalled();
+      expect(dialog.nav.navigateRoot).toHaveBeenCalledWith('/login');
+    });
+
+    it('Estudiante y Docente no pueden eliminar la cuenta desde la app', async () => {
+      const deleteAccount = vi.fn(() => of('ok'));
+      const dialog = withDialog('destructive', 'ELIMINAR');
+      await setup({ profile: () => of(STUDENT), deleteAccount }, dialog.providers).componentInstance.deleteAccount();
+
+      expect(deleteAccount).not.toHaveBeenCalled();
+    });
   });
 });

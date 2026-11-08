@@ -112,6 +112,16 @@
           <i class="ph ph-caret-right" aria-hidden="true"></i>
         </button>
       </section>
+
+      <!-- ---------- Sesión ---------- -->
+      <button type="button" class="logout" tzHaptic (click)="logout()">
+        <i class="ph ph-sign-out" aria-hidden="true"></i>Cerrar sesión
+      </button>
+      @if (isVisitor()) {
+        <button type="button" class="danger-link" [disabled]="saving()" (click)="deleteAccount()">
+          <i class="ph ph-trash" aria-hidden="true"></i>Eliminar mi cuenta
+        </button>
+      }
     } @else {
       <div aria-busy="true" aria-label="Cargando perfil">
         @for (i of skeletonRows; track i) {

@@ -2,6 +2,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
+  AlertController,
   IonButton,
   IonContent,
   IonInput,
@@ -42,7 +43,8 @@ const DATE_TIME = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeSt
 /**
  * Vista del perfil (Estudiante, Docente y Visitante): enlaza la plantilla con el estado
  * de su ViewModel, muestra los datos de la cuenta, edita la información permitida y
- * cambia la palabra secreta y la contraseña.
+ * cambia la palabra secreta y la contraseña. También cierra la sesión y, solo para
+ * Visitante, elimina la cuenta.
  */
 @Component({
   selector: 'app-profile',
@@ -64,6 +66,7 @@ const DATE_TIME = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeSt
 export class ProfilePage {
   private readonly auth = inject(AuthService);
   private readonly nav = inject(NavController);
+  private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly destroyRef = inject(DestroyRef);
@@ -249,12 +252,59 @@ export class ProfilePage {
     return '';
   }
 
-  /* ---------- Sesión ---------- */
+  /* ---------- Sesión y cuenta ---------- */
+
+  async logout(): Promise<void> {
+    const alert = await this.alerts.create({
+      header: 'Cerrar sesión',
+      message: '¿Deseas cerrar tu sesión en este dispositivo?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Cerrar sesión', role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    if (role !== 'confirm') return;
+    this.auth.logout();
+    await this.nav.navigateRoot('/login');
+  }
 
   /** Sesión vencida: se descarta y se vuelve al inicio de sesión sin pedir confirmación. */
   goToLogin(): void {
     this.auth.logout();
     void this.nav.navigateRoot('/login');
+  }
+
+  async deleteAccount(): Promise<void> {
+    if (!this.isVisitor() || this.saving()) return;
+    const alert = await this.alerts.create({
+      header: 'Eliminar cuenta',
+      message:
+        'Se eliminarán tu cuenta y sus datos (compras, progreso de lectura y sesiones). Esta acción no se puede deshacer. Escribe ELIMINAR para confirmar.',
+      inputs: [{ name: 'confirm', type: 'text', placeholder: 'ELIMINAR', attributes: { autocapitalize: 'characters' } }],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Eliminar', role: 'destructive' },
+      ],
+    });
+    await alert.present();
+    const { role, data } = await alert.onDidDismiss<{ values?: { confirm?: string } }>();
+    if (role !== 'destructive') return;
+    if ((data?.values?.confirm ?? '').trim().toUpperCase() !== 'ELIMINAR') {
+      await this.toast('No se eliminó la cuenta: escribe ELIMINAR para confirmar.', 'warning');
+      return;
+    }
+    this.vm
+      .deleteAccount()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: async (message) => {
+          await this.toast(message, 'success');
+          await this.nav.navigateRoot('/login');
+        },
+        error: (err: unknown) => void this.toast(toProfileError(err).message, 'danger'),
+      });
   }
 
   /* ---------- Auxiliares ---------- */

@@ -16,11 +16,11 @@ const PROFILE = {
 const VALUES = { nombre: 'Astrid', a_paterno: 'Zamora', a_materno: 'Guzmán', correo: 'astrid@correo.com', telefono: '7711234567' };
 
 describe('ProfileViewModel (MVVM)', () => {
-  let service: { profile: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; changePassword: ReturnType<typeof vi.fn> };
+  let service: { profile: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; changePassword: ReturnType<typeof vi.fn>; deleteAccount: ReturnType<typeof vi.fn> };
   let vm: ProfileViewModel;
 
   beforeEach(() => {
-    service = { profile: vi.fn(() => of(PROFILE)), update: vi.fn(() => of('ok')), changePassword: vi.fn(() => of('ok')) };
+    service = { profile: vi.fn(() => of(PROFILE)), update: vi.fn(() => of('ok')), changePassword: vi.fn(() => of('ok')), deleteAccount: vi.fn(() => of('ok')) };
     TestBed.configureTestingModule({ providers: [{ provide: ProfileService, useValue: service }] });
     vm = TestBed.runInInjectionContext(() => new ProfileViewModel());
   });
@@ -102,6 +102,12 @@ describe('ProfileViewModel (MVVM)', () => {
   it('cambia la contraseña con la actual y la nueva', () => {
     vm.changePassword('Actual1@', 'Nueva12@').subscribe();
     expect(service.changePassword).toHaveBeenCalledWith('Actual1@', 'Nueva12@');
+    expect(vm.saving()).toBe(false);
+  });
+
+  it('elimina la cuenta con el caso de uso del servicio', () => {
+    vm.deleteAccount().subscribe();
+    expect(service.deleteAccount).toHaveBeenCalled();
     expect(vm.saving()).toBe(false);
   });
 });

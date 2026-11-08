@@ -68,6 +68,14 @@ export class ProfileService {
     );
   }
 
+  /** DELETE /users/profile (solo Visitante). Al eliminarla se descarta la sesión local. */
+  deleteAccount(): Observable<string> {
+    return this.withSession(() => this.repository.deleteAccount()).pipe(
+      map((res) => res?.message || 'Tu cuenta fue eliminada correctamente.'),
+      tap(() => this.session.clear()),
+    );
+  }
+
   /** El saludo de Inicio y otros módulos leen el nombre y correo de la sesión. */
   private syncSession(profile: Profile): void {
     const current = this.session.current;

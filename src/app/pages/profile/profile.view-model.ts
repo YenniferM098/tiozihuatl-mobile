@@ -85,6 +85,11 @@ export class ProfileViewModel {
     return this.run(this.service.changePassword(actual, nueva));
   }
 
+  /** Elimina la cuenta: el servicio solo lo hace para Visitante y descarta la sesión. */
+  deleteAccount(): Observable<string> {
+    return this.run(this.service.deleteAccount());
+  }
+
   /** Marca la operación en curso mientras dura la petición. */
   private run(request: Observable<string>): Observable<string> {
     this.saving.set(true);
