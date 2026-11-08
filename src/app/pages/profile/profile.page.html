@@ -113,15 +113,30 @@
         </button>
       </section>
 
+      <!-- ---------- Privacidad y tus datos (derechos ARCO) ---------- -->
+      <section class="card" aria-labelledby="card-privacy">
+        <h2 id="card-privacy" class="card__title"><i class="ph ph-user-focus" aria-hidden="true"></i>Privacidad y tus datos</h2>
+        <p class="card__text">
+          Aquí puedes consultar y corregir tus datos personales. Para eliminar tu cuenta o pedir que tus datos
+          dejen de usarse, la solicitud la atiende el Instituto (Servicios Escolares).
+        </p>
+        @if (isVisitor()) {
+          <p class="card__text">Como Visitante también puedes eliminar tu cuenta desde la aplicación.</p>
+        }
+        <a class="outline" [href]="accountDeletionUrl" target="_blank" rel="noopener noreferrer" tzHaptic>
+          <i class="ph ph-arrow-square-out" aria-hidden="true"></i>Cómo eliminar mi cuenta
+        </a>
+        @if (isVisitor()) {
+          <button type="button" class="danger-link" [disabled]="saving()" (click)="deleteAccount()">
+            <i class="ph ph-trash" aria-hidden="true"></i>Eliminar mi cuenta
+          </button>
+        }
+      </section>
+
       <!-- ---------- Sesión ---------- -->
       <button type="button" class="logout" tzHaptic (click)="logout()">
         <i class="ph ph-sign-out" aria-hidden="true"></i>Cerrar sesión
       </button>
-      @if (isVisitor()) {
-        <button type="button" class="danger-link" [disabled]="saving()" (click)="deleteAccount()">
-          <i class="ph ph-trash" aria-hidden="true"></i>Eliminar mi cuenta
-        </button>
-      }
     } @else {
       <div aria-busy="true" aria-label="Cargando perfil">
         @for (i of skeletonRows; track i) {

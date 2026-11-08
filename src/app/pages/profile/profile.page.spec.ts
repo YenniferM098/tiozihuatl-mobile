@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Provider } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { AlertController, NavController, ToastController } from '@ionic/angular';
+import { environment } from '../../../environments/environment';
 import { of, throwError } from 'rxjs';
 import { Profile, ProfileError } from '../../core/models/profile.models';
 import { AuthService } from '../../core/services/auth.service';
@@ -197,6 +198,23 @@ describe('ProfilePage - Perfil de usuario', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Iniciar sesión');
+  });
+
+  it('todos los roles ven sus derechos ARCO y el enlace para eliminar la cuenta', () => {
+    for (const profile of [STUDENT, { ...STUDENT, rol: 'Docente', matricula: null }, VISITOR]) {
+      TestBed.resetTestingModule();
+      const element: HTMLElement = setup({ profile: () => of(profile) }).nativeElement;
+      const card = element.querySelector('[aria-labelledby="card-privacy"]');
+      const link = card?.querySelector('a') as HTMLAnchorElement;
+
+      expect(card?.textContent).toContain('Privacidad y tus datos');
+      expect(card?.textContent).toContain('Servicios Escolares');
+      expect(link.textContent).toContain('Cómo eliminar mi cuenta');
+      expect(link.getAttribute('href')).toBe(environment.accountDeletionUrl);
+      expect(link.target).toBe('_blank');
+      expect(link.rel).toContain('noopener');
+      expect(!!card?.textContent?.includes('Eliminar mi cuenta')).toBe(profile.rol === 'Visitante');
+    }
   });
 
   describe('sesión y eliminación de cuenta', () => {

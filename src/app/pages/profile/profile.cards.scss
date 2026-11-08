@@ -30,6 +30,13 @@
   font-size: 0.78rem;
 }
 
+.card__text {
+  margin: 0 0 10px;
+  color: var(--tz-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
 .fields {
   margin: 0;
 
@@ -78,6 +85,7 @@
 
 .outline {
   margin-top: 14px;
+  text-decoration: none;
   border: 1.5px solid var(--ion-color-primary);
   color: var(--ion-color-primary-shade);
 }

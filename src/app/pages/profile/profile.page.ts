@@ -15,6 +15,7 @@ import {
   ToastController,
 } from '@ionic/angular';
 import { Observable, map, startWith } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { HapticDirective } from '../../core/directives/haptic.directive';
 import { AuthService } from '../../core/services/auth.service';
 import { toProfileError } from '../../core/services/profile.service';
@@ -43,8 +44,8 @@ const DATE_TIME = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeSt
 /**
  * Vista del perfil (Estudiante, Docente y Visitante): enlaza la plantilla con el estado
  * de su ViewModel, muestra los datos de la cuenta, edita la información permitida y
- * cambia la palabra secreta y la contraseña. También cierra la sesión y, solo para
- * Visitante, elimina la cuenta.
+ * cambia la palabra secreta y la contraseña. También informa cómo ejercer los derechos
+ * ARCO, cierra la sesión y, solo para Visitante, elimina la cuenta.
  */
 @Component({
   selector: 'app-profile',
@@ -83,6 +84,8 @@ export class ProfilePage {
   readonly showSecret = signal(false);
   readonly showPasswords = signal(false);
   readonly secretMax = SECRET_MAX;
+  /** Procedimiento institucional para eliminar la cuenta y los datos, para todos los roles. */
+  readonly accountDeletionUrl = environment.accountDeletionUrl;
 
   /** Visitante puede cambiar su nombre; Estudiante y Docente solo correo y teléfono. */
   readonly editForm = this.fb.group({
