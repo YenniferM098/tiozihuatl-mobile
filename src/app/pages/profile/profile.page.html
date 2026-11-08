@@ -1,0 +1,97 @@
+<ion-content class="profile-content">
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- ---------- Identidad sobre el azul institucional (mockup 7.5) ---------- -->
+  <header class="hero">
+    <h1 class="hero__title">Mi perfil</h1>
+    @if (profile(); as p) {
+      <div class="identity">
+        <span class="identity__avatar"><i class="ph ph-user" aria-hidden="true"></i></span>
+        <p class="identity__name">{{ p.fullName }}</p>
+        @if (p.matricula) {
+          <p class="identity__sub">Matrícula: {{ p.matricula }}</p>
+        }
+        <ul class="chips" aria-label="Datos de la cuenta">
+          <li class="chip"><i class="ph ph-shield-check" aria-hidden="true"></i>{{ p.rol }}</li>
+          @if (p.carrera) {
+            <li class="chip"><i class="ph ph-graduation-cap" aria-hidden="true"></i>{{ p.carrera }}</li>
+          }
+          @if (p.semestre) {
+            <li class="chip"><i class="ph ph-calendar-blank" aria-hidden="true"></i>{{ p.semestre }}</li>
+          }
+          @if (p.grupo) {
+            <li class="chip"><i class="ph ph-users-three" aria-hidden="true"></i>Grupo {{ p.grupo }}</li>
+          }
+        </ul>
+      </div>
+    }
+  </header>
+
+  <main class="sheet">
+    @if (error(); as err) {
+      <section class="state" role="alert">
+        <span class="state__icon"><i class="ph ph-wifi-slash" aria-hidden="true"></i></span>
+        <h2 class="state__title">No pudimos cargar tu perfil</h2>
+        <p class="state__text">{{ err.message }}</p>
+        @if (err.kind === 'session') {
+          <button type="button" class="state__action" tzHaptic (click)="goToLogin()">
+            <i class="ph ph-sign-in" aria-hidden="true"></i>Iniciar sesión
+          </button>
+        } @else {
+          <button type="button" class="state__action" tzHaptic (click)="load()">
+            <i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Reintentar
+          </button>
+        }
+      </section>
+    } @else if (profile(); as p) {
+      <!-- ---------- Cuenta (solo consulta) ---------- -->
+      <section class="card" aria-labelledby="card-account">
+        <h2 id="card-account" class="card__title"><i class="ph ph-lock-simple" aria-hidden="true"></i>Cuenta</h2>
+        <dl class="fields">
+          <div><dt>Acceso</dt><dd>{{ p.rol }}</dd></div>
+          @if (p.matricula) {
+            <div><dt>Matrícula</dt><dd>{{ p.matricula }}</dd></div>
+          }
+          @if (p.carrera) {
+            <div><dt>Carrera</dt><dd>{{ p.carrera }}</dd></div>
+          }
+          @if (p.semestre) {
+            <div><dt>Semestre</dt><dd>{{ p.semestre }}</dd></div>
+          }
+          @if (p.grupo) {
+            <div><dt>Grupo</dt><dd>{{ p.grupo }}</dd></div>
+          }
+          <div>
+            <dt>Estado de la cuenta</dt>
+            <dd><span class="status" [class.status--off]="p.estado !== 'Activo'">{{ p.estado || '—' }}</span></dd>
+          </div>
+          <div><dt>Miembro desde</dt><dd>{{ formatDate(p.fechaRegistro) }}</dd></div>
+          <div><dt>Última actualización</dt><dd>{{ formatDate(p.ultimaConexion, true) }}</dd></div>
+        </dl>
+        @if (!isVisitor()) {
+          <p class="card__hint">Tu nombre, matrícula y datos académicos los administra el Instituto.</p>
+        }
+      </section>
+
+      <!-- ---------- Información personal ---------- -->
+      <section class="card" aria-labelledby="card-personal">
+        <h2 id="card-personal" class="card__title"><i class="ph ph-user-circle" aria-hidden="true"></i>Información personal</h2>
+        <dl class="fields">
+          <div><dt>Nombre</dt><dd>{{ p.nombre || '—' }}</dd></div>
+          <div><dt>Apellido paterno</dt><dd>{{ p.aPaterno || '—' }}</dd></div>
+          <div><dt>Apellido materno</dt><dd>{{ p.aMaterno || '—' }}</dd></div>
+          <div><dt>Correo electrónico</dt><dd>{{ p.correo || '—' }}</dd></div>
+          <div><dt>Teléfono de contacto</dt><dd>{{ p.telefono || '—' }}</dd></div>
+        </dl>
+      </section>
+    } @else {
+      <div aria-busy="true" aria-label="Cargando perfil">
+        @for (i of skeletonRows; track i) {
+          <ion-skeleton-text class="sk-card" [animated]="true"></ion-skeleton-text>
+        }
+      </div>
+    }
+  </main>
+</ion-content>
