@@ -1,0 +1,90 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { ProfileDto } from '../models/profile.models';
+import { ProfileService } from './profile.service';
+import { SessionService } from './session.service';
+
+const API = `${environment.apiUrl}/users/profile`;
+
+function saveSession(rol = 'Estudiante'): void {
+  const payload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }));
+  localStorage.setItem(
+    'tiozihuatl.session',
+    JSON.stringify({
+      accessToken: `h.${payload}.s`,
+      refreshToken: 'r',
+      user: { id: 5, id_usuario: 5, nombre: 'Astrid', rol, correo: 'viejo@correo.com', id_semestre: 2 },
+    }),
+  );
+}
+
+const DTO: ProfileDto = {
+  id_usuario: 5,
+  nombre: 'Astrid  Cireth',
+  a_paterno: 'Zamora',
+  a_materno: 'Guzmán',
+  correo: 'astrid@correo.com',
+  telefono: '7711234567',
+  matricula: 'IEST0514',
+  grupo: 'A',
+  carrera: 'Licenciatura en Enfermería',
+  semestre: 'Segundo semestre',
+  tiene_palabra_secreta: 1,
+  estado: 'Activo',
+  fecha_registro: '2026-01-15T10:00:00.000Z',
+  ultima_conexion: null,
+  rol: 'Estudiante',
+};
+
+describe('ProfileService - Perfil de usuario', () => {
+  let service: ProfileService;
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    localStorage.clear();
+    saveSession();
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    service = TestBed.inject(ProfileService);
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  it('obtiene el perfil, lo limpia y actualiza nombre y correo en la sesión', async () => {
+    const result = firstValueFrom(service.profile());
+    http.expectOne(API).flush(DTO);
+
+    const profile = await result;
+    expect(profile.fullName).toBe('Astrid Cireth Zamora Guzmán');
+    expect(profile.matricula).toBe('IEST0514');
+    expect(profile.tienePalabraSecreta).toBe(true);
+    expect(profile.ultimaConexion).toBeNull();
+
+    const user = TestBed.inject(SessionService).user();
+    expect(user?.correo).toBe('astrid@correo.com');
+    expect(user?.nombre).toBe('Astrid Cireth');
+  });
+
+  it('informa error de conexión cuando el servidor no responde', async () => {
+    const result = firstValueFrom(service.profile());
+    http.expectOne(API).error(new ProgressEvent('error'), { status: 0 });
+
+    await expect(result).rejects.toMatchObject({ kind: 'connection' });
+  });
+});
+
+describe('ProfileService - sin sesión', () => {
+  it('no consulta el perfil y pide iniciar sesión', async () => {
+    localStorage.clear();
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = TestBed.inject(ProfileService);
+    const http = TestBed.inject(HttpTestingController);
+
+    await expect(firstValueFrom(service.profile())).rejects.toMatchObject({ kind: 'session' });
+    http.expectNone(API);
+    http.verify();
+  });
+});
