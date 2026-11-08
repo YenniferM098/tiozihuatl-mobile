@@ -1,10 +1,10 @@
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom } from 'rxjs';
+import { TimeoutError, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ProfileDto } from '../models/profile.models';
-import { ProfileService } from './profile.service';
+import { ProfileDto, ProfileError } from '../models/profile.models';
+import { ProfileService, toProfileError } from './profile.service';
 import { SessionService } from './session.service';
 
 const API = `${environment.apiUrl}/users/profile`;
@@ -149,5 +149,34 @@ describe('ProfileService - sin sesión', () => {
     await expect(firstValueFrom(service.profile())).rejects.toMatchObject({ kind: 'session' });
     http.expectNone(API);
     http.verify();
+  });
+});
+
+describe('toProfileError - mensajes claros sin detalles técnicos', () => {
+  const http = (status: number, error: unknown = null) => new HttpErrorResponse({ status, error });
+
+  it('clasifica cada respuesta del servidor', () => {
+    expect(toProfileError(new TimeoutError()).kind).toBe('connection');
+    expect(toProfileError(http(503)).kind).toBe('connection');
+    expect(toProfileError(http(401))).toMatchObject({ kind: 'session', message: 'Tu sesión expiró. Inicia sesión nuevamente.' });
+    expect(toProfileError(http(403)).message).toBe('Esta acción no está disponible para tu cuenta.');
+    expect(toProfileError(http(409)).message).toBe('Revisa los datos ingresados.');
+    expect(toProfileError(http(500))).toMatchObject({ kind: 'server', message: 'Ocurrió un problema en el servidor. Intenta más tarde.' });
+    expect(toProfileError(new Error('cualquier cosa')).kind).toBe('server');
+  });
+
+  it('agrega acentos a los mensajes conocidos y conserva los demás', () => {
+    expect(toProfileError(http(409, { error: 'El telefono ya esta registrado' })).message).toBe(
+      'El número de teléfono ya está registrado en otra cuenta.',
+    );
+    expect(toProfileError(http(400, { error: 'La palabra secreta debe tener entre 4 y 10' })).message).toBe(
+      'La palabra secreta debe tener entre 4 y 10 caracteres.',
+    );
+    expect(toProfileError(http(400, { error: '  Dato no válido  ' })).message).toBe('Dato no válido');
+  });
+
+  it('un error ya traducido se conserva', () => {
+    const error = new ProfileError('validation', 'Mensaje');
+    expect(toProfileError(error)).toBe(error);
   });
 });

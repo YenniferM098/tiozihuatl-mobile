@@ -217,6 +217,85 @@ describe('ProfilePage - Perfil de usuario', () => {
     }
   });
 
+  it('explica cada error de validación cerca de su campo', () => {
+    const page = setup({ profile: () => of(STUDENT) }).componentInstance;
+    const { nombre, telefono } = page.editForm.controls;
+
+    nombre.setValue('');
+    nombre.markAsTouched();
+    expect(page.fieldError(nombre, 'name')).toBe('Este campo es obligatorio.');
+    nombre.setValue('4str1d');
+    expect(page.fieldError(nombre, 'name')).toBe('Usa solo letras y espacios (2 a 30 caracteres).');
+    telefono.setValue('123');
+    telefono.markAsTouched();
+    expect(page.fieldError(telefono, 'phone')).toBe('Ingresa un teléfono de 10 dígitos.');
+
+    const { palabra } = page.secretForm.controls;
+    palabra.markAsTouched();
+    expect(page.secretError).toBe('Escribe tu palabra secreta.');
+    palabra.setValue('<gato>');
+    expect(page.secretError).toContain('No uses los caracteres');
+
+    const { contrasena, confirmar } = page.passwordForm.controls;
+    contrasena.markAsTouched();
+    confirmar.markAsTouched();
+    expect(page.newPasswordError).toBe('Escribe tu nueva contraseña.');
+    expect(page.confirmError).toBe('Confirma tu nueva contraseña.');
+    contrasena.setValue('abc');
+    expect(page.newPasswordError).toBe('La contraseña no cumple los requisitos.');
+  });
+
+  it('sin cambios cierra la hoja sin llamar al servidor', () => {
+    const update = vi.fn(() => of('ok'));
+    const page = setup({ profile: () => of(STUDENT), update }).componentInstance;
+
+    page.openEdit();
+    page.saveProfile();
+
+    expect(update).not.toHaveBeenCalled();
+    expect(page.sheet()).toBeNull();
+  });
+
+  it('si la sesión venció al guardar, cierra la hoja y regresa al inicio de sesión', () => {
+    const changePassword = vi.fn(() => throwError(() => new ProfileError('session', 'Tu sesión expiró.')));
+    const auth = { logout: vi.fn() };
+    const nav = { navigateRoot: vi.fn(() => Promise.resolve(true)) };
+    const page = setup({ profile: () => of(STUDENT), changePassword }, [
+      { provide: AuthService, useValue: auth },
+      { provide: NavController, useValue: nav },
+    ]).componentInstance;
+
+    page.openPassword();
+    page.passwordForm.setValue({ actual: 'Actual1@', contrasena: 'Nueva12@', confirmar: 'Nueva12@' });
+    page.savePassword();
+
+    expect(page.sheet()).toBeNull();
+    expect(auth.logout).toHaveBeenCalled();
+    expect(nav.navigateRoot).toHaveBeenCalledWith('/login');
+  });
+
+  it('al deslizar para refrescar vuelve a consultar y termina la animación', () => {
+    const profile = vi.fn(() => of(STUDENT));
+    const page = setup({ profile }).componentInstance;
+    const complete = vi.fn();
+
+    page.refresh({ target: { complete } } as unknown as Event);
+
+    expect(profile).toHaveBeenCalledTimes(2);
+    expect(complete).toHaveBeenCalled();
+  });
+
+  it('no cierra una hoja mientras se guarda', () => {
+    const page = setup({ profile: () => of(STUDENT) }).componentInstance;
+    page.openSecret();
+    page.saving.set(true);
+    page.closeSheet();
+    expect(page.sheet()).toBe('secret');
+    page.saving.set(false);
+    page.closeSheet();
+    expect(page.sheet()).toBeNull();
+  });
+
   describe('sesión y eliminación de cuenta', () => {
     /** Simula la alerta de confirmación con el botón que pulsa el usuario y lo que escribe. */
     function withDialog(role: string, confirm?: string) {
