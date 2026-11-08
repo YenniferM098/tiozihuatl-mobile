@@ -61,6 +61,13 @@ export class ProfileService {
     );
   }
 
+  /** PUT /users/profile/change-password. */
+  changePassword(contrasenaActual: string, nuevaContrasena: string): Observable<string> {
+    return this.withSession(() => this.repository.changePassword({ contrasenaActual, nuevaContrasena })).pipe(
+      map((res) => res?.message || 'Contraseña actualizada correctamente.'),
+    );
+  }
+
   /** El saludo de Inicio y otros módulos leen el nombre y correo de la sesión. */
   private syncSession(profile: Profile): void {
     const current = this.session.current;

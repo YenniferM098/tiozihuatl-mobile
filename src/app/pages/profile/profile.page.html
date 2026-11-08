@@ -89,6 +89,29 @@
           <i class="ph ph-pencil-simple" aria-hidden="true"></i>Editar información
         </button>
       </section>
+
+      <!-- ---------- Seguridad ---------- -->
+      <section class="card" aria-labelledby="card-security">
+        <h2 id="card-security" class="card__title"><i class="ph ph-shield-check" aria-hidden="true"></i>Seguridad</h2>
+        <button type="button" class="row" tzHaptic (click)="openSecret()">
+          <i class="ph ph-key row__icon" aria-hidden="true"></i>
+          <span class="row__text">
+            <span class="row__label">Palabra secreta</span>
+            <span class="row__sub" [class.row__sub--warn]="!p.tienePalabraSecreta">
+              {{ p.tienePalabraSecreta ? 'Configurada' : 'Sin configurar: la necesitas para recuperar tu contraseña' }}
+            </span>
+          </span>
+          <i class="ph ph-caret-right" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="row" tzHaptic (click)="openPassword()">
+          <i class="ph ph-lock-key row__icon" aria-hidden="true"></i>
+          <span class="row__text">
+            <span class="row__label">Cambiar contraseña</span>
+            <span class="row__sub">Actualiza la contraseña con la que inicias sesión</span>
+          </span>
+          <i class="ph ph-caret-right" aria-hidden="true"></i>
+        </button>
+      </section>
     } @else {
       <div aria-busy="true" aria-label="Cargando perfil">
         @for (i of skeletonRows; track i) {
@@ -147,6 +170,101 @@
           <ion-button class="tz-submit" type="submit" expand="block" [disabled]="saving() || !editChanged()">
             @if (saving()) { <ion-spinner name="crescent"></ion-spinner> }
             Guardar cambios
+          </ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ---------- Palabra secreta ---------- -->
+  <ion-modal [isOpen]="sheet() === 'secret'" [canDismiss]="!saving()" (didDismiss)="sheet.set(null)">
+    <ng-template>
+      <ion-content class="sheet-content">
+        <header class="sheet-bar">
+          <button type="button" class="sheet-bar__close" aria-label="Cerrar" (click)="closeSheet()">
+            <i class="ph ph-x" aria-hidden="true"></i>
+          </button>
+          <h2 class="sheet-bar__title">Palabra secreta</h2>
+        </header>
+        <form class="sheet-form" [formGroup]="secretForm" (ngSubmit)="saveSecret()" novalidate>
+          <p class="sheet-form__hint">
+            Se te pedirá junto con tu correo para recuperar tu contraseña. Guárdala en un lugar seguro:
+            por seguridad no se puede consultar después.
+          </p>
+          <ion-input class="tz-field" formControlName="palabra" label="Nueva palabra secreta" labelPlacement="stacked"
+                     [type]="showSecret() ? 'text' : 'password'" autocapitalize="off" autocomplete="off"
+                     [maxlength]="secretMax" [readonly]="saving()" [errorText]="secretError"
+                     (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-key tz-field__icon" aria-hidden="true"></i>
+            <button slot="end" type="button" class="tz-field__toggle"
+                    [attr.aria-label]="showSecret() ? 'Ocultar palabra secreta' : 'Mostrar palabra secreta'"
+                    (click)="showSecret.set(!showSecret())">
+              <i class="ph" [class.ph-eye]="!showSecret()" [class.ph-eye-slash]="showSecret()" aria-hidden="true"></i>
+            </button>
+          </ion-input>
+
+          @if (sheetError(); as message) {
+            <p class="tz-alert tz-alert--error" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ message }}</p>
+          }
+          <ion-button class="tz-submit" type="submit" expand="block" [disabled]="saving()">
+            @if (saving()) { <ion-spinner name="crescent"></ion-spinner> }
+            Guardar palabra secreta
+          </ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ---------- Cambiar contraseña ---------- -->
+  <ion-modal [isOpen]="sheet() === 'password'" [canDismiss]="!saving()" (didDismiss)="sheet.set(null)">
+    <ng-template>
+      <ion-content class="sheet-content">
+        <header class="sheet-bar">
+          <button type="button" class="sheet-bar__close" aria-label="Cerrar" (click)="closeSheet()">
+            <i class="ph ph-x" aria-hidden="true"></i>
+          </button>
+          <h2 class="sheet-bar__title">Cambiar contraseña</h2>
+        </header>
+        <form class="sheet-form" [formGroup]="passwordForm" (ngSubmit)="savePassword()" novalidate>
+          <ion-input class="tz-field" formControlName="actual" label="Contraseña actual" labelPlacement="stacked"
+                     [type]="showPasswords() ? 'text' : 'password'" autocomplete="current-password"
+                     autocapitalize="off" [readonly]="saving()"
+                     [errorText]="passwordForm.controls.actual.touched && passwordForm.controls.actual.invalid ? 'Escribe tu contraseña actual.' : ''"
+                     (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-lock tz-field__icon" aria-hidden="true"></i>
+            <button slot="end" type="button" class="tz-field__toggle"
+                    [attr.aria-label]="showPasswords() ? 'Ocultar contraseñas' : 'Mostrar contraseñas'"
+                    (click)="showPasswords.set(!showPasswords())">
+              <i class="ph" [class.ph-eye]="!showPasswords()" [class.ph-eye-slash]="showPasswords()" aria-hidden="true"></i>
+            </button>
+          </ion-input>
+          <ion-input class="tz-field" formControlName="contrasena" label="Nueva contraseña" labelPlacement="stacked"
+                     [type]="showPasswords() ? 'text' : 'password'" autocomplete="new-password" autocapitalize="off"
+                     placeholder="8 caracteres" [maxlength]="8" [readonly]="saving()" [errorText]="newPasswordError"
+                     (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-lock-key tz-field__icon" aria-hidden="true"></i>
+          </ion-input>
+
+          <ul class="rules" aria-label="Requisitos de la contraseña">
+            <li [class.is-ok]="rules().length"><i class="ph" [class.ph-check-circle]="rules().length" [class.ph-circle]="!rules().length" aria-hidden="true"></i>8 caracteres</li>
+            <li [class.is-ok]="rules().upper"><i class="ph" [class.ph-check-circle]="rules().upper" [class.ph-circle]="!rules().upper" aria-hidden="true"></i>Una mayúscula</li>
+            <li [class.is-ok]="rules().lower"><i class="ph" [class.ph-check-circle]="rules().lower" [class.ph-circle]="!rules().lower" aria-hidden="true"></i>Una minúscula</li>
+            <li [class.is-ok]="rules().number"><i class="ph" [class.ph-check-circle]="rules().number" [class.ph-circle]="!rules().number" aria-hidden="true"></i>Un número</li>
+            <li [class.is-ok]="rules().special"><i class="ph" [class.ph-check-circle]="rules().special" [class.ph-circle]="!rules().special" aria-hidden="true"></i>Un símbolo (&#64;$!%*?&amp;)</li>
+          </ul>
+
+          <ion-input class="tz-field" formControlName="confirmar" label="Confirmar nueva contraseña" labelPlacement="stacked"
+                     [type]="showPasswords() ? 'text' : 'password'" autocomplete="new-password" autocapitalize="off"
+                     [maxlength]="8" [readonly]="saving()" [errorText]="confirmError" (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-lock-key tz-field__icon" aria-hidden="true"></i>
+          </ion-input>
+
+          @if (sheetError(); as message) {
+            <p class="tz-alert tz-alert--error" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ message }}</p>
+          }
+          <ion-button class="tz-submit" type="submit" expand="block" [disabled]="saving()">
+            @if (saving()) { <ion-spinner name="crescent"></ion-spinner> }
+            Actualizar contraseña
           </ion-button>
         </form>
       </ion-content>

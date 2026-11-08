@@ -16,11 +16,11 @@ const PROFILE = {
 const VALUES = { nombre: 'Astrid', a_paterno: 'Zamora', a_materno: 'Guzmán', correo: 'astrid@correo.com', telefono: '7711234567' };
 
 describe('ProfileViewModel (MVVM)', () => {
-  let service: { profile: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> };
+  let service: { profile: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; changePassword: ReturnType<typeof vi.fn> };
   let vm: ProfileViewModel;
 
   beforeEach(() => {
-    service = { profile: vi.fn(() => of(PROFILE)), update: vi.fn(() => of('ok')) };
+    service = { profile: vi.fn(() => of(PROFILE)), update: vi.fn(() => of('ok')), changePassword: vi.fn(() => of('ok')) };
     TestBed.configureTestingModule({ providers: [{ provide: ProfileService, useValue: service }] });
     vm = TestBed.runInInjectionContext(() => new ProfileViewModel());
   });
@@ -91,6 +91,17 @@ describe('ProfileViewModel (MVVM)', () => {
     expect(vm.saving()).toBe(true);
     pending.next('ok');
     pending.complete();
+    expect(vm.saving()).toBe(false);
+  });
+
+  it('guarda la palabra secreta sin espacios en los extremos', () => {
+    vm.saveSecret('  gatito ').subscribe();
+    expect(service.update).toHaveBeenCalledWith({ palabra_secreta: 'gatito' });
+  });
+
+  it('cambia la contraseña con la actual y la nueva', () => {
+    vm.changePassword('Actual1@', 'Nueva12@').subscribe();
+    expect(service.changePassword).toHaveBeenCalledWith('Actual1@', 'Nueva12@');
     expect(vm.saving()).toBe(false);
   });
 });

@@ -91,6 +91,25 @@ describe('ProfileService - Perfil de usuario', () => {
     });
   });
 
+  it('cambia la contraseña con el contrato del backend', async () => {
+    const result = firstValueFrom(service.changePassword('Actual1@', 'Nueva12@'));
+    const req = http.expectOne(`${API}/change-password`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ contrasenaActual: 'Actual1@', nuevaContrasena: 'Nueva12@' });
+    req.flush({ message: 'Contrasena actualizada correctamente.' });
+
+    await result;
+  });
+
+  it('informa cuando la contraseña actual es incorrecta', async () => {
+    const result = firstValueFrom(service.changePassword('Mala123@', 'Nueva12@'));
+    http
+      .expectOne(`${API}/change-password`)
+      .flush({ error: 'La contrasena actual es incorrecta.' }, { status: 400, statusText: 'Bad Request' });
+
+    await expect(result).rejects.toMatchObject({ kind: 'validation', message: 'La contraseña actual es incorrecta.' });
+  });
+
   it('informa error de conexión cuando el servidor no responde', async () => {
     const result = firstValueFrom(service.profile());
     http.expectOne(API).error(new ProgressEvent('error'), { status: 0 });

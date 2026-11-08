@@ -127,6 +127,57 @@ describe('ProfilePage - Perfil de usuario', () => {
     expect(page.saving()).toBe(false);
   });
 
+  it('valida la nueva contraseña antes de enviarla', () => {
+    const changePassword = vi.fn(() => of('ok'));
+    const fixture = setup({ profile: () => of(STUDENT), changePassword });
+    const page = fixture.componentInstance;
+
+    page.openPassword();
+    page.passwordForm.setValue({ actual: 'Actual1@', contrasena: 'debil', confirmar: 'debil' });
+    page.savePassword();
+    expect(changePassword).not.toHaveBeenCalled();
+
+    page.passwordForm.setValue({ actual: 'Actual1@', contrasena: 'Nueva12@', confirmar: 'Nueva12@' });
+    page.savePassword();
+    expect(changePassword).toHaveBeenCalledWith('Actual1@', 'Nueva12@');
+  });
+
+  it('la palabra secreta respeta el límite de 4 a 10 caracteres del backend', () => {
+    const update = vi.fn(() => of('ok'));
+    const fixture = setup({ profile: () => of(STUDENT), update });
+    const page = fixture.componentInstance;
+
+    page.openSecret();
+    page.secretForm.setValue({ palabra: 'abc' });
+    page.saveSecret();
+    expect(update).not.toHaveBeenCalled();
+
+    page.secretForm.setValue({ palabra: 'gatito' });
+    page.saveSecret();
+    expect(update).toHaveBeenCalledWith({ palabra_secreta: 'gatito' });
+  });
+
+  it('la nueva contraseña debe coincidir y ser distinta de la actual', () => {
+    const changePassword = vi.fn(() => of('ok'));
+    const page = setup({ profile: () => of(STUDENT), changePassword }).componentInstance;
+
+    page.openPassword();
+    page.passwordForm.setValue({ actual: 'Nueva12@', contrasena: 'Nueva12@', confirmar: 'Nueva12@' });
+    page.passwordForm.markAllAsTouched();
+    expect(page.confirmError).toBe('La nueva contraseña debe ser distinta de la actual.');
+
+    page.passwordForm.setValue({ actual: 'Actual1@', contrasena: 'Nueva12@', confirmar: 'Nueva13@' });
+    expect(page.confirmError).toBe('Las contraseñas no coinciden.');
+    page.savePassword();
+    expect(changePassword).not.toHaveBeenCalled();
+  });
+
+  it('Seguridad indica si falta configurar la palabra secreta', () => {
+    expect(setup({ profile: () => of(STUDENT) }).nativeElement.textContent).toContain('Sin configurar');
+    TestBed.resetTestingModule();
+    expect(setup({ profile: () => of(VISITOR) }).nativeElement.textContent).toContain('Configurada');
+  });
+
   it('muestra el error de conexión con opción de reintentar', () => {
     const error = new ProfileError('connection', 'No fue posible conectar con el servidor.');
     const fixture = setup({ profile: () => throwError(() => error) });

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
@@ -17,21 +17,32 @@ import { Observable, map, startWith } from 'rxjs';
 import { HapticDirective } from '../../core/directives/haptic.directive';
 import { AuthService } from '../../core/services/auth.service';
 import { toProfileError } from '../../core/services/profile.service';
-import { EMAIL_PATTERN, patternTrimmed } from '../../core/validators/form.validators';
+import {
+  EMAIL_PATTERN,
+  noForbiddenChars,
+  passwordRules,
+  passwordsMatch,
+  patternTrimmed,
+  strongPassword,
+} from '../../core/validators/form.validators';
 import { ProfileViewModel } from './profile.view-model';
 
 // Mismas reglas que el registro de visitante (register.page.ts).
 const NAME_PATTERN = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,30}$/;
 const PHONE_PATTERN = /^[0-9]{10}$/;
+// Límites de la palabra secreta que aplica el backend al actualizar el perfil.
+const SECRET_MIN = 4;
+const SECRET_MAX = 10;
 
-type Sheet = 'edit' | null;
+type Sheet = 'edit' | 'secret' | 'password' | null;
 
 const DATE = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
 const DATE_TIME = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
 
 /**
  * Vista del perfil (Estudiante, Docente y Visitante): enlaza la plantilla con el estado
- * de su ViewModel, muestra los datos de la cuenta y edita la información permitida.
+ * de su ViewModel, muestra los datos de la cuenta, edita la información permitida y
+ * cambia la palabra secreta y la contraseña.
  */
 @Component({
   selector: 'app-profile',
@@ -66,6 +77,9 @@ export class ProfilePage {
 
   readonly sheet = signal<Sheet>(null);
   readonly sheetError = signal<string | null>(null);
+  readonly showSecret = signal(false);
+  readonly showPasswords = signal(false);
+  readonly secretMax = SECRET_MAX;
 
   /** Visitante puede cambiar su nombre; Estudiante y Docente solo correo y teléfono. */
   readonly editForm = this.fb.group({
@@ -75,6 +89,30 @@ export class ProfilePage {
     correo: this.fb.control('', [Validators.required, patternTrimmed(EMAIL_PATTERN, 'email')]),
     telefono: this.fb.control('', [Validators.required, patternTrimmed(PHONE_PATTERN, 'phone')]),
   });
+
+  readonly secretForm = this.fb.group({
+    palabra: this.fb.control('', [
+      Validators.required,
+      Validators.minLength(SECRET_MIN),
+      Validators.maxLength(SECRET_MAX),
+      noForbiddenChars,
+    ]),
+  });
+
+  readonly passwordForm = this.fb.group(
+    {
+      actual: this.fb.control('', Validators.required),
+      contrasena: this.fb.control('', [Validators.required, noForbiddenChars, strongPassword]),
+      confirmar: this.fb.control('', Validators.required),
+    },
+    { validators: [passwordsMatch, differentFromCurrent] },
+  );
+
+  private readonly newPassword = toSignal(
+    this.passwordForm.controls.contrasena.valueChanges.pipe(startWith('')),
+    { initialValue: '' },
+  );
+  readonly rules = computed(() => passwordRules(this.newPassword()));
 
   /** El botón Guardar solo se activa si hay cambios respecto a lo que se ve en el perfil. */
   readonly editChanged = toSignal(
@@ -127,6 +165,18 @@ export class ProfilePage {
     this.openSheet('edit');
   }
 
+  openSecret(): void {
+    this.secretForm.reset();
+    this.showSecret.set(false);
+    this.openSheet('secret');
+  }
+
+  openPassword(): void {
+    this.passwordForm.reset();
+    this.showPasswords.set(false);
+    this.openSheet('password');
+  }
+
   closeSheet(): void {
     if (!this.saving()) this.sheet.set(null);
   }
@@ -145,6 +195,25 @@ export class ProfilePage {
     this.submit(this.vm.update(changes), 'Perfil actualizado correctamente.', true);
   }
 
+  saveSecret(): void {
+    if (this.saving()) return;
+    if (this.secretForm.invalid) {
+      this.secretForm.markAllAsTouched();
+      return;
+    }
+    this.submit(this.vm.saveSecret(this.secretForm.getRawValue().palabra), 'Palabra secreta guardada correctamente.', true);
+  }
+
+  savePassword(): void {
+    if (this.saving()) return;
+    if (this.passwordForm.invalid) {
+      this.passwordForm.markAllAsTouched();
+      return;
+    }
+    const { actual, contrasena } = this.passwordForm.getRawValue();
+    this.submit(this.vm.changePassword(actual, contrasena), 'Contraseña actualizada correctamente.', false);
+  }
+
   /* ---------- Mensajes de validación (cerca de cada campo) ---------- */
 
   fieldError(control: AbstractControl, kind: 'name' | 'email' | 'phone'): string {
@@ -153,6 +222,31 @@ export class ProfilePage {
     if (kind === 'name') return 'Usa solo letras y espacios (2 a 30 caracteres).';
     if (kind === 'email') return 'Ingresa un correo electrónico válido.';
     return 'Ingresa un teléfono de 10 dígitos.';
+  }
+
+  get secretError(): string {
+    const control = this.secretForm.controls.palabra;
+    if (!control.touched || control.valid) return '';
+    if (control.hasError('required')) return 'Escribe tu palabra secreta.';
+    if (control.hasError('forbidden')) return 'No uses los caracteres < > " \' `.';
+    return `Debe tener entre ${SECRET_MIN} y ${SECRET_MAX} caracteres.`;
+  }
+
+  get newPasswordError(): string {
+    const control = this.passwordForm.controls.contrasena;
+    if (!control.touched || control.valid) return '';
+    if (control.hasError('required')) return 'Escribe tu nueva contraseña.';
+    if (control.hasError('forbidden')) return 'No uses los caracteres < > " \' `.';
+    return 'La contraseña no cumple los requisitos.';
+  }
+
+  get confirmError(): string {
+    const control = this.passwordForm.controls.confirmar;
+    if (!control.touched) return '';
+    if (control.hasError('required')) return 'Confirma tu nueva contraseña.';
+    if (this.passwordForm.hasError('mismatch')) return 'Las contraseñas no coinciden.';
+    if (this.passwordForm.hasError('sameAsCurrent')) return 'La nueva contraseña debe ser distinta de la actual.';
+    return '';
   }
 
   /* ---------- Sesión ---------- */
@@ -196,4 +290,11 @@ export class ProfilePage {
     const toast = await this.toasts.create({ message, duration: 3500, position: 'bottom', color });
     await toast.present();
   }
+}
+
+/** La nueva contraseña no puede ser igual a la actual. */
+function differentFromCurrent(group: AbstractControl) {
+  const actual = group.get('actual')?.value;
+  const nueva = group.get('contrasena')?.value;
+  return actual && nueva && actual === nueva ? { sameAsCurrent: true } : null;
 }

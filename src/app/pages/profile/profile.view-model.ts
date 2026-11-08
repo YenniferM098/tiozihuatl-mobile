@@ -75,6 +75,16 @@ export class ProfileViewModel {
     return this.run(this.service.update(changes));
   }
 
+  /** Guarda la palabra secreta con la que se recupera la contraseña. */
+  saveSecret(palabra: string): Observable<string> {
+    return this.run(this.service.update({ palabra_secreta: palabra.trim() }));
+  }
+
+  /** Cambia la contraseña con la que se inicia sesión. */
+  changePassword(actual: string, nueva: string): Observable<string> {
+    return this.run(this.service.changePassword(actual, nueva));
+  }
+
   /** Marca la operación en curso mientras dura la petición. */
   private run(request: Observable<string>): Observable<string> {
     this.saving.set(true);
