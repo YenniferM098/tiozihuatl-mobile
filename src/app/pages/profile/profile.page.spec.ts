@@ -74,6 +74,59 @@ describe('ProfilePage - Perfil de usuario', () => {
     expect(page.formatDate('no es fecha')).toBe('—');
   });
 
+  it('Estudiante solo puede editar correo y teléfono; envía únicamente lo que cambió', () => {
+    const update = vi.fn(() => of('Perfil actualizado correctamente.'));
+    const fixture = setup({ profile: () => of(STUDENT), update });
+    const page = fixture.componentInstance;
+
+    page.openEdit();
+    expect(page.editForm.controls.nombre.disabled).toBe(true);
+    page.editForm.controls.telefono.setValue('7719998877');
+    page.saveProfile();
+
+    expect(update).toHaveBeenCalledWith({ telefono: '7719998877' });
+  });
+
+  it('Visitante puede editar su nombre', () => {
+    const update = vi.fn(() => of('ok'));
+    const fixture = setup({ profile: () => of(VISITOR), update });
+    const page = fixture.componentInstance;
+
+    page.openEdit();
+    expect(page.editForm.controls.nombre.enabled).toBe(true);
+    page.editForm.controls.nombre.setValue('Astrid');
+    page.saveProfile();
+
+    expect(update).toHaveBeenCalledWith({ nombre: 'Astrid' });
+  });
+
+  it('no envía un correo con formato inválido', () => {
+    const update = vi.fn(() => of('ok'));
+    const fixture = setup({ profile: () => of(STUDENT), update });
+    const page = fixture.componentInstance;
+
+    page.openEdit();
+    page.editForm.controls.correo.setValue('usuario@');
+    page.saveProfile();
+
+    expect(update).not.toHaveBeenCalled();
+    expect(page.fieldError(page.editForm.controls.correo, 'email')).toBe('Ingresa un correo electrónico válido.');
+  });
+
+  it('muestra dentro de la hoja el error que devuelve el servidor', () => {
+    const update = vi.fn(() => throwError(() => new ProfileError('conflict', 'El correo electrónico ya está registrado en otra cuenta.')));
+    const fixture = setup({ profile: () => of(STUDENT), update });
+    const page = fixture.componentInstance;
+
+    page.openEdit();
+    page.editForm.controls.correo.setValue('otro@correo.com');
+    page.saveProfile();
+
+    expect(page.sheet()).toBe('edit');
+    expect(page.sheetError()).toBe('El correo electrónico ya está registrado en otra cuenta.');
+    expect(page.saving()).toBe(false);
+  });
+
   it('muestra el error de conexión con opción de reintentar', () => {
     const error = new ProfileError('connection', 'No fue posible conectar con el servidor.');
     const fixture = setup({ profile: () => throwError(() => error) });

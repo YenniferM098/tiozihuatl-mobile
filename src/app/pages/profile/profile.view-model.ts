@@ -1,8 +1,15 @@
 import { DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
-import { Profile, ProfileError } from '../../core/models/profile.models';
+import { Observable, finalize } from 'rxjs';
+import { Profile, ProfileError, ProfileUpdateRequest } from '../../core/models/profile.models';
 import { ProfileService, toProfileError } from '../../core/services/profile.service';
+
+/** Valores del formulario de edición (los nombres coinciden con los del backend). */
+export type EditableFields = Record<'nombre' | 'a_paterno' | 'a_materno' | 'correo' | 'telefono', string>;
+
+/** Visitante puede cambiar su nombre; Estudiante y Docente solo correo y teléfono. */
+const VISITOR_FIELDS = ['nombre', 'a_paterno', 'a_materno', 'correo', 'telefono'] as const;
+const MEMBER_FIELDS = ['correo', 'telefono'] as const;
 
 /**
  * ViewModel del perfil (MVVM): conserva los datos de la cuenta, el error de carga y si hay
@@ -16,6 +23,8 @@ export class ProfileViewModel {
 
   readonly profile = signal<Profile | null>(null);
   readonly error = signal<ProfileError | null>(null);
+  /** Hay un cambio enviándose: la vista bloquea los formularios y los botones. */
+  readonly saving = signal(false);
 
   readonly isVisitor = computed(() => this.profile()?.rol === 'Visitante');
   readonly isStudent = computed(() => this.profile()?.rol === 'Estudiante');
@@ -40,5 +49,35 @@ export class ProfileViewModel {
           else this.error.set(error);
         },
       });
+  }
+
+  /** Solo los campos permitidos al rol que cambiaron (el backend ignora los demás). */
+  changes(values: EditableFields): ProfileUpdateRequest {
+    const p = this.profile();
+    if (!p) return {};
+    const current: EditableFields = {
+      nombre: p.nombre,
+      a_paterno: p.aPaterno,
+      a_materno: p.aMaterno,
+      correo: p.correo,
+      telefono: p.telefono,
+    };
+    const changes: ProfileUpdateRequest = {};
+    for (const key of this.isVisitor() ? VISITOR_FIELDS : MEMBER_FIELDS) {
+      const value = values[key].replace(/\s+/g, ' ').trim();
+      if (value !== current[key]) changes[key] = key === 'correo' ? value.toLowerCase() : value;
+    }
+    return changes;
+  }
+
+  /** Guarda los datos personales permitidos. */
+  update(changes: ProfileUpdateRequest): Observable<string> {
+    return this.run(this.service.update(changes));
+  }
+
+  /** Marca la operación en curso mientras dura la petición. */
+  private run(request: Observable<string>): Observable<string> {
+    this.saving.set(true);
+    return request.pipe(finalize(() => this.saving.set(false)));
   }
 }

@@ -85,6 +85,9 @@
           <div><dt>Correo electrónico</dt><dd>{{ p.correo || '—' }}</dd></div>
           <div><dt>Teléfono de contacto</dt><dd>{{ p.telefono || '—' }}</dd></div>
         </dl>
+        <button type="button" class="outline" tzHaptic (click)="openEdit()">
+          <i class="ph ph-pencil-simple" aria-hidden="true"></i>Editar información
+        </button>
       </section>
     } @else {
       <div aria-busy="true" aria-label="Cargando perfil">
@@ -94,4 +97,59 @@
       </div>
     }
   </main>
+
+  <!-- ---------- Editar información personal ---------- -->
+  <ion-modal [isOpen]="sheet() === 'edit'" [canDismiss]="!saving()" (didDismiss)="sheet.set(null)">
+    <ng-template>
+      <ion-content class="sheet-content">
+        <header class="sheet-bar">
+          <button type="button" class="sheet-bar__close" aria-label="Cerrar" (click)="closeSheet()">
+            <i class="ph ph-x" aria-hidden="true"></i>
+          </button>
+          <h2 class="sheet-bar__title">Editar información</h2>
+        </header>
+        <form class="sheet-form" [formGroup]="editForm" (ngSubmit)="saveProfile()" novalidate>
+          @if (!isVisitor()) {
+            <p class="sheet-form__hint">
+              Puedes actualizar tu correo y teléfono. Tu nombre lo administra el Instituto.
+            </p>
+          } @else {
+            <ion-input class="tz-field" formControlName="nombre" label="Nombre(s)" labelPlacement="stacked"
+                       autocapitalize="words" [maxlength]="30" [readonly]="saving()"
+                       [errorText]="fieldError(editForm.controls.nombre, 'name')" (ionInput)="sheetError.set(null)">
+              <i slot="start" class="ph ph-user tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+            <ion-input class="tz-field" formControlName="a_paterno" label="Apellido paterno" labelPlacement="stacked"
+                       autocapitalize="words" [maxlength]="30" [readonly]="saving()"
+                       [errorText]="fieldError(editForm.controls.a_paterno, 'name')" (ionInput)="sheetError.set(null)">
+              <i slot="start" class="ph ph-user tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+            <ion-input class="tz-field" formControlName="a_materno" label="Apellido materno" labelPlacement="stacked"
+                       autocapitalize="words" [maxlength]="30" [readonly]="saving()"
+                       [errorText]="fieldError(editForm.controls.a_materno, 'name')" (ionInput)="sheetError.set(null)">
+              <i slot="start" class="ph ph-user tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+          }
+          <ion-input class="tz-field" formControlName="correo" label="Correo electrónico" labelPlacement="stacked"
+                     type="email" inputmode="email" autocapitalize="off" [maxlength]="80" [readonly]="saving()"
+                     [errorText]="fieldError(editForm.controls.correo, 'email')" (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-envelope-simple tz-field__icon" aria-hidden="true"></i>
+          </ion-input>
+          <ion-input class="tz-field" formControlName="telefono" label="Teléfono de contacto" labelPlacement="stacked"
+                     type="tel" inputmode="numeric" [maxlength]="10" [readonly]="saving()"
+                     [errorText]="fieldError(editForm.controls.telefono, 'phone')" (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-phone tz-field__icon" aria-hidden="true"></i>
+          </ion-input>
+
+          @if (sheetError(); as message) {
+            <p class="tz-alert tz-alert--error" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ message }}</p>
+          }
+          <ion-button class="tz-submit" type="submit" expand="block" [disabled]="saving() || !editChanged()">
+            @if (saving()) { <ion-spinner name="crescent"></ion-spinner> }
+            Guardar cambios
+          </ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>

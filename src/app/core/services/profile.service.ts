@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, TimeoutError, catchError, map, switchMap, tap, throwError, timeout } from 'rxjs';
-import { Profile, ProfileDto, ProfileError } from '../models/profile.models';
+import { Profile, ProfileDto, ProfileError, ProfileUpdateRequest } from '../models/profile.models';
 import { PROFILE_REPOSITORY } from '../../domain/repositories/profile.repository';
 import { AuthService } from './auth.service';
 import { SessionService } from './session.service';
@@ -51,6 +51,13 @@ export class ProfileService {
         return toProfile(dto);
       }),
       tap((profile) => this.syncSession(profile)),
+    );
+  }
+
+  /** PUT /users/profile con los datos personales permitidos o la palabra secreta. */
+  update(data: ProfileUpdateRequest): Observable<string> {
+    return this.withSession(() => this.repository.update(data)).pipe(
+      map((res) => res?.message || 'Perfil actualizado correctamente.'),
     );
   }
 

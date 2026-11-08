@@ -68,6 +68,29 @@ describe('ProfileService - Perfil de usuario', () => {
     expect(user?.nombre).toBe('Astrid Cireth');
   });
 
+  it('envía solo los datos indicados al actualizar', async () => {
+    const result = firstValueFrom(service.update({ correo: 'nuevo@correo.com' }));
+    const req = http.expectOne(API);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ correo: 'nuevo@correo.com' });
+    req.flush({ message: 'Perfil actualizado correctamente.' });
+
+    expect(await result).toBe('Perfil actualizado correctamente.');
+  });
+
+  it('traduce el correo duplicado (409) a un mensaje con acentos', async () => {
+    const result = firstValueFrom(service.update({ correo: 'otro@correo.com' }));
+    http.expectOne(API).flush(
+      { error: 'El correo electronico ya esta registrado en otra cuenta.' },
+      { status: 409, statusText: 'Conflict' },
+    );
+
+    await expect(result).rejects.toMatchObject({
+      kind: 'conflict',
+      message: 'El correo electrónico ya está registrado en otra cuenta.',
+    });
+  });
+
   it('informa error de conexión cuando el servidor no responde', async () => {
     const result = firstValueFrom(service.profile());
     http.expectOne(API).error(new ProgressEvent('error'), { status: 0 });

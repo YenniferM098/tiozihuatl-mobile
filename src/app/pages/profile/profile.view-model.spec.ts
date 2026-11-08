@@ -1,17 +1,26 @@
 import { TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { Profile, ProfileError } from '../../core/models/profile.models';
 import { ProfileService } from '../../core/services/profile.service';
 import { ProfileViewModel } from './profile.view-model';
 
-const PROFILE = { id: 5, rol: 'Estudiante', nombre: 'Astrid' } as Profile;
+const PROFILE = {
+  id: 5,
+  rol: 'Estudiante',
+  nombre: 'Astrid',
+  aPaterno: 'Zamora',
+  aMaterno: 'Guzmán',
+  correo: 'astrid@correo.com',
+  telefono: '7711234567',
+} as Profile;
+const VALUES = { nombre: 'Astrid', a_paterno: 'Zamora', a_materno: 'Guzmán', correo: 'astrid@correo.com', telefono: '7711234567' };
 
 describe('ProfileViewModel (MVVM)', () => {
-  let service: { profile: ReturnType<typeof vi.fn> };
+  let service: { profile: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> };
   let vm: ProfileViewModel;
 
   beforeEach(() => {
-    service = { profile: vi.fn(() => of(PROFILE)) };
+    service = { profile: vi.fn(() => of(PROFILE)), update: vi.fn(() => of('ok')) };
     TestBed.configureTestingModule({ providers: [{ provide: ProfileService, useValue: service }] });
     vm = TestBed.runInInjectionContext(() => new ProfileViewModel());
   });
@@ -52,5 +61,36 @@ describe('ProfileViewModel (MVVM)', () => {
 
     expect(vm.isVisitor()).toBe(true);
     expect(vm.isStudent()).toBe(false);
+  });
+
+  it('Estudiante y Docente solo envían correo y teléfono, limpios y sin repetir lo que no cambió', () => {
+    vm.load();
+    const changes = vm.changes({ ...VALUES, nombre: 'Otro', correo: '  NUEVO@Correo.com ', telefono: '7711234567' });
+
+    expect(changes).toEqual({ correo: 'nuevo@correo.com' });
+  });
+
+  it('Visitante también puede cambiar su nombre y apellidos', () => {
+    service.profile.mockReturnValue(of({ ...PROFILE, rol: 'Visitante' }));
+    vm.load();
+
+    expect(vm.changes({ ...VALUES, nombre: 'Astrid   Cireth' })).toEqual({ nombre: 'Astrid Cireth' });
+  });
+
+  it('sin perfil cargado no hay cambios que enviar', () => {
+    expect(vm.changes(VALUES)).toEqual({});
+  });
+
+  it('marca la operación en curso mientras se guarda', () => {
+    const pending = new Subject<string>();
+    service.update.mockReturnValue(pending);
+    vm.load();
+    vm.update({ telefono: '7719998877' }).subscribe();
+
+    expect(service.update).toHaveBeenCalledWith({ telefono: '7719998877' });
+    expect(vm.saving()).toBe(true);
+    pending.next('ok');
+    pending.complete();
+    expect(vm.saving()).toBe(false);
   });
 });
