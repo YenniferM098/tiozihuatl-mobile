@@ -1,0 +1,298 @@
+<ion-content class="profile-content">
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- ---------- Identidad sobre el azul institucional (mockup 7.5) ---------- -->
+  <header class="hero">
+    <h1 class="hero__title">Mi perfil</h1>
+    @if (profile(); as p) {
+      <div class="identity">
+        <span class="identity__avatar"><i class="ph ph-user" aria-hidden="true"></i></span>
+        <p class="identity__name">{{ p.fullName }}</p>
+        @if (p.matricula) {
+          <p class="identity__sub">Matrícula: {{ p.matricula }}</p>
+        }
+        <ul class="chips" aria-label="Datos de la cuenta">
+          <li class="chip"><i class="ph ph-shield-check" aria-hidden="true"></i>{{ p.rol }}</li>
+          @if (p.carrera) {
+            <li class="chip"><i class="ph ph-graduation-cap" aria-hidden="true"></i>{{ p.carrera }}</li>
+          }
+          @if (p.semestre) {
+            <li class="chip"><i class="ph ph-calendar-blank" aria-hidden="true"></i>{{ p.semestre }}</li>
+          }
+          @if (p.grupo) {
+            <li class="chip"><i class="ph ph-users-three" aria-hidden="true"></i>Grupo {{ p.grupo }}</li>
+          }
+        </ul>
+      </div>
+    }
+  </header>
+
+  <main class="sheet">
+    @if (error(); as err) {
+      <section class="state" role="alert">
+        <span class="state__icon"><i class="ph ph-wifi-slash" aria-hidden="true"></i></span>
+        <h2 class="state__title">No pudimos cargar tu perfil</h2>
+        <p class="state__text">{{ err.message }}</p>
+        @if (err.kind === 'session') {
+          <button type="button" class="state__action" tzHaptic (click)="goToLogin()">
+            <i class="ph ph-sign-in" aria-hidden="true"></i>Iniciar sesión
+          </button>
+        } @else {
+          <button type="button" class="state__action" tzHaptic (click)="load()">
+            <i class="ph ph-arrow-clockwise" aria-hidden="true"></i>Reintentar
+          </button>
+        }
+      </section>
+    } @else if (profile(); as p) {
+      <!-- ---------- Cuenta (solo consulta) ---------- -->
+      <section class="card" aria-labelledby="card-account">
+        <h2 id="card-account" class="card__title"><i class="ph ph-lock-simple" aria-hidden="true"></i>Cuenta</h2>
+        <dl class="fields">
+          <div><dt>Acceso</dt><dd>{{ p.rol }}</dd></div>
+          @if (p.matricula) {
+            <div><dt>Matrícula</dt><dd>{{ p.matricula }}</dd></div>
+          }
+          @if (p.carrera) {
+            <div><dt>Carrera</dt><dd>{{ p.carrera }}</dd></div>
+          }
+          @if (p.semestre) {
+            <div><dt>Semestre</dt><dd>{{ p.semestre }}</dd></div>
+          }
+          @if (p.grupo) {
+            <div><dt>Grupo</dt><dd>{{ p.grupo }}</dd></div>
+          }
+          <div>
+            <dt>Estado de la cuenta</dt>
+            <dd><span class="status" [class.status--off]="p.estado !== 'Activo'">{{ p.estado || '—' }}</span></dd>
+          </div>
+          <div><dt>Miembro desde</dt><dd>{{ formatDate(p.fechaRegistro) }}</dd></div>
+          <div><dt>Última actualización</dt><dd>{{ formatDate(p.ultimaConexion, true) }}</dd></div>
+        </dl>
+        @if (!isVisitor()) {
+          <p class="card__hint">Tu nombre, matrícula y datos académicos los administra el Instituto.</p>
+        }
+      </section>
+
+      <!-- ---------- Información personal ---------- -->
+      <section class="card" aria-labelledby="card-personal">
+        <h2 id="card-personal" class="card__title"><i class="ph ph-user-circle" aria-hidden="true"></i>Información personal</h2>
+        <dl class="fields">
+          <div><dt>Nombre</dt><dd>{{ p.nombre || '—' }}</dd></div>
+          <div><dt>Apellido paterno</dt><dd>{{ p.aPaterno || '—' }}</dd></div>
+          <div><dt>Apellido materno</dt><dd>{{ p.aMaterno || '—' }}</dd></div>
+          <div><dt>Correo electrónico</dt><dd>{{ p.correo || '—' }}</dd></div>
+          <div><dt>Teléfono de contacto</dt><dd>{{ p.telefono || '—' }}</dd></div>
+        </dl>
+        <button type="button" class="outline" tzHaptic (click)="openEdit()">
+          <i class="ph ph-pencil-simple" aria-hidden="true"></i>Editar información
+        </button>
+      </section>
+
+      <!-- ---------- Seguridad ---------- -->
+      <section class="card" aria-labelledby="card-security">
+        <h2 id="card-security" class="card__title"><i class="ph ph-shield-check" aria-hidden="true"></i>Seguridad</h2>
+        <button type="button" class="row" tzHaptic (click)="openSecret()">
+          <i class="ph ph-key row__icon" aria-hidden="true"></i>
+          <span class="row__text">
+            <span class="row__label">Palabra secreta</span>
+            <span class="row__sub" [class.row__sub--warn]="!p.tienePalabraSecreta">
+              {{ p.tienePalabraSecreta ? 'Configurada' : 'Sin configurar: la necesitas para recuperar tu contraseña' }}
+            </span>
+          </span>
+          <i class="ph ph-caret-right" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="row" tzHaptic (click)="openPassword()">
+          <i class="ph ph-lock-key row__icon" aria-hidden="true"></i>
+          <span class="row__text">
+            <span class="row__label">Cambiar contraseña</span>
+            <span class="row__sub">Actualiza la contraseña con la que inicias sesión</span>
+          </span>
+          <i class="ph ph-caret-right" aria-hidden="true"></i>
+        </button>
+      </section>
+
+      <!-- ---------- Privacidad y tus datos (derechos ARCO) ---------- -->
+      <section class="card" aria-labelledby="card-privacy">
+        <h2 id="card-privacy" class="card__title"><i class="ph ph-user-focus" aria-hidden="true"></i>Privacidad y tus datos</h2>
+        <p class="card__text">
+          Aquí puedes consultar y corregir tus datos personales. Para eliminar tu cuenta o pedir que tus datos
+          dejen de usarse, la solicitud la atiende el Instituto (Servicios Escolares).
+        </p>
+        @if (isVisitor()) {
+          <p class="card__text">Como Visitante también puedes eliminar tu cuenta desde la aplicación.</p>
+        }
+        <a class="outline" [href]="accountDeletionUrl" target="_blank" rel="noopener noreferrer" tzHaptic>
+          <i class="ph ph-arrow-square-out" aria-hidden="true"></i>Cómo eliminar mi cuenta
+        </a>
+        @if (isVisitor()) {
+          <button type="button" class="danger-link" [disabled]="saving()" (click)="deleteAccount()">
+            <i class="ph ph-trash" aria-hidden="true"></i>Eliminar mi cuenta
+          </button>
+        }
+      </section>
+
+      <!-- ---------- Sesión ---------- -->
+      <button type="button" class="logout" tzHaptic (click)="logout()">
+        <i class="ph ph-sign-out" aria-hidden="true"></i>Cerrar sesión
+      </button>
+    } @else {
+      <div aria-busy="true" aria-label="Cargando perfil">
+        @for (i of skeletonRows; track i) {
+          <ion-skeleton-text class="sk-card" [animated]="true"></ion-skeleton-text>
+        }
+      </div>
+    }
+  </main>
+
+  <!-- ---------- Editar información personal ---------- -->
+  <ion-modal [isOpen]="sheet() === 'edit'" [canDismiss]="!saving()" (didDismiss)="sheet.set(null)">
+    <ng-template>
+      <ion-content class="sheet-content">
+        <header class="sheet-bar">
+          <button type="button" class="sheet-bar__close" aria-label="Cerrar" (click)="closeSheet()">
+            <i class="ph ph-x" aria-hidden="true"></i>
+          </button>
+          <h2 class="sheet-bar__title">Editar información</h2>
+        </header>
+        <form class="sheet-form" [formGroup]="editForm" (ngSubmit)="saveProfile()" novalidate>
+          @if (!isVisitor()) {
+            <p class="sheet-form__hint">
+              Puedes actualizar tu correo y teléfono. Tu nombre lo administra el Instituto.
+            </p>
+          } @else {
+            <ion-input class="tz-field" formControlName="nombre" label="Nombre(s)" labelPlacement="stacked"
+                       autocapitalize="words" [maxlength]="30" [readonly]="saving()"
+                       [errorText]="fieldError(editForm.controls.nombre, 'name')" (ionInput)="sheetError.set(null)">
+              <i slot="start" class="ph ph-user tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+            <ion-input class="tz-field" formControlName="a_paterno" label="Apellido paterno" labelPlacement="stacked"
+                       autocapitalize="words" [maxlength]="30" [readonly]="saving()"
+                       [errorText]="fieldError(editForm.controls.a_paterno, 'name')" (ionInput)="sheetError.set(null)">
+              <i slot="start" class="ph ph-user tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+            <ion-input class="tz-field" formControlName="a_materno" label="Apellido materno" labelPlacement="stacked"
+                       autocapitalize="words" [maxlength]="30" [readonly]="saving()"
+                       [errorText]="fieldError(editForm.controls.a_materno, 'name')" (ionInput)="sheetError.set(null)">
+              <i slot="start" class="ph ph-user tz-field__icon" aria-hidden="true"></i>
+            </ion-input>
+          }
+          <ion-input class="tz-field" formControlName="correo" label="Correo electrónico" labelPlacement="stacked"
+                     type="email" inputmode="email" autocapitalize="off" [maxlength]="80" [readonly]="saving()"
+                     [errorText]="fieldError(editForm.controls.correo, 'email')" (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-envelope-simple tz-field__icon" aria-hidden="true"></i>
+          </ion-input>
+          <ion-input class="tz-field" formControlName="telefono" label="Teléfono de contacto" labelPlacement="stacked"
+                     type="tel" inputmode="numeric" [maxlength]="10" [readonly]="saving()"
+                     [errorText]="fieldError(editForm.controls.telefono, 'phone')" (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-phone tz-field__icon" aria-hidden="true"></i>
+          </ion-input>
+
+          @if (sheetError(); as message) {
+            <p class="tz-alert tz-alert--error" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ message }}</p>
+          }
+          <ion-button class="tz-submit" type="submit" expand="block" [disabled]="saving() || !editChanged()">
+            @if (saving()) { <ion-spinner name="crescent"></ion-spinner> }
+            Guardar cambios
+          </ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ---------- Palabra secreta ---------- -->
+  <ion-modal [isOpen]="sheet() === 'secret'" [canDismiss]="!saving()" (didDismiss)="sheet.set(null)">
+    <ng-template>
+      <ion-content class="sheet-content">
+        <header class="sheet-bar">
+          <button type="button" class="sheet-bar__close" aria-label="Cerrar" (click)="closeSheet()">
+            <i class="ph ph-x" aria-hidden="true"></i>
+          </button>
+          <h2 class="sheet-bar__title">Palabra secreta</h2>
+        </header>
+        <form class="sheet-form" [formGroup]="secretForm" (ngSubmit)="saveSecret()" novalidate>
+          <p class="sheet-form__hint">
+            Se te pedirá junto con tu correo para recuperar tu contraseña. Guárdala en un lugar seguro:
+            por seguridad no se puede consultar después.
+          </p>
+          <ion-input class="tz-field" formControlName="palabra" label="Nueva palabra secreta" labelPlacement="stacked"
+                     [type]="showSecret() ? 'text' : 'password'" autocapitalize="off" autocomplete="off"
+                     [maxlength]="secretMax" [readonly]="saving()" [errorText]="secretError"
+                     (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-key tz-field__icon" aria-hidden="true"></i>
+            <button slot="end" type="button" class="tz-field__toggle"
+                    [attr.aria-label]="showSecret() ? 'Ocultar palabra secreta' : 'Mostrar palabra secreta'"
+                    (click)="showSecret.set(!showSecret())">
+              <i class="ph" [class.ph-eye]="!showSecret()" [class.ph-eye-slash]="showSecret()" aria-hidden="true"></i>
+            </button>
+          </ion-input>
+
+          @if (sheetError(); as message) {
+            <p class="tz-alert tz-alert--error" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ message }}</p>
+          }
+          <ion-button class="tz-submit" type="submit" expand="block" [disabled]="saving()">
+            @if (saving()) { <ion-spinner name="crescent"></ion-spinner> }
+            Guardar palabra secreta
+          </ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ---------- Cambiar contraseña ---------- -->
+  <ion-modal [isOpen]="sheet() === 'password'" [canDismiss]="!saving()" (didDismiss)="sheet.set(null)">
+    <ng-template>
+      <ion-content class="sheet-content">
+        <header class="sheet-bar">
+          <button type="button" class="sheet-bar__close" aria-label="Cerrar" (click)="closeSheet()">
+            <i class="ph ph-x" aria-hidden="true"></i>
+          </button>
+          <h2 class="sheet-bar__title">Cambiar contraseña</h2>
+        </header>
+        <form class="sheet-form" [formGroup]="passwordForm" (ngSubmit)="savePassword()" novalidate>
+          <ion-input class="tz-field" formControlName="actual" label="Contraseña actual" labelPlacement="stacked"
+                     [type]="showPasswords() ? 'text' : 'password'" autocomplete="current-password"
+                     autocapitalize="off" [readonly]="saving()"
+                     [errorText]="passwordForm.controls.actual.touched && passwordForm.controls.actual.invalid ? 'Escribe tu contraseña actual.' : ''"
+                     (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-lock tz-field__icon" aria-hidden="true"></i>
+            <button slot="end" type="button" class="tz-field__toggle"
+                    [attr.aria-label]="showPasswords() ? 'Ocultar contraseñas' : 'Mostrar contraseñas'"
+                    (click)="showPasswords.set(!showPasswords())">
+              <i class="ph" [class.ph-eye]="!showPasswords()" [class.ph-eye-slash]="showPasswords()" aria-hidden="true"></i>
+            </button>
+          </ion-input>
+          <ion-input class="tz-field" formControlName="contrasena" label="Nueva contraseña" labelPlacement="stacked"
+                     [type]="showPasswords() ? 'text' : 'password'" autocomplete="new-password" autocapitalize="off"
+                     placeholder="8 caracteres" [maxlength]="8" [readonly]="saving()" [errorText]="newPasswordError"
+                     (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-lock-key tz-field__icon" aria-hidden="true"></i>
+          </ion-input>
+
+          <ul class="rules" aria-label="Requisitos de la contraseña">
+            <li [class.is-ok]="rules().length"><i class="ph" [class.ph-check-circle]="rules().length" [class.ph-circle]="!rules().length" aria-hidden="true"></i>8 caracteres</li>
+            <li [class.is-ok]="rules().upper"><i class="ph" [class.ph-check-circle]="rules().upper" [class.ph-circle]="!rules().upper" aria-hidden="true"></i>Una mayúscula</li>
+            <li [class.is-ok]="rules().lower"><i class="ph" [class.ph-check-circle]="rules().lower" [class.ph-circle]="!rules().lower" aria-hidden="true"></i>Una minúscula</li>
+            <li [class.is-ok]="rules().number"><i class="ph" [class.ph-check-circle]="rules().number" [class.ph-circle]="!rules().number" aria-hidden="true"></i>Un número</li>
+            <li [class.is-ok]="rules().special"><i class="ph" [class.ph-check-circle]="rules().special" [class.ph-circle]="!rules().special" aria-hidden="true"></i>Un símbolo (&#64;$!%*?&amp;)</li>
+          </ul>
+
+          <ion-input class="tz-field" formControlName="confirmar" label="Confirmar nueva contraseña" labelPlacement="stacked"
+                     [type]="showPasswords() ? 'text' : 'password'" autocomplete="new-password" autocapitalize="off"
+                     [maxlength]="8" [readonly]="saving()" [errorText]="confirmError" (ionInput)="sheetError.set(null)">
+            <i slot="start" class="ph ph-lock-key tz-field__icon" aria-hidden="true"></i>
+          </ion-input>
+
+          @if (sheetError(); as message) {
+            <p class="tz-alert tz-alert--error" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i>{{ message }}</p>
+          }
+          <ion-button class="tz-submit" type="submit" expand="block" [disabled]="saving()">
+            @if (saving()) { <ion-spinner name="crescent"></ion-spinner> }
+            Actualizar contraseña
+          </ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

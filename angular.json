@@ -149,7 +149,9 @@
               "src/app/core/services/material-files.service.ts",
               "src/app/core/services/material-file-validation.ts",
               "src/app/core/native/**/*.ts",
-              "src/app/pages/materiales/**/*.ts"
+              "src/app/pages/materiales/**/*.ts",
+              "src/app/core/services/profile.service.ts",
+              "src/app/pages/profile/**/*.ts"
             ],
             "coverageReporters": ["text-summary", "html", "lcov"],
             "coverageThresholds": { "statements": 70, "branches": 70, "functions": 70, "lines": 70 }
