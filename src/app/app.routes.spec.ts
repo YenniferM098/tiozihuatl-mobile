@@ -10,6 +10,7 @@ import { MaterialDetailPage } from './pages/materiales/material-detail.page';
 import { MaterialViewerPage } from './pages/materiales/material-viewer.page';
 import { MaterialsPage } from './pages/materiales/materials.page';
 import { LoginPage } from './pages/login/login.page';
+import { ProfilePage } from './pages/profile/profile.page';
 import { RecoverPasswordPage } from './pages/recover-password/recover-password.page';
 import { TabsPage } from './pages/tabs/tabs.page';
 
@@ -38,7 +39,7 @@ describe('Rutas de la app (HU-02 navegación)', () => {
   });
 
   it('las pestañas sin contenido muestran "Próximamente" con sus datos', async () => {
-    for (const path of ['revistas', 'perfil']) {
+    for (const path of ['revistas']) {
       expect(await componente(pestana(path))).toBe(ComingSoonPage);
       expect(pestana(path).data).toEqual(
         expect.objectContaining({ title: expect.any(String), icon: expect.any(String), description: expect.any(String) }),
@@ -52,6 +53,11 @@ describe('Rutas de la app (HU-02 navegación)', () => {
     expect(await componente(ruta('reset-password'))).toBe(RecoverPasswordPage);
     expect(await componente(tabs)).toBe(TabsPage);
     expect(await componente(pestana('home'))).toBe(HomePage);
+  });
+
+  it('Perfil (HU-03) carga su pantalla para todos los roles con sesión', async () => {
+    expect(await componente(pestana('perfil'))).toBe(ProfilePage);
+    expect(pestana('perfil').data).toBeUndefined();
   });
 
   it('Biblioteca (HU-04) carga el catálogo y el detalle del libro', async () => {

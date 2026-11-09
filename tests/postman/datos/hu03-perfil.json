@@ -1,0 +1,29 @@
+[
+  {
+    "caso": "Estudiante con token alterado",
+    "rol": "Estudiante",
+    "tokenAlterado": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MH0.firma-alterada",
+    "correoNuevo": "ci.estudiante.hu03@example.com",
+    "telefonoNuevo": "7710000001",
+    "contrasena": "Prueba1!",
+    "nuevaContrasena": "Nueva12@"
+  },
+  {
+    "caso": "Docente con token que no es JWT",
+    "rol": "Docente",
+    "tokenAlterado": "token-que-no-es-jwt",
+    "correoNuevo": "ci.docente.hu03@example.com",
+    "telefonoNuevo": "7710000002",
+    "contrasena": "Prueba1!",
+    "nuevaContrasena": "Nueva12@"
+  },
+  {
+    "caso": "Visitante con token vencido",
+    "rol": "Visitante",
+    "tokenAlterado": "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjF9.vencido",
+    "correoNuevo": "ci.visitante.hu03@example.com",
+    "telefonoNuevo": "7710000003",
+    "contrasena": "Prueba1!",
+    "nuevaContrasena": "Nueva12@"
+  }
+]

@@ -120,11 +120,11 @@ export const routes: Routes = [
           },
         ],
       },
-      comingSoon('perfil', {
-        title: 'Perfil',
-        icon: 'user',
-        description: 'Muy pronto podrás consultar y editar los datos de tu cuenta.',
-      }),
+      {
+        // Perfil (todos los roles): datos de la cuenta, edición permitida y seguridad.
+        path: 'perfil',
+        loadComponent: () => import('./pages/profile/profile.page').then((m) => m.ProfilePage),
+      },
     ],
   },
   {

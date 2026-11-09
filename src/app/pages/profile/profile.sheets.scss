@@ -1,0 +1,71 @@
+/* Hojas de edición (datos personales, palabra secreta y contraseña). Los campos usan theme/forms.scss. */
+.sheet-content {
+  --background: #fff;
+}
+
+.sheet-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(14px + var(--ion-safe-area-top, 0px)) 16px 14px;
+  background: var(--ion-color-primary);
+  color: #fff;
+}
+
+.sheet-bar__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 20px;
+}
+
+.sheet-bar__title {
+  margin: 0;
+  font: 800 1.15rem/1.2 var(--tz-font-display);
+}
+
+.sheet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 22px 20px calc(28px + var(--ion-safe-area-bottom, 0px));
+}
+
+.sheet-form__hint {
+  margin: 0;
+  color: var(--tz-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.rules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  margin: -4px 0 0;
+  padding: 0 4px;
+  list-style: none;
+  color: var(--tz-text-muted);
+  font-size: 0.78rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .is-ok {
+    color: #1e8e5a;
+  }
+
+  i {
+    font-size: 16px;
+  }
+}

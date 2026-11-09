@@ -1,0 +1,87 @@
+/*
+ * Perfil: identidad sobre el azul institucional (mockup 7.5) y hoja blanca con las
+ * tarjetas. Tarjetas y estados: profile.cards.scss. Hojas de edición: profile.sheets.scss.
+ */
+:host {
+  --gutter: 20px;
+}
+
+.profile-content {
+  --background: #f5f7fa;
+}
+
+.hero {
+  padding: calc(24px + var(--ion-safe-area-top, 0px)) var(--gutter) 64px;
+  background: var(--ion-color-primary);
+  color: #fff;
+  text-align: center;
+}
+
+.hero__title {
+  margin: 0;
+  font: 800 1.35rem/1.2 var(--tz-font-display);
+  text-align: left;
+}
+
+.identity {
+  margin-top: 18px;
+}
+
+.identity__avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ion-color-primary-shade);
+  font-size: 42px;
+  box-shadow: 0 8px 20px rgba(29, 43, 54, 0.15);
+}
+
+.identity__name {
+  margin: 14px 0 0;
+  font: 800 1.25rem/1.25 var(--tz-font-display);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.identity__sub {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.sheet {
+  position: relative;
+  max-width: 720px;
+  min-height: 50vh;
+  margin: -32px auto 0;
+  padding: 20px 16px calc(32px + var(--ion-safe-area-bottom, 0px));
+  background: #f5f7fa;
+  // Las dos esquinas iguales para que la hoja y sus tarjetas queden centradas y simétricas.
+  border-radius: 28px 28px 0 0;
+}

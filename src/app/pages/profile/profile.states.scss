@@ -1,0 +1,48 @@
+/* Estados especiales del perfil: error de conexión o sesión expirada (apartado 9 del documento UI/UX). */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 24px;
+  text-align: center;
+}
+
+.state__icon {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #e3f2fc;
+  color: var(--ion-color-primary-shade);
+  font-size: 34px;
+}
+
+.state__title {
+  margin: 16px 0 0;
+  color: var(--tz-text);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.state__text {
+  max-width: 320px;
+  margin: 8px 0 0;
+  color: var(--tz-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.state__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  margin-top: 18px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ion-color-primary);
+  color: #fff;
+  font: 700 0.95rem var(--ion-font-family);
+}

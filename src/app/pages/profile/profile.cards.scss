@@ -1,0 +1,161 @@
+/* Tarjetas de información del perfil (apartado 5.5.6), acciones y estados especiales. */
+.card {
+  margin-bottom: 16px;
+  padding: 18px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(29, 43, 54, 0.06);
+}
+
+.card__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  color: var(--tz-text);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  i {
+    color: var(--ion-color-primary-shade);
+    font-size: 20px;
+  }
+}
+
+.card__hint {
+  margin: 10px 0 0;
+  color: var(--tz-text-muted);
+  font-size: 0.78rem;
+}
+
+.card__text {
+  margin: 0 0 10px;
+  color: var(--tz-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.fields {
+  margin: 0;
+
+  div {
+    padding: 10px 0;
+    border-bottom: 1px solid #eef1f4;
+  }
+
+  dt {
+    color: var(--ion-color-primary-shade);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    color: var(--tz-text);
+    font-size: 0.95rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.status {
+  color: #1a7f45;
+  font-weight: 700;
+}
+
+.status--off {
+  color: #b42318;
+}
+
+.outline,
+.logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  background: #fff;
+  font: 700 0.95rem var(--ion-font-family);
+}
+
+.outline {
+  margin-top: 14px;
+  text-decoration: none;
+  border: 1.5px solid var(--ion-color-primary);
+  color: var(--ion-color-primary-shade);
+}
+
+.logout {
+  margin-top: 8px;
+  border: 1.5px solid #f3c4c4;
+  color: #c0392b;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid #eef1f4;
+  background: transparent;
+  color: var(--tz-text-muted);
+  text-align: left;
+  font: inherit;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.row__icon {
+  color: var(--ion-color-primary-shade);
+  font-size: 22px;
+}
+
+.row__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.row__label {
+  color: var(--tz-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.row__sub {
+  font-size: 0.78rem;
+}
+
+.row__sub--warn {
+  color: #b54708;
+}
+
+.danger-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  color: #b42318;
+  font: 600 0.85rem var(--ion-font-family);
+}
+
+.sk-card {
+  height: 140px;
+  margin: 0 0 16px;
+  border-radius: 20px;
+}
