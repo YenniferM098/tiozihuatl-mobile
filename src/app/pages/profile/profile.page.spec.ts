@@ -285,6 +285,40 @@ describe('ProfilePage - Perfil de usuario', () => {
     expect(complete).toHaveBeenCalled();
   });
 
+  it('un clic mientras la hoja se cierra no repite el guardado', () => {
+    const update = vi.fn(() => of('ok'));
+    const changePassword = vi.fn(() => of('ok'));
+    const page = setup({ profile: () => of(STUDENT), update, changePassword }).componentInstance;
+
+    page.openEdit();
+    page.editForm.controls.telefono.setValue('7719998877');
+    page.saveProfile();
+    page.saveProfile();
+    expect(update).toHaveBeenCalledTimes(1);
+
+    page.openSecret();
+    page.secretForm.setValue({ palabra: 'gatito' });
+    page.saveSecret();
+    page.saveSecret();
+    expect(update).toHaveBeenCalledTimes(2);
+
+    page.openPassword();
+    page.passwordForm.setValue({ actual: 'Actual1@', contrasena: 'Nueva12@', confirmar: 'Nueva12@' });
+    page.savePassword();
+    page.savePassword();
+    expect(changePassword).toHaveBeenCalledTimes(1);
+  });
+
+  it('no envía si la hoja no está abierta', () => {
+    const update = vi.fn(() => of('ok'));
+    const page = setup({ profile: () => of(STUDENT), update }).componentInstance;
+
+    page.saveProfile();
+    page.saveSecret();
+
+    expect(update).not.toHaveBeenCalled();
+  });
+
   it('no cierra una hoja mientras se guarda', () => {
     const page = setup({ profile: () => of(STUDENT) }).componentInstance;
     page.openSecret();
