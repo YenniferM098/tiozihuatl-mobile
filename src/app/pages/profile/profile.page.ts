@@ -31,7 +31,7 @@ import { ProfileViewModel } from './profile.view-model';
 
 // Mismas reglas que el registro de visitante (register.page.ts).
 const NAME_PATTERN = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,30}$/;
-const PHONE_PATTERN = /^[0-9]{10}$/;
+const PHONE_PATTERN = /^\d{10}$/;
 // Límites de la palabra secreta que aplica el backend al actualizar el perfil.
 const SECRET_MIN = 4;
 const SECRET_MAX = 10;

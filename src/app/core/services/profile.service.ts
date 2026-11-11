@@ -84,7 +84,7 @@ export class ProfileService {
   /** El saludo de Inicio y otros módulos leen el nombre y correo de la sesión. */
   private syncSession(profile: Profile): void {
     const current = this.session.current;
-    if (!current || current.user.id_usuario !== profile.id) return;
+    if (current?.user.id_usuario !== profile.id) return;
     const { nombre, correo } = current.user;
     if (nombre === profile.nombre && correo === profile.correo) return;
     this.session.save({ ...current, user: { ...current.user, nombre: profile.nombre, correo: profile.correo } });
@@ -167,7 +167,7 @@ function isTruthy(value: unknown): boolean {
 /** Texto plano: quita etiquetas HTML y espacios repetidos. Angular lo interpola siempre como texto. */
 function clean(value: string | null | undefined): string {
   return String(value ?? '')
-    .replace(/<[^>]*>/g, ' ')
+    .replace(/<[^<>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
