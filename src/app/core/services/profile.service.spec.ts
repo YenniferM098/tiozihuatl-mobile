@@ -165,14 +165,36 @@ describe('toProfileError - mensajes claros sin detalles técnicos', () => {
     expect(toProfileError(new Error('cualquier cosa')).kind).toBe('server');
   });
 
-  it('agrega acentos a los mensajes conocidos y conserva los demás', () => {
+  it('agrega acentos a los mensajes conocidos', () => {
     expect(toProfileError(http(409, { error: 'El telefono ya esta registrado' })).message).toBe(
       'El número de teléfono ya está registrado en otra cuenta.',
     );
     expect(toProfileError(http(400, { error: 'La palabra secreta debe tener entre 4 y 10' })).message).toBe(
       'La palabra secreta debe tener entre 4 y 10 caracteres.',
     );
-    expect(toProfileError(http(400, { error: '  Dato no válido  ' })).message).toBe('Dato no válido');
+  });
+
+  it('no muestra mensajes técnicos del servidor (#189)', () => {
+    const bd = http(400, { error: 'getaddrinfo ENOTFOUND mysql-1860d830-app-123.g.aivencloud.com' });
+    expect(toProfileError(bd)).toMatchObject({ kind: 'server', message: 'Ocurrió un problema en el servidor. Intenta más tarde.' });
+    expect(toProfileError(http(400)).kind).toBe('server');
+    expect(toProfileError(http(409, { error: 'ER_DUP_ENTRY: Duplicate entry' })).message).toBe('Revisa los datos ingresados.');
+    expect(toProfileError(http(403, { error: 'Acceso denegado por la regla 7' })).message).toBe(
+      'Esta acción no está disponible para tu cuenta.',
+    );
+  });
+
+  it('traduce los demás mensajes conocidos del backend', () => {
+    expect(toProfileError(http(400, { error: 'Debe proporcionar ambas contrasenas.' })).message).toBe(
+      'Escribe tu contraseña actual y la nueva.',
+    );
+    expect(toProfileError(http(404, { error: 'Usuario no encontrado.' })).kind).toBe('server');
+    expect(toProfileError(http(400, { error: 'Usuario no encontrado.' })).message).toBe(
+      'No se encontró tu cuenta. Inicia sesión nuevamente.',
+    );
+    expect(toProfileError(http(409, { error: 'No fue posible eliminar la cuenta porque aun tiene datos relacionados protegidos.' })).message).toBe(
+      'No fue posible eliminar la cuenta porque aún tiene datos relacionados protegidos.',
+    );
   });
 
   it('un error ya traducido se conserva', () => {
