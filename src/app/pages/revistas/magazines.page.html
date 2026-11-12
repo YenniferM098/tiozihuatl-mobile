@@ -78,7 +78,7 @@
                 <span class="purchased"><i class="ph ph-check-circle" aria-hidden="true"></i> Adquirida</span>
                 @if (magazine.purchasedAt) { <p class="purchased-at">El {{ magazine.purchasedAt | date: 'dd/MM/yyyy' }}</p> }
               </div>
-            </a></li>
+            </a><a class="read-link" [routerLink]="['/revistas', magazine.id, 'lector']" [attr.aria-label]="'Leer ' + magazine.title"><i class="ph ph-book-open-text" aria-hidden="true"></i> Leer revista</a></li>
           }
         </ul>
       }
