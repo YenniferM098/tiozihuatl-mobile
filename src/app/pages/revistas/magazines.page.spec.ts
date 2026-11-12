@@ -51,6 +51,7 @@ describe('Revistas: catálogo', () => {
     expect(el.querySelector('.description-preview img')).toBeNull();
     expect(el.querySelector('img')?.getAttribute('alt')).toBe(`Portada de ${SALUD.title}`);
     expect(el.querySelectorAll('.magazine-card')[1].querySelector('img')).toBeNull();
+    expect(el.querySelector('a.magazine-card[href="/revistas/3"]')).toBeTruthy();
   });
 
   it('marca el descuento con el precio anterior tachado', async () => {

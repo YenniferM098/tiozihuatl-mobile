@@ -88,13 +88,17 @@ export const routes: Routes = [
         ],
       },
       {
-        // Revistas Digitales (todos los roles): catálogo de consulta; la compra se hace en el sitio web.
+        // Revistas Digitales (todos los roles): catálogo y detalle; la compra se hace en el sitio web.
         path: 'revistas',
         children: [
           {
             path: '',
             pathMatch: 'full',
             loadComponent: () => import('./pages/revistas/magazines.page').then((m) => m.MagazinesPage),
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./pages/revistas/magazine-detail.page').then((m) => m.MagazineDetailPage),
           },
         ],
       },

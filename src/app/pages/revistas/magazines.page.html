@@ -22,7 +22,7 @@
       <p class="result-count" role="status">{{ loading() ? 'Actualizando resultados…' : countLabel() }}</p>
       <ul class="magazine-grid">
         @for (magazine of magazines(); track magazine.id) {
-          <li class="magazine-card">
+          <li><a class="magazine-card" [routerLink]="['/revistas', magazine.id]">
             <div class="magazine-cover">
               @if (magazine.cover && !brokenCovers().has(magazine.id)) {
                 <img [src]="magazine.cover" [alt]="'Portada de ' + magazine.title" loading="lazy" decoding="async" (error)="coverFailed(magazine.id)" />
@@ -39,7 +39,7 @@
                 <strong>{{ price(magazine.finalPrice) }}</strong>
               </p>
             </div>
-          </li>
+          </a></li>
         }
       </ul>
     }

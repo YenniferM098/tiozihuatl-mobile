@@ -8,6 +8,7 @@ import { LibraryPage } from './pages/biblioteca/library.page';
 import { MaterialDetailPage } from './pages/materiales/material-detail.page';
 import { MaterialViewerPage } from './pages/materiales/material-viewer.page';
 import { MaterialsPage } from './pages/materiales/materials.page';
+import { MagazineDetailPage } from './pages/revistas/magazine-detail.page';
 import { MagazinesPage } from './pages/revistas/magazines.page';
 import { LoginPage } from './pages/login/login.page';
 import { ProfilePage } from './pages/profile/profile.page';
@@ -38,12 +39,13 @@ describe('Rutas de la app (HU-02 navegación)', () => {
     expect(pestana('perfil').canActivate).toBeUndefined();
   });
 
-  it('Revistas (HU-07) carga el catálogo para todos los roles con sesión', async () => {
+  it('Revistas (HU-07) carga el catálogo y el detalle para todos los roles con sesión', async () => {
     const revistas = pestana('revistas');
     const hija = (path: string) => revistas.children!.find((r) => r.path === path)!;
     expect(revistas.data).toBeUndefined();
-    expect(revistas.children!.map((r) => r.path)).toEqual(['']);
+    expect(revistas.children!.map((r) => r.path)).toEqual(['', ':id']);
     expect(await componente(hija(''))).toBe(MagazinesPage);
+    expect(await componente(hija(':id'))).toBe(MagazineDetailPage);
   });
 
   it('cada ruta carga su pantalla', async () => {

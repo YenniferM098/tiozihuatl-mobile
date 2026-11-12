@@ -1,5 +1,6 @@
 import { Component, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   IonButton,
   IonContent,
@@ -23,6 +24,7 @@ import { MAGAZINE_LETTERS, MAGAZINE_SORTS, MagazinesViewModel, formatPrice } fro
   styleUrls: ['../biblioteca/library.scss', './magazines.page.scss'],
   imports: [
     FormsModule,
+    RouterLink,
     IonHeader,
     IonToolbar,
     IonTitle,
