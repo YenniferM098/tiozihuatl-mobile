@@ -2803,6 +2803,319 @@
           }
         }
       ]
+    },
+    {
+      "name": "hu08-lector-revistas",
+      "description": "HU-08 Lectura de Revistas Digitales. El archivo de una revista solo se entrega con sesión y si el usuario la adquirió (GET /magazines/secure-pdf/:id). La API es la de producción: no se usan cuentas reales, así que se valida con una revista real del catálogo que sin token o con un token alterado no se entregue la dirección del PDF ni por secure-pdf ni por /:id/view, y que el progreso de lectura también esté protegido. La lectura de una revista adquirida y el rechazo (403) de una no adquirida se validan en la prueba de aceptación.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Valores por defecto para el modo Performance de Postman, que no recibe el archivo de datos.",
+              "if (!pm.iterationData.has('tokenAlterado')) pm.variables.set('tokenAlterado', 'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MH0.firma-alterada');"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Elegir una revista del catálogo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200 con revistas`, () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data).to.be.an('array').and.not.empty;",
+                  "});",
+                  "// Se prueba con una revista real para que el 401 no sea por un id inexistente.",
+                  "const revistas = pm.response.json().data ?? [];",
+                  "if (revistas.length) pm.collectionVariables.set('revistaLectura', revistas[0].id_magazine);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pedir el PDF protegido sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que falta el token`, () => pm.expect(pm.response.json().error).to.eql('Token no proporcionado'));",
+                  "pm.test(`[${caso}] no entrega la dirección del archivo`, () => {",
+                  "  const texto = pm.response.text();",
+                  "  pm.expect(texto).to.not.include('res.cloudinary.com');",
+                  "  pm.expect(pm.response.json()).to.not.have.property('url');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/secure-pdf/{{revistaLectura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "secure-pdf",
+                "{{revistaLectura}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pedir el PDF protegido con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que el token no es válido`, () => pm.expect(pm.response.json().error).to.eql('Token invalido o expirado'));",
+                  "pm.test(`[${caso}] no entrega la dirección del archivo`, () => {",
+                  "  const texto = pm.response.text();",
+                  "  pm.expect(texto).to.not.include('res.cloudinary.com');",
+                  "  pm.expect(pm.response.json()).to.not.have.property('url');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/secure-pdf/{{revistaLectura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "secure-pdf",
+                "{{revistaLectura}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pedir la vista de la revista sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que falta el token`, () => pm.expect(pm.response.json().error).to.eql('Token no proporcionado'));",
+                  "pm.test(`[${caso}] no entrega la dirección del archivo`, () => {",
+                  "  const texto = pm.response.text();",
+                  "  pm.expect(texto).to.not.include('res.cloudinary.com');",
+                  "  pm.expect(pm.response.json()).to.not.have.property('url');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/{{revistaLectura}}/view",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "{{revistaLectura}}",
+                "view"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pedir la vista de la revista con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que el token no es válido`, () => pm.expect(pm.response.json().error).to.eql('Token invalido o expirado'));",
+                  "pm.test(`[${caso}] no entrega la dirección del archivo`, () => {",
+                  "  const texto = pm.response.text();",
+                  "  pm.expect(texto).to.not.include('res.cloudinary.com');",
+                  "  pm.expect(pm.response.json()).to.not.have.property('url');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/{{revistaLectura}}/view",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "{{revistaLectura}}",
+                "view"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar el progreso de lectura sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] no expone la página de nadie`, () => pm.expect(pm.response.json()).to.not.have.property('pagina'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/progress/{{revistaLectura}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "progress",
+                "{{revistaLectura}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pedir el PDF de una revista inexistente sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que falta el token`, () => pm.expect(pm.response.json().error).to.eql('Token no proporcionado'));",
+                  "pm.test(`[${caso}] no entrega la dirección del archivo`, () => {",
+                  "  const texto = pm.response.text();",
+                  "  pm.expect(texto).to.not.include('res.cloudinary.com');",
+                  "  pm.expect(pm.response.json()).to.not.have.property('url');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/secure-pdf/999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "secure-pdf",
+                "999999999"
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }
