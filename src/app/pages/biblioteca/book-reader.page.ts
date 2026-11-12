@@ -79,7 +79,7 @@ export class BookReaderPage implements OnDestroy {
     GlobalWorkerOptions.workerSrc = new URL('assets/pdfjs/pdf.worker.min.mjs', document.baseURI).href;
     this.request = this.service.pdf(id).subscribe({
       next: ({ data, titulo }) => { void this.prepareDocument(data, titulo, version); },
-      error: error => { if (version === this.loadVersion) { this.loading.set(false); this.error.set(libraryError(error, true)); } },
+      error: error => { if (version === this.loadVersion) { this.loading.set(false); this.error.set(this.service.errorMessage?.(error) ?? libraryError(error, true)); } },
     });
   }
   private async prepareDocument(data: ArrayBuffer, title: string, version: number): Promise<void> {

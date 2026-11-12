@@ -220,10 +220,11 @@ describe('Lector: apertura autorizada y bloqueo de contenido no disponible', () 
   let id: string;
   let pdf: ReturnType<typeof vi.fn>;
   let progressPrefix: string | undefined;
+  let errorMessage: ((error: unknown) => string) | undefined;
   function create(): BookReaderPage {
     TestBed.configureTestingModule({ providers: [
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => id } } } },
-      { provide: PDF_READER_SOURCE, useValue: { pdf, progressPrefix } },
+      { provide: PDF_READER_SOURCE, useValue: { pdf, progressPrefix, errorMessage } },
     ] });
     const reader = TestBed.runInInjectionContext(() => new BookReaderPage());
     const container = document.createElement('div');
@@ -231,7 +232,7 @@ describe('Lector: apertura autorizada y bloqueo de contenido no disponible', () 
     (reader as unknown as ReaderInternals).container = new ElementRef(container);
     return reader;
   }
-  beforeEach(() => { id = '52'; pdf = vi.fn(); progressPrefix = undefined; });
+  beforeEach(() => { id = '52'; pdf = vi.fn(); progressPrefix = undefined; errorMessage = undefined; });
   afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
   it('abre el PDF autorizado del libro y muestra su título y número de páginas', async () => {
@@ -261,6 +262,16 @@ describe('Lector: apertura autorizada y bloqueo de contenido no disponible', () 
     material.load();
     expect((material as unknown as { bookId: string }).bookId).toBe('material.52');
     material.ngOnDestroy();
+  });
+  it('una revista guarda su página con su propia clave y muestra los mensajes de Revistas', () => {
+    progressPrefix = 'revista.';
+    errorMessage = () => 'Solo puedes leer las revistas que adquiriste.';
+    pdf.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+    const reader = create();
+    reader.load();
+    expect((reader as unknown as { bookId: string }).bookId).toBe('revista.52');
+    expect(reader.error()).toBe('Solo puedes leer las revistas que adquiriste.');
+    reader.ngOnDestroy();
   });
   it('no pide el archivo con un identificador inválido', () => {
     id = 'abc';

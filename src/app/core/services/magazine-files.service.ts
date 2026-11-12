@@ -54,6 +54,11 @@ export class MagazineFilesService implements PdfReaderSource {
     );
   }
 
+  /** Mensajes del lector propios de Revistas (por ejemplo, revista no adquirida). */
+  errorMessage(error: unknown): string {
+    return toMagazineError(error).message;
+  }
+
   /** Título para la barra del lector; si el catálogo no responde, uno genérico. */
   private title(id: number): Observable<string> {
     return this.magazines.catalog().pipe(

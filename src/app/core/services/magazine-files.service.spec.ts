@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
@@ -134,6 +134,16 @@ describe('MagazineFilesService - sin sesión', () => {
     await expect(firstValueFrom(TestBed.inject(MagazineFilesService).pdf(3))).rejects.toMatchObject({ kind: 'session' });
     http.expectNone(`${API}/secure-pdf/3`);
     http.verify();
+  });
+});
+
+describe('MagazineFilesService - mensajes del lector', () => {
+  it('traduce cada error a un mensaje propio de Revistas, sin detalles técnicos', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = TestBed.inject(MagazineFilesService);
+    expect(service.errorMessage(new HttpErrorResponse({ status: 403 }))).toBe('Solo puedes leer las revistas que adquiriste.');
+    expect(service.errorMessage(new HttpErrorResponse({ status: 0 }))).toContain('No fue posible conectar');
+    expect(service.errorMessage(new Error('ENOTFOUND res.cloudinary.com'))).toBe('Ocurrió un problema en el servidor. Intenta más tarde.');
   });
 });
 
