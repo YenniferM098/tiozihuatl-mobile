@@ -8,6 +8,7 @@ import {
   MagazineFilterParams,
   MagazineFilterResponse,
   PurchasedMagazineDto,
+  SecurePdfResponse,
 } from '../../core/models/magazine.models';
 import type { MagazinesRepository } from '../../domain/repositories/magazines.repository';
 
@@ -34,5 +35,13 @@ export class HttpMagazinesRepository implements MagazinesRepository {
 
   myPurchases(): Observable<PurchasedMagazineDto[]> {
     return this.http.get<PurchasedMagazineDto[]>(`${this.api}/my-purchases`);
+  }
+
+  securePdf(id: number): Observable<SecurePdfResponse> {
+    return this.http.get<SecurePdfResponse>(`${this.api}/secure-pdf/${id}`);
+  }
+
+  file(url: string): Observable<ArrayBuffer> {
+    return this.http.get(url, { responseType: 'arraybuffer' });
   }
 }

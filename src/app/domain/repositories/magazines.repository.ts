@@ -7,6 +7,7 @@ import {
   MagazineFilterParams,
   MagazineFilterResponse,
   PurchasedMagazineDto,
+  SecurePdfResponse,
 } from '../../core/models/magazine.models';
 
 /**
@@ -22,6 +23,10 @@ export interface MagazinesRepository {
   detail(id: number): Observable<MagazineDetailResponse>;
   /** GET /magazines/my-purchases (con sesión): revistas que adquirió el usuario. */
   myPurchases(): Observable<PurchasedMagazineDto[]>;
+  /** GET /magazines/secure-pdf/:id (con sesión): dirección del PDF solo si el usuario adquirió la revista. */
+  securePdf(id: number): Observable<SecurePdfResponse>;
+  /** Descarga el PDF desde Cloudinary (el interceptor no envía el token fuera de la API). */
+  file(url: string): Observable<ArrayBuffer>;
 }
 
 /** Punto de inyección del repositorio; la fábrica entrega la implementación HTTP (patrón Factory). */

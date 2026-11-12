@@ -17,12 +17,16 @@ import { AuthService } from './auth.service';
 const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_SEARCH_LENGTH = 100;
 
-const MESSAGES: Record<MagazineError['kind'], string> = {
+/** Mensajes para el usuario de cada tipo de error de Revistas. */
+export const MAGAZINE_MESSAGES: Readonly<Record<MagazineError['kind'], string>> = {
   connection: 'No fue posible conectar con el servidor. Revisa tu conexión e intenta nuevamente.',
   session: 'Tu sesión expiró. Inicia sesión nuevamente.',
+  forbidden: 'Solo puedes leer las revistas que adquiriste.',
+  unavailable: 'El archivo de esta revista no está disponible.',
   notFound: 'La revista solicitada no existe o ya no está disponible.',
   server: 'Ocurrió un problema en el servidor. Intenta más tarde.',
 };
+const MESSAGES = MAGAZINE_MESSAGES;
 
 /**
  * Casos de uso de Revistas Digitales (todos los roles): catálogo, búsqueda, detalle y
@@ -138,6 +142,8 @@ export function toMagazineError(err: unknown): MagazineError {
       return new MagazineError('connection', MESSAGES.connection);
     case 401:
       return new MagazineError('session', MESSAGES.session);
+    case 403:
+      return new MagazineError('forbidden', MESSAGES.forbidden);
     case 404:
       return new MagazineError('notFound', MESSAGES.notFound);
     default:

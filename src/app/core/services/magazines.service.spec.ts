@@ -170,6 +170,7 @@ describe('toMagazineError - mensajes claros sin detalles técnicos', () => {
     expect(toMagazineError(new TimeoutError()).kind).toBe('connection');
     expect(toMagazineError(http(504)).kind).toBe('connection');
     expect(toMagazineError(http(401)).kind).toBe('session');
+    expect(toMagazineError(http(403))).toMatchObject({ kind: 'forbidden', message: 'Solo puedes leer las revistas que adquiriste.' });
     expect(toMagazineError(http(404)).kind).toBe('notFound');
     expect(toMagazineError(http(500))).toMatchObject({ kind: 'server', message: 'Ocurrió un problema en el servidor. Intenta más tarde.' });
     expect(toMagazineError(new Error('x')).kind).toBe('server');

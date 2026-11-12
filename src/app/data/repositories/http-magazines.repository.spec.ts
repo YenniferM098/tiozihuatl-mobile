@@ -46,6 +46,18 @@ describe('HttpMagazinesRepository (capa de datos)', () => {
     plain.flush({ ok: true, data: [] });
   });
 
+  it('pide la dirección protegida del PDF y descarga el archivo como binario', () => {
+    repository.securePdf(3).subscribe();
+    const secure = http.expectOne(`${API}/secure-pdf/3`);
+    expect(secure.request.method).toBe('GET');
+    secure.flush({ url: 'https://res.cloudinary.com/demo/image/upload/r.pdf' });
+
+    repository.file('https://res.cloudinary.com/demo/image/upload/r.pdf').subscribe();
+    const file = http.expectOne('https://res.cloudinary.com/demo/image/upload/r.pdf');
+    expect(file.request.responseType).toBe('arraybuffer');
+    file.flush(new ArrayBuffer(4));
+  });
+
   it('consulta el detalle y las compras del usuario', () => {
     repository.detail(7).subscribe();
     http.expectOne(`${API}/7`).flush({ data: null });
