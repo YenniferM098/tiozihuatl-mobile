@@ -1,0 +1,36 @@
+<ion-header><ion-toolbar color="primary"><ion-title>Revistas Digitales</ion-title></ion-toolbar></ion-header>
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)"><ion-refresher-content /></ion-refresher>
+  <section class="search-area"><p>Consulta las publicaciones del Instituto.</p></section>
+  <main class="library-body">
+    @if (loading() && !magazines().length) { <app-library-state message="Cargando revistas…" [loading]="true" /> }
+    @else if (error() && !magazines().length) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load(true)" /> }
+    @else if (!magazines().length) { <app-library-state message="Por ahora no hay revistas disponibles." /> }
+    @else {
+      @if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load(true)" /> }
+      <p class="result-count" role="status">{{ magazines().length === 1 ? '1 revista' : magazines().length + ' revistas' }}</p>
+      <ul class="magazine-grid">
+        @for (magazine of magazines(); track magazine.id) {
+          <li class="magazine-card">
+            <div class="magazine-cover">
+              @if (magazine.cover && !brokenCovers().has(magazine.id)) {
+                <img [src]="magazine.cover" [alt]="'Portada de ' + magazine.title" loading="lazy" decoding="async" (error)="coverFailed(magazine.id)" />
+              } @else {
+                <i class="ph ph-newspaper" aria-hidden="true"></i>
+              }
+              @if (magazine.hasDiscount) { <span class="discount">Descuento</span> }
+            </div>
+            <div class="magazine-info">
+              <h2>{{ magazine.title }}</h2>
+              @if (magazine.description) { <p class="description-preview">{{ magazine.description }}</p> }
+              <p class="price" [attr.aria-label]="magazine.hasDiscount ? 'Precio ' + price(magazine.finalPrice) + ', antes ' + price(magazine.price) : 'Precio ' + price(magazine.price)">
+                @if (magazine.hasDiscount) { <s>{{ price(magazine.price) }}</s> }
+                <strong>{{ price(magazine.finalPrice) }}</strong>
+              </p>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </main>
+</ion-content>

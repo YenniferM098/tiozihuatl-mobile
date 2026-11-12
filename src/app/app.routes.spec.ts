@@ -5,10 +5,10 @@ import { HomePage } from './home/home.page';
 import { BookDetailPage } from './pages/biblioteca/book-detail.page';
 import { BookReaderPage } from './pages/biblioteca/book-reader.page';
 import { LibraryPage } from './pages/biblioteca/library.page';
-import { ComingSoonPage } from './pages/coming-soon/coming-soon.page';
 import { MaterialDetailPage } from './pages/materiales/material-detail.page';
 import { MaterialViewerPage } from './pages/materiales/material-viewer.page';
 import { MaterialsPage } from './pages/materiales/materials.page';
+import { MagazinesPage } from './pages/revistas/magazines.page';
 import { LoginPage } from './pages/login/login.page';
 import { ProfilePage } from './pages/profile/profile.page';
 import { RecoverPasswordPage } from './pages/recover-password/recover-password.page';
@@ -38,13 +38,12 @@ describe('Rutas de la app (HU-02 navegación)', () => {
     expect(pestana('perfil').canActivate).toBeUndefined();
   });
 
-  it('las pestañas sin contenido muestran "Próximamente" con sus datos', async () => {
-    for (const path of ['revistas']) {
-      expect(await componente(pestana(path))).toBe(ComingSoonPage);
-      expect(pestana(path).data).toEqual(
-        expect.objectContaining({ title: expect.any(String), icon: expect.any(String), description: expect.any(String) }),
-      );
-    }
+  it('Revistas (HU-07) carga el catálogo para todos los roles con sesión', async () => {
+    const revistas = pestana('revistas');
+    const hija = (path: string) => revistas.children!.find((r) => r.path === path)!;
+    expect(revistas.data).toBeUndefined();
+    expect(revistas.children!.map((r) => r.path)).toEqual(['']);
+    expect(await componente(hija(''))).toBe(MagazinesPage);
   });
 
   it('cada ruta carga su pantalla', async () => {
