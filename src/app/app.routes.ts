@@ -1,18 +1,7 @@
-import { Route, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { authGuard, guestGuard, memberGuard, startGuard, welcomeGuard } from './core/guards/auth.guard';
 import { MaterialFilesService } from './core/services/material-files.service';
 import { PDF_READER_SOURCE } from './core/services/pdf-reader-source';
-import type { ComingSoonData } from './pages/coming-soon/coming-soon.page';
-
-/** Pestaña aún sin contenido: muestra la pantalla "Próximamente". */
-function comingSoon(path: string, data: ComingSoonData, extra: Partial<Route> = {}): Route {
-  return {
-    path,
-    data,
-    ...extra,
-    loadComponent: () => import('./pages/coming-soon/coming-soon.page').then((m) => m.ComingSoonPage),
-  };
-}
 
 export const routes: Routes = [
   {
@@ -98,11 +87,21 @@ export const routes: Routes = [
           },
         ],
       },
-      comingSoon('revistas', {
-        title: 'Revistas',
-        icon: 'newspaper',
-        description: 'Muy pronto podrás leer las revistas del Instituto desde tu celular.',
-      }),
+      {
+        // Revistas Digitales (todos los roles): catálogo y detalle; la compra se hace en el sitio web.
+        path: 'revistas',
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () => import('./pages/revistas/magazines.page').then((m) => m.MagazinesPage),
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./pages/revistas/magazine-detail.page').then((m) => m.MagazineDetailPage),
+          },
+        ],
+      },
       {
         // Materiales Complementarios (solo Estudiante y Docente): listado y detalle del material.
         path: 'materiales',

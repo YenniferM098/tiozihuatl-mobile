@@ -2379,6 +2379,430 @@
           }
         }
       ]
+    },
+    {
+      "name": "hu07-revistas",
+      "description": "HU-07 Consulta de Revistas Digitales. El catálogo, la búsqueda, los filtros, el orden y el detalle son públicos; las revistas adquiridas exigen sesión. La API es la de producción: no se usan cuentas reales ni se compra nada, así que se valida el catálogo y sus filtros, que el detalle coincida con el catálogo, que una revista inexistente responda 404 y que sin token o con un token alterado no se consulten las compras. Las revistas adquiridas de cada rol se validan en la prueba de aceptación.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Valores por defecto para el modo Performance de Postman, que no recibe el archivo de datos.",
+              "const porDefecto = { busqueda: 'enfermeria', letra: 'R', orden: 'price_asc',",
+              "  busquedaSinResultados: 'zzqx-sin-resultados-hu07', tokenAlterado: 'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MH0.firma-alterada' };",
+              "Object.entries(porDefecto).forEach(([clave, valor]) => {",
+              "  if (!pm.iterationData.has(clave)) pm.variables.set(clave, valor);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Consultar el catálogo de revistas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "const revistas = body.data ?? [];",
+                  "pm.test(`[${caso}] entrega la lista de revistas activas`, () => {",
+                  "  pm.expect(body.success).to.eql(true);",
+                  "  pm.expect(revistas).to.be.an('array').and.not.empty;",
+                  "});",
+                  "pm.test(`[${caso}] cada revista trae los datos que muestra la app`, () => {",
+                  "  revistas.forEach((r) => {",
+                  "    pm.expect(r.id_magazine, 'id_magazine').to.be.a('number');",
+                  "    pm.expect(r.titulo, 'titulo').to.be.a('string').and.not.empty;",
+                  "    pm.expect(Number(r.precio), 'precio').to.be.at.least(0);",
+                  "    pm.expect(Number(r.precio_final), 'precio_final').to.be.at.most(Number(r.precio));",
+                  "  });",
+                  "});",
+                  "pm.test(`[${caso}] las portadas son imágenes https de Cloudinary`, () => {",
+                  "  revistas.forEach((r) => pm.expect(r.portada_url, r.titulo).to.match(/^https:\\/\\/res\\.cloudinary\\.com\\//));",
+                  "});",
+                  "pm.test(`[${caso}] el descuento solo baja el precio cuando está activo`, () => {",
+                  "  revistas.filter((r) => Number(r.descuento_activo) !== 1).forEach((r) => pm.expect(Number(r.precio_final), r.titulo).to.eql(Number(r.precio)));",
+                  "});",
+                  "// La revista para consultar el detalle se toma del catálogo, así la prueba no depende de un id fijo.",
+                  "if (revistas.length) {",
+                  "  pm.collectionVariables.set('revistaId', revistas[0].id_magazine);",
+                  "  pm.collectionVariables.set('revistaTitulo', revistas[0].titulo);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar revistas por título",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const normal = (t) => String(t ?? '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();",
+                  "const revistas = pm.response.json().data ?? [];",
+                  "const busqueda = normal(pm.variables.get('busqueda'));",
+                  "pm.test(`[${caso}] encuentra revistas con \"${busqueda}\"`, () => pm.expect(revistas).to.not.be.empty);",
+                  "pm.test(`[${caso}] solo devuelve títulos que contienen la búsqueda`, () => {",
+                  "  revistas.forEach((r) => pm.expect(normal(r.titulo)).to.include(busqueda));",
+                  "});",
+                  "pm.test(`[${caso}] ordena por título de A a Z`, () => {",
+                  "  const titulos = revistas.map((r) => normal(r.titulo));",
+                  "  titulos.slice(1).forEach((t, i) => pm.expect(titulos[i].localeCompare(t, 'es')).to.be.at.most(0));",
+                  "});",
+                  "pm.test(`[${caso}] cada revista trae los datos que muestra la app`, () => {",
+                  "  revistas.forEach((r) => {",
+                  "    pm.expect(r.id_magazine, 'id_magazine').to.be.a('number');",
+                  "    pm.expect(r.titulo, 'titulo').to.be.a('string').and.not.empty;",
+                  "    pm.expect(Number(r.precio), 'precio').to.be.at.least(0);",
+                  "    pm.expect(Number(r.precio_final), 'precio_final').to.be.at.most(Number(r.precio));",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/filter?search={{busqueda}}&sort=asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "filter"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "{{busqueda}}"
+                },
+                {
+                  "key": "sort",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar por letra inicial y ordenar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const normal = (t) => String(t ?? '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();",
+                  "const revistas = pm.response.json().data ?? [];",
+                  "const letra = normal(pm.variables.get('letra'));",
+                  "const orden = pm.variables.get('orden');",
+                  "pm.test(`[${caso}] solo devuelve títulos que empiezan con ${letra.toUpperCase()}`, () => {",
+                  "  revistas.forEach((r) => pm.expect(normal(r.titulo).startsWith(letra), r.titulo).to.eql(true));",
+                  "});",
+                  "pm.test(`[${caso}] respeta el orden ${orden}`, () => {",
+                  "  const comparar = {",
+                  "    asc: (a, b) => normal(a.titulo).localeCompare(normal(b.titulo), 'es'),",
+                  "    desc: (a, b) => normal(b.titulo).localeCompare(normal(a.titulo), 'es'),",
+                  "    price_asc: (a, b) => Number(a.precio_final) - Number(b.precio_final),",
+                  "    price_desc: (a, b) => Number(b.precio_final) - Number(a.precio_final),",
+                  "  }[orden];",
+                  "  pm.expect(comparar, 'orden válido').to.be.a('function');",
+                  "  revistas.slice(1).forEach((r, i) => pm.expect(comparar(revistas[i], r)).to.be.at.most(0));",
+                  "});",
+                  "pm.test(`[${caso}] cada revista trae los datos que muestra la app`, () => {",
+                  "  revistas.forEach((r) => {",
+                  "    pm.expect(r.id_magazine, 'id_magazine').to.be.a('number');",
+                  "    pm.expect(r.titulo, 'titulo').to.be.a('string').and.not.empty;",
+                  "    pm.expect(Number(r.precio), 'precio').to.be.at.least(0);",
+                  "    pm.expect(Number(r.precio_final), 'precio_final').to.be.at.most(Number(r.precio));",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/filter?letter={{letra}}&sort={{orden}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "filter"
+              ],
+              "query": [
+                {
+                  "key": "letter",
+                  "value": "{{letra}}"
+                },
+                {
+                  "key": "sort",
+                  "value": "{{orden}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar sin coincidencias",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "pm.test(`[${caso}] devuelve una lista vacía`, () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.ok).to.eql(true);",
+                  "  pm.expect(body.data).to.be.an('array').that.is.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/filter?search={{busquedaSinResultados}}&sort=asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "filter"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "{{busquedaSinResultados}}"
+                },
+                {
+                  "key": "sort",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar el detalle de una revista del catálogo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 200`, () => pm.response.to.have.status(200));",
+                  "const revista = pm.response.json().data ?? {};",
+                  "pm.test(`[${caso}] es la misma revista del catálogo`, () => {",
+                  "  pm.expect(revista.id_revista).to.eql(Number(pm.collectionVariables.get('revistaId')));",
+                  "  pm.expect(revista.titulo).to.eql(pm.collectionVariables.get('revistaTitulo'));",
+                  "});",
+                  "pm.test(`[${caso}] trae título, descripción y precio`, () => {",
+                  "  pm.expect(revista.titulo).to.be.a('string').and.not.empty;",
+                  "  pm.expect(revista).to.have.property('descripcion');",
+                  "  pm.expect(Number(revista.precio)).to.be.at.least(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/{{revistaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "{{revistaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar una revista inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] responde 404`, () => pm.response.to.have.status(404));",
+                  "pm.test(`[${caso}] no devuelve datos de revista`, () => pm.expect(pm.response.json()).to.not.have.property('data'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "999999999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar las revistas adquiridas sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que falta el token`, () => pm.expect(pm.response.json().error).to.eql('Token no proporcionado'));",
+                  "pm.test(`[${caso}] no expone compras de ninguna cuenta`, () => pm.expect(pm.response.json()).to.not.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/my-purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "my-purchases"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar las revistas adquiridas con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// En el modo Performance de Postman no llegan los datos del archivo: se usa un nombre por defecto.",
+                  "const caso = pm.iterationData.get('caso') ?? 'sin archivo de datos';",
+                  "pm.test(`[${caso}] niega el acceso con 401`, () => pm.response.to.have.status(401));",
+                  "pm.test(`[${caso}] indica que el token no es válido`, () => pm.expect(pm.response.json().error).to.eql('Token invalido o expirado'));",
+                  "pm.test(`[${caso}] no expone compras de ninguna cuenta`, () => pm.expect(pm.response.json()).to.not.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/magazines/my-purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "magazines",
+                "my-purchases"
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }

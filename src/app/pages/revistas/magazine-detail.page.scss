@@ -1,0 +1,13 @@
+.magazine-detail-cover { width:min(220px,60%); aspect-ratio:3/4; margin:0 auto 20px; display:grid; place-items:center; border-radius:12px; overflow:hidden; background:#edf5fb; color:var(--ion-color-primary-shade); font-size:56px; box-shadow:0 4px 14px rgba(15,40,70,.12); }
+.magazine-detail-cover img { width:100%; height:100%; object-fit:cover; }
+h1 { margin:0 0 12px; font-size:20px; line-height:1.35; text-align:center; overflow-wrap:anywhere; }
+.price-block { display:flex; flex-wrap:wrap; justify-content:center; align-items:baseline; gap:8px; margin-bottom:20px; }
+.price-block strong { font-size:22px; color:var(--ion-color-primary-shade); }
+.price-block s { color:var(--tz-text-muted); }
+.discount { background:#b42318; color:white; padding:3px 8px; border-radius:6px; font-size:12px; font-weight:700; }
+.description { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; }
+.purchase-status { display:flex; align-items:center; justify-content:center; gap:6px; margin:0 0 20px; padding:10px 12px; border-radius:12px; font-weight:600; }
+.purchase-status.purchased { background:#e7f6ec; color:#1e6b3a; }
+.purchase-note { margin:0 0 20px; padding:14px; border-radius:12px; background:#f1f6fb; text-align:center; }
+.purchase-note p { margin:0 0 12px; color:var(--tz-text-muted); line-height:1.5; }
+.web-link { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:10px 18px; border-radius:12px; background:var(--ion-color-primary); color:white; font-weight:600; text-decoration:none; }

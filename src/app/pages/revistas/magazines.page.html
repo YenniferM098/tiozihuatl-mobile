@@ -1,0 +1,87 @@
+<ion-header><ion-toolbar color="primary"><ion-title>Revistas Digitales</ion-title></ion-toolbar></ion-header>
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)"><ion-refresher-content /></ion-refresher>
+  <section class="search-area">
+    <p>Consulta las publicaciones del Instituto.</p>
+    @if (view() === 'all') {
+      <ion-searchbar aria-label="Buscar revistas por título" placeholder="Buscar por título" [debounce]="400" [maxlength]="100" [(ngModel)]="filters.search" (ionInput)="load()" />
+    }
+  </section>
+  <main class="library-body">
+    <ion-segment class="views" [value]="view()" (ionChange)="selectView($event.detail.value)" aria-label="Revistas que se muestran">
+      <ion-segment-button value="all"><ion-label>Todas</ion-label></ion-segment-button>
+      <ion-segment-button value="mine"><ion-label>Mis revistas</ion-label></ion-segment-button>
+    </ion-segment>
+
+    @if (view() === 'all') {
+      <details class="filters" open>
+        <summary><i class="ph ph-sliders-horizontal" aria-hidden="true"></i> Filtros y ordenamiento</summary>
+        <div class="filter-grid">
+          <ion-select label="Letra inicial" interface="alert" [(ngModel)]="filters.letter" (ionChange)="load()"><ion-select-option value="">Todas</ion-select-option>@for (letter of letters; track letter) { <ion-select-option [value]="letter">{{ letter }}</ion-select-option> }</ion-select>
+          <ion-select label="Ordenar por" interface="alert" [(ngModel)]="filters.sort" (ionChange)="load()">@for (sort of sorts; track sort.value) { <ion-select-option [value]="sort.value">{{ sort.label }}</ion-select-option> }</ion-select>
+        </div>
+        @if (filtered) { <ion-button fill="clear" (click)="reset()">Limpiar búsqueda y filtros</ion-button> }
+      </details>
+      @if (loading() && !magazines().length) { <app-library-state [message]="filtered ? 'Buscando revistas…' : 'Cargando revistas…'" [loading]="true" /> }
+      @else if (error() && !magazines().length) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load(true)" /> }
+      @else if (!magazines().length) { <app-library-state [message]="filtered ? 'No se encontraron revistas para esta búsqueda o filtros.' : 'Por ahora no hay revistas disponibles.'" /> }
+      @else {
+        @if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load(true)" /> }
+        <p class="result-count" role="status">{{ loading() ? 'Actualizando resultados…' : countLabel() }}</p>
+        <ul class="magazine-grid">
+          @for (magazine of magazines(); track magazine.id) {
+            <li><a class="magazine-card" [routerLink]="['/revistas', magazine.id]">
+              <div class="magazine-cover">
+                @if (magazine.cover && !brokenCovers().has(magazine.id)) {
+                  <img [src]="magazine.cover" [alt]="'Portada de ' + magazine.title" loading="lazy" decoding="async" (error)="coverFailed(magazine.id)" />
+                } @else {
+                  <i class="ph ph-newspaper" aria-hidden="true"></i>
+                }
+                @if (magazine.hasDiscount) { <span class="discount">Descuento</span> }
+              </div>
+              <div class="magazine-info">
+                <h2>{{ magazine.title }}</h2>
+                @if (purchasedIds().has(magazine.id)) { <span class="purchased"><i class="ph ph-check-circle" aria-hidden="true"></i> Adquirida</span> }
+                @if (magazine.description) { <p class="description-preview">{{ magazine.description }}</p> }
+                <p class="price" [attr.aria-label]="magazine.hasDiscount ? 'Precio ' + price(magazine.finalPrice) + ', antes ' + price(magazine.price) : 'Precio ' + price(magazine.price)">
+                  @if (magazine.hasDiscount) { <s>{{ price(magazine.price) }}</s> }
+                  <strong>{{ price(magazine.finalPrice) }}</strong>
+                </p>
+              </div>
+            </a></li>
+          }
+        </ul>
+      }
+    } @else {
+      @if (purchasesLoading()) { <app-library-state message="Cargando tus revistas…" [loading]="true" /> }
+      @else if (purchasesError()) { <app-library-state [message]="purchasesError()" [retry]="true" (retryClick)="loadPurchases()" /> }
+      @else if (!purchases().length) {
+        <div class="no-purchases">
+          <app-library-state message="Aún no has adquirido revistas." />
+          <p>La compra de revistas no está disponible en la aplicación. Puedes adquirirlas desde el sitio web del Instituto.</p>
+          <a class="web-link" [href]="webUrl" target="_blank" rel="noopener noreferrer"><i class="ph ph-globe" aria-hidden="true"></i> Ir al sitio web de Revistas</a>
+        </div>
+      } @else {
+        <p class="result-count" role="status">{{ purchases().length === 1 ? '1 revista adquirida' : purchases().length + ' revistas adquiridas' }}</p>
+        <ul class="magazine-grid">
+          @for (magazine of purchases(); track magazine.id) {
+            <li><a class="magazine-card" [routerLink]="['/revistas', magazine.id]">
+              <div class="magazine-cover">
+                @if (magazine.cover && !brokenCovers().has(magazine.id)) {
+                  <img [src]="magazine.cover" [alt]="'Portada de ' + magazine.title" loading="lazy" decoding="async" (error)="coverFailed(magazine.id)" />
+                } @else {
+                  <i class="ph ph-newspaper" aria-hidden="true"></i>
+                }
+              </div>
+              <div class="magazine-info">
+                <h2>{{ magazine.title }}</h2>
+                <span class="purchased"><i class="ph ph-check-circle" aria-hidden="true"></i> Adquirida</span>
+                @if (magazine.purchasedAt) { <p class="purchased-at">El {{ magazine.purchasedAt | date: 'dd/MM/yyyy' }}</p> }
+              </div>
+            </a></li>
+          }
+        </ul>
+      }
+    }
+  </main>
+</ion-content>
