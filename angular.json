@@ -153,6 +153,7 @@
               "src/app/core/services/profile.service.ts",
               "src/app/pages/profile/**/*.ts",
               "src/app/core/services/magazines.service.ts",
+              "src/app/core/services/magazine-files.service.ts",
               "src/app/pages/revistas/**/*.ts"
             ],
             "coverageReporters": ["text-summary", "html", "lcov"],
