@@ -1,6 +1,6 @@
 import { Component, WritableSignal, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { IonContent, IonRefresher, IonRefresherContent, IonSkeletonText } from '@ionic/angular';
+import { Router, RouterLink } from '@angular/router';
+import { IonContent, IonModal, IonRefresher, IonRefresherContent, IonSkeletonText } from '@ionic/angular';
 import { Observable, forkJoin, tap } from 'rxjs';
 import { HapticDirective } from '../core/directives/haptic.directive';
 import { FeaturedEvent, HomeBook, HomeMagazine, HomeMaterial } from '../core/models/home.models';
@@ -16,13 +16,13 @@ type Section<T> = T[] | null;
  * - Estudiante: destacados, libros y materiales de su semestre, y revistas recientes.
  * - Docente: destacados, libros del acervo, sus materiales y revistas recientes.
  * - Visitante: destacados y revistas recientes (no se consulta Biblioteca ni Materiales).
- * Libros, revistas y materiales son solo informativos en esta versión.
+ * Los destacados abren un visor con todas sus imágenes; libros, revistas y materiales, su detalle.
  */
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
-  styleUrls: ['home.page.scss', 'home.page.common.scss', 'home.page.waves.scss'],
-  imports: [IonContent, IonRefresher, IonRefresherContent, IonSkeletonText, HapticDirective],
+  styleUrls: ['home.page.scss', 'home.page.common.scss', 'home.page.waves.scss', 'home.page.viewer.scss'],
+  imports: [RouterLink, IonContent, IonModal, IonRefresher, IonRefresherContent, IonSkeletonText, HapticDirective],
 })
 export class HomePage {
   private readonly auth = inject(AuthService);
@@ -34,6 +34,8 @@ export class HomePage {
   readonly books = signal<Section<HomeBook>>(null);
   readonly magazines = signal<Section<HomeMagazine>>(null);
   readonly materials = signal<Section<HomeMaterial>>(null);
+  /** Destacado abierto en el visor de imágenes; null si está cerrado. */
+  readonly viewer = signal<FeaturedEvent | null>(null);
 
   readonly firstName = computed(() => {
     const name = (this.user()?.nombre ?? '').trim();
@@ -55,6 +57,14 @@ export class HomePage {
 
   refresh(event: Event): void {
     this.load(() => (event.target as HTMLIonRefresherElement).complete());
+  }
+
+  openEvent(event: FeaturedEvent): void {
+    this.viewer.set(event);
+  }
+
+  closeEvent(): void {
+    this.viewer.set(null);
   }
 
   coverFailed(url: string): void {

@@ -37,7 +37,8 @@
         </h2>
         <div class="rail" [class.rail--single]="events()!.length === 1">
           @for (event of events(); track event.id) {
-            <article class="event">
+            <article class="event home-link" role="button" tabindex="0" [attr.aria-label]="'Ver imágenes de ' + event.title"
+                     tzHaptic (click)="openEvent(event)" (keydown.enter)="openEvent(event)">
               <div class="event__media" [attr.data-count]="event.images.length">
                 @for (src of event.images; track src; let first = $first) {
                   <img [src]="src" alt="" [attr.loading]="first ? 'eager' : 'lazy'" decoding="async" />
@@ -69,7 +70,7 @@
         </h2>
         <ul class="pair">
           @for (book of books(); track book.id) {
-            <li>
+            <li><a class="home-link" tzHaptic [routerLink]="['/biblioteca', book.id]">
               @if (book.cover && !brokenCovers().has(book.cover)) {
                 <!-- Libro con PDF válido: portada (primera página) y título debajo, como revistas. -->
                 <div class="magazine__cover">
@@ -82,7 +83,7 @@
                   <span class="book__cover-title">{{ book.title }}</span>
                 </div>
               }
-            </li>
+            </a></li>
           }
         </ul>
       </section>
@@ -105,7 +106,7 @@
         </h2>
         <ul class="pair">
           @for (magazine of magazines(); track magazine.id) {
-            <li>
+            <li><a class="home-link" tzHaptic [routerLink]="['/revistas', magazine.id]">
               <div class="magazine__cover">
                 @if (magazine.cover) {
                   <img [src]="magazine.cover" alt="" loading="lazy" decoding="async" />
@@ -114,7 +115,7 @@
                 }
               </div>
               <p class="magazine__title">{{ magazine.title }}</p>
-            </li>
+            </a></li>
           }
         </ul>
       </section>
@@ -135,7 +136,7 @@
         </h2>
         <ul class="materials">
           @for (material of materials(); track material.id) {
-            <li class="material">
+            <li class="material"><a class="material__link home-link" tzHaptic [routerLink]="['/materiales', material.id]">
               <span class="material__icon">
                 <i class="ph ph-{{ material.icon }}" aria-hidden="true"></i>
               </span>
@@ -147,10 +148,34 @@
                   }
                 </p>
               </div>
-            </li>
+              <i class="ph ph-caret-right material__go" aria-hidden="true"></i>
+            </a></li>
           }
         </ul>
       </section>
     }
   </main>
+
+  <!-- ---------- Visor de imágenes de un destacado ---------- -->
+  <ion-modal class="viewer" [isOpen]="viewer() !== null" (didDismiss)="closeEvent()">
+    <ng-template>
+      @if (viewer(); as event) {
+        <ion-content class="viewer__content">
+          <header class="viewer__bar">
+            <h2 class="viewer__title">{{ event.title }}</h2>
+            <button type="button" class="viewer__close" aria-label="Cerrar" (click)="closeEvent()">
+              <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+          </header>
+          <div class="viewer__images">
+            @for (src of event.gallery; track src; let i = $index) {
+              <img [src]="src" [alt]="event.title + ', imagen ' + (i + 1)" [attr.loading]="i < 2 ? 'eager' : 'lazy'" decoding="async" />
+            } @empty {
+              <p class="viewer__empty">Este destacado no tiene imágenes.</p>
+            }
+          </div>
+        </ion-content>
+      }
+    </ng-template>
+  </ion-modal>
 </ion-content>

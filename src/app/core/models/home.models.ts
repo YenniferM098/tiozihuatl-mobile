@@ -56,8 +56,10 @@ export interface PagedResponse<T> {
 export interface FeaturedEvent {
   id: number;
   title: string;
-  /** Máximo 3 imágenes: la principal primero. */
+  /** Máximo 3 imágenes para la tarjeta de Inicio: la principal primero. */
   images: string[];
+  /** Todas las imágenes del evento, en orden, para el visor. */
+  gallery: string[];
 }
 
 export interface HomeBook {
