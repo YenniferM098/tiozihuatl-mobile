@@ -19,14 +19,14 @@ const ANATOMIA: Magazine = { id: 5, title: 'Anatomía', description: '', cover: 
 
 describe('Revistas: catálogo', () => {
   let response: Subject<Magazine[]>;
-  let catalog: ReturnType<typeof vi.fn>;
+  let search: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     response = new Subject();
-    catalog = vi.fn(() => response);
+    search = vi.fn(() => response);
     TestBed.configureTestingModule({
       imports: [MagazinesPage],
-      providers: [provideRouter([]), { provide: MagazinesService, useValue: { catalog } }],
+      providers: [provideRouter([]), { provide: MagazinesService, useValue: { search } }],
     });
   });
 
@@ -89,7 +89,7 @@ describe('Revistas: catálogo', () => {
 
     response = new Subject();
     fixture.nativeElement.querySelector('ion-button').click();
-    expect(catalog).toHaveBeenLastCalledWith(true);
+    expect(search).toHaveBeenLastCalledWith(expect.anything(), true);
   });
 
   it('al deslizar actualiza el catálogo y cierra el indicador', async () => {
@@ -98,10 +98,47 @@ describe('Revistas: catálogo', () => {
     const complete = vi.fn();
     response = new Subject();
     fixture.componentInstance.refresh({ target: { complete } } as unknown as Event);
-    expect(catalog).toHaveBeenLastCalledWith(true);
+    expect(search).toHaveBeenLastCalledWith(expect.anything(), true);
     response.next([SALUD]);
     response.complete();
     expect(complete).toHaveBeenCalled();
+  });
+
+  it('distingue la búsqueda sin coincidencias y permite limpiarla', async () => {
+    const fixture = await open();
+    response.next([SALUD]);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('1 revista');
+    expect(fixture.nativeElement.textContent).not.toContain('Limpiar búsqueda');
+
+    const page = fixture.componentInstance;
+    page.filters.search = 'zzz';
+    response = new Subject();
+    page.load();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('Actualizando resultados');
+    response.next([]);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('No se encontraron revistas para esta búsqueda o filtros.');
+
+    response = new Subject();
+    (Array.from(fixture.nativeElement.querySelectorAll('ion-button')) as HTMLElement[])
+      .find((b) => b.textContent?.includes('Limpiar'))!
+      .click();
+    expect(search).toHaveBeenLastCalledWith({ search: '', letter: '', sort: 'asc' }, false);
+  });
+
+  it('cuenta los resultados encontrados con filtros y ofrece letras y ordenamientos', async () => {
+    const fixture = await open();
+    const page = fixture.componentInstance;
+    page.filters.letter = 'S';
+    response.next([SALUD, ANATOMIA]);
+    await fixture.whenStable();
+    expect(page.countLabel()).toBe('2 revistas encontradas');
+    response.next([SALUD]);
+    expect(page.countLabel()).toBe('1 revista encontrada');
+    expect(page.letters).toContain('Ñ');
+    expect(page.sorts.map((s) => s.value)).toEqual(['asc', 'desc', 'price_asc', 'price_desc']);
   });
 
   it('al salir cancela la consulta pendiente', async () => {

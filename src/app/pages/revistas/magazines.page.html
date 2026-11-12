@@ -1,14 +1,25 @@
 <ion-header><ion-toolbar color="primary"><ion-title>Revistas Digitales</ion-title></ion-toolbar></ion-header>
 <ion-content>
   <ion-refresher slot="fixed" (ionRefresh)="refresh($event)"><ion-refresher-content /></ion-refresher>
-  <section class="search-area"><p>Consulta las publicaciones del Instituto.</p></section>
+  <section class="search-area">
+    <p>Consulta las publicaciones del Instituto.</p>
+    <ion-searchbar aria-label="Buscar revistas por título" placeholder="Buscar por título" [debounce]="400" [maxlength]="100" [(ngModel)]="filters.search" (ionInput)="load()" />
+  </section>
   <main class="library-body">
-    @if (loading() && !magazines().length) { <app-library-state message="Cargando revistas…" [loading]="true" /> }
+    <details class="filters" open>
+      <summary><i class="ph ph-sliders-horizontal" aria-hidden="true"></i> Filtros y ordenamiento</summary>
+      <div class="filter-grid">
+        <ion-select label="Letra inicial" interface="alert" [(ngModel)]="filters.letter" (ionChange)="load()"><ion-select-option value="">Todas</ion-select-option>@for (letter of letters; track letter) { <ion-select-option [value]="letter">{{ letter }}</ion-select-option> }</ion-select>
+        <ion-select label="Ordenar por" interface="alert" [(ngModel)]="filters.sort" (ionChange)="load()">@for (sort of sorts; track sort.value) { <ion-select-option [value]="sort.value">{{ sort.label }}</ion-select-option> }</ion-select>
+      </div>
+      @if (filtered) { <ion-button fill="clear" (click)="reset()">Limpiar búsqueda y filtros</ion-button> }
+    </details>
+    @if (loading() && !magazines().length) { <app-library-state [message]="filtered ? 'Buscando revistas…' : 'Cargando revistas…'" [loading]="true" /> }
     @else if (error() && !magazines().length) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load(true)" /> }
-    @else if (!magazines().length) { <app-library-state message="Por ahora no hay revistas disponibles." /> }
+    @else if (!magazines().length) { <app-library-state [message]="filtered ? 'No se encontraron revistas para esta búsqueda o filtros.' : 'Por ahora no hay revistas disponibles.'" /> }
     @else {
       @if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load(true)" /> }
-      <p class="result-count" role="status">{{ magazines().length === 1 ? '1 revista' : magazines().length + ' revistas' }}</p>
+      <p class="result-count" role="status">{{ loading() ? 'Actualizando resultados…' : countLabel() }}</p>
       <ul class="magazine-grid">
         @for (magazine of magazines(); track magazine.id) {
           <li class="magazine-card">
