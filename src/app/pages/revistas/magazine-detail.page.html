@@ -16,6 +16,15 @@
         <strong>{{ price(item.finalPrice) }}</strong>
         @if (item.hasDiscount) { <s>{{ price(item.price) }}</s><span class="discount">Descuento</span> }
       </div>
+      @if (item.purchased === true) {
+        <p class="purchase-status purchased" role="status"><i class="ph ph-check-circle" aria-hidden="true"></i> Ya adquiriste esta revista.</p>
+      } @else {
+        <section class="purchase-note" aria-label="Cómo adquirir la revista">
+          @if (item.purchased === null) { <p role="status">No fue posible verificar si ya adquiriste esta revista.</p> }
+          <p>La compra de revistas no está disponible en la aplicación. Puedes adquirirla desde el sitio web del Instituto.</p>
+          <a class="web-link" [href]="webUrl" target="_blank" rel="noopener noreferrer"><i class="ph ph-globe" aria-hidden="true"></i> Adquirir en el sitio web</a>
+        </section>
+      }
       <dl>
         <dt>Descripción</dt>
         <dd class="description">{{ item.description || 'Esta revista no tiene descripción.' }}</dd>

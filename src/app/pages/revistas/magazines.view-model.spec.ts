@@ -9,11 +9,13 @@ const MAGAZINE: Magazine = { id: 3, title: 'Salud', description: '', cover: null
 
 describe('MagazinesViewModel (MVVM)', () => {
   let search: ReturnType<typeof vi.fn>;
+  let purchases: ReturnType<typeof vi.fn>;
   let vm: MagazinesViewModel;
 
   beforeEach(() => {
     search = vi.fn(() => of([MAGAZINE]));
-    TestBed.configureTestingModule({ providers: [{ provide: MagazinesService, useValue: { search } }] });
+    purchases = vi.fn(() => of([{ id: 3, title: 'Salud', cover: null, purchasedAt: '2026-10-01' }]));
+    TestBed.configureTestingModule({ providers: [{ provide: MagazinesService, useValue: { search, purchases } }] });
     vm = TestBed.runInInjectionContext(() => new MagazinesViewModel());
   });
 
@@ -81,6 +83,33 @@ describe('MagazinesViewModel (MVVM)', () => {
     expect(vm.filters).toEqual({ search: '', letter: '', sort: 'asc' });
     expect(vm.filtered).toBe(false);
     expect(search).toHaveBeenLastCalledWith({ search: '', letter: '', sort: 'asc' }, false);
+  });
+
+  it('al entrar consulta el catálogo y las revistas adquiridas', () => {
+    vm.enter();
+    expect(search).toHaveBeenCalled();
+    expect(purchases).toHaveBeenCalled();
+    expect(vm.purchasesLoading()).toBe(false);
+    expect(vm.purchasedIds().has(3)).toBe(true);
+    expect(vm.purchasedIds().has(5)).toBe(false);
+    expect(vm.view()).toBe('all');
+  });
+
+  it('si no puede consultar las compras lo informa sin afectar el catálogo', () => {
+    purchases.mockReturnValue(throwError(() => new MagazineError('session', 'Tu sesión expiró. Inicia sesión nuevamente.')));
+    vm.enter();
+    expect(vm.purchasesError()).toBe('Tu sesión expiró. Inicia sesión nuevamente.');
+    expect(vm.purchasedIds().size).toBe(0);
+    expect(vm.magazines()).toEqual([MAGAZINE]);
+    expect(vm.error()).toBe('');
+  });
+
+  it('al salir también cancela la consulta de compras', () => {
+    const pending = new Subject<never[]>();
+    purchases.mockReturnValue(pending);
+    vm.loadPurchases();
+    vm.leave();
+    expect(pending.observed).toBe(false);
   });
 
   it('muestra los precios en pesos mexicanos', () => {

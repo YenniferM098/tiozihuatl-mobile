@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { MagazineDetail, MagazineError } from '../../core/models/magazine.models';
+import { MAGAZINES_WEB_URL, MagazineDetail, MagazineError } from '../../core/models/magazine.models';
 import { MagazinesService } from '../../core/services/magazines.service';
 import { MagazineDetailPage } from './magazine-detail.page';
 import { MagazineDetailViewModel } from './magazine-detail.view-model';
@@ -96,6 +96,37 @@ describe('Revistas: detalle de la revista', () => {
       .find((b) => b.textContent?.includes('Reintentar'))!
       .click();
     expect(detail).toHaveBeenCalledTimes(2);
+  });
+
+  it('una revista adquirida lo indica y no ofrece comprarla', async () => {
+    const fixture = await open();
+    response.next({ ...DETAIL, purchased: true });
+    await fixture.whenStable();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('.purchase-status')?.textContent).toContain('Ya adquiriste esta revista.');
+    expect(el.querySelector('.web-link, .purchase-note')).toBeNull();
+  });
+
+  it('una revista no adquirida indica que se compra en el sitio web, sin compra en la app', async () => {
+    const fixture = await open();
+    response.next(DETAIL);
+    await fixture.whenStable();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('La compra de revistas no está disponible en la aplicación');
+    expect(el.textContent).not.toContain('No fue posible verificar');
+    const link = el.querySelector('a.web-link') as HTMLAnchorElement;
+    expect(link.href).toBe(MAGAZINES_WEB_URL);
+    expect(link.target).toBe('_blank');
+    expect(link.rel).toBe('noopener noreferrer');
+    expect(el.textContent).not.toMatch(/Comprar|Agregar al carrito/);
+  });
+
+  it('si no pudo verificar la compra lo indica y ofrece el sitio web', async () => {
+    const fixture = await open();
+    response.next({ ...DETAIL, purchased: null });
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('No fue posible verificar si ya adquiriste esta revista.');
+    expect(fixture.nativeElement.querySelector('a.web-link')).toBeTruthy();
   });
 
   it('al salir cancela la consulta pendiente', async () => {
