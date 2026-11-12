@@ -145,6 +145,15 @@ describe('MagazineFilesService - mensajes del lector', () => {
     expect(service.errorMessage(new HttpErrorResponse({ status: 0 }))).toContain('No fue posible conectar');
     expect(service.errorMessage(new Error('ENOTFOUND res.cloudinary.com'))).toBe('Ocurrió un problema en el servidor. Intenta más tarde.');
   });
+
+  it('no ofrece Reintentar ante una revista no adquirida o inexistente, sí ante fallas de conexión', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = TestBed.inject(MagazineFilesService);
+    expect(service.canRetry(new HttpErrorResponse({ status: 403 }))).toBe(false);
+    expect(service.canRetry(new HttpErrorResponse({ status: 404 }))).toBe(false);
+    expect(service.canRetry(new HttpErrorResponse({ status: 0 }))).toBe(true);
+    expect(service.canRetry(new HttpErrorResponse({ status: 500 }))).toBe(true);
+  });
 });
 
 describe('isMagazinePdfUrl', () => {

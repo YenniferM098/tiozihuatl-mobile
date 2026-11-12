@@ -59,6 +59,12 @@ export class MagazineFilesService implements PdfReaderSource {
     return toMagazineError(error).message;
   }
 
+  /** No se ofrece Reintentar ante una revista no adquirida o inexistente: el resultado sería el mismo. */
+  canRetry(error: unknown): boolean {
+    const { kind } = toMagazineError(error);
+    return kind !== 'forbidden' && kind !== 'notFound';
+  }
+
   /** Título para la barra del lector; si el catálogo no responde, uno genérico. */
   private title(id: number): Observable<string> {
     return this.magazines.catalog().pipe(

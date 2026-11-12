@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonSpinner, IonTitle, IonToolbar } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { getDocument, GlobalWorkerOptions, PDFDocumentProxy, PDFDocumentLoadingTask, PDFPageProxy, RenderTask } from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -13,7 +13,7 @@ import { layoutPdfPages, pageAtOffset, PdfPageSlot, visiblePdfWindow } from './p
   selector: 'app-book-reader',
   templateUrl: './book-reader.page.html',
   styleUrls: ['./book-reader.page.scss'],
-  imports: [IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonButton, IonSpinner, LibraryStateComponent],
+  imports: [RouterLink, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonButton, IonSpinner, LibraryStateComponent],
 })
 export class BookReaderPage implements OnDestroy {
   @ViewChild('container', { static: true }) private container!: ElementRef<HTMLDivElement>;
@@ -42,6 +42,8 @@ export class BookReaderPage implements OnDestroy {
   readonly loading = signal(true);
   readonly loadingMessage = signal('Cargando archivo…');
   readonly error = signal('');
+  /** Falso cuando reintentar no cambiaría nada (contenido no autorizado): se ofrece volver al detalle. */
+  readonly retryable = signal(true);
   readonly page = signal(1);
   readonly totalPages = signal(0);
   readonly resumeMessage = signal('');
@@ -70,6 +72,7 @@ export class BookReaderPage implements OnDestroy {
     this.totalPages.set(0);
     this.title.set('Lector digital');
     this.error.set('');
+    this.retryable.set(true);
     this.loadingMessage.set('Cargando archivo…');
     this.loading.set(true);
     if (this.scrollElement) this.scrollElement.scrollTop = 0;
@@ -79,7 +82,12 @@ export class BookReaderPage implements OnDestroy {
     GlobalWorkerOptions.workerSrc = new URL('assets/pdfjs/pdf.worker.min.mjs', document.baseURI).href;
     this.request = this.service.pdf(id).subscribe({
       next: ({ data, titulo }) => { void this.prepareDocument(data, titulo, version); },
-      error: error => { if (version === this.loadVersion) { this.loading.set(false); this.error.set(this.service.errorMessage?.(error) ?? libraryError(error, true)); } },
+      error: error => {
+        if (version !== this.loadVersion) return;
+        this.loading.set(false);
+        this.retryable.set(this.service.canRetry?.(error) ?? true);
+        this.error.set(this.service.errorMessage?.(error) ?? libraryError(error, true));
+      },
     });
   }
   private async prepareDocument(data: ArrayBuffer, title: string, version: number): Promise<void> {
