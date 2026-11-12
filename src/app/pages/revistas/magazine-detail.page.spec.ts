@@ -60,6 +60,15 @@ describe('Revistas: detalle de la revista', () => {
     expect(el.querySelector('ion-button[routerLink="/revistas"], ion-button[href="/revistas"]')).toBeTruthy();
   });
 
+  it('la portada del detalle se descarga con prioridad alta', async () => {
+    const fixture = await open();
+    response.next(DETAIL);
+    await fixture.whenStable();
+    const img = fixture.nativeElement.querySelector('.magazine-detail-cover img') as HTMLImageElement;
+    expect(img.getAttribute('fetchpriority')).toBe('high');
+    expect(img.getAttribute('loading')).toBeNull();
+  });
+
   it('sin descuento ni descripción ni portada muestra textos e icono predeterminados', async () => {
     const fixture = await open();
     response.next({ ...DETAIL, description: '', cover: null, hasDiscount: false, finalPrice: 120 });

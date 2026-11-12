@@ -6,7 +6,7 @@
     <article class="detail-card">
       <div class="magazine-detail-cover">
         @if (item.cover && !coverBroken()) {
-          <img [src]="item.cover" [alt]="'Portada de ' + item.title" decoding="async" (error)="coverBroken.set(true)" />
+          <img [src]="item.cover" [alt]="'Portada de ' + item.title" width="300" height="400" decoding="async" fetchpriority="high" (error)="coverBroken.set(true)" />
         } @else {
           <i class="ph ph-newspaper" aria-hidden="true"></i>
         }

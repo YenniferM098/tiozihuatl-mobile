@@ -33,7 +33,7 @@
             <li><a class="magazine-card" [routerLink]="['/revistas', magazine.id]">
               <div class="magazine-cover">
                 @if (magazine.cover && !brokenCovers().has(magazine.id)) {
-                  <img [src]="magazine.cover" [alt]="'Portada de ' + magazine.title" loading="lazy" decoding="async" (error)="coverFailed(magazine.id)" />
+                  <img [src]="magazine.cover" [alt]="'Portada de ' + magazine.title" width="300" height="400" decoding="async" [attr.loading]="$index < eagerCovers ? 'eager' : 'lazy'" [attr.fetchpriority]="$index < eagerCovers ? 'high' : 'auto'" (error)="coverFailed(magazine.id)" />
                 } @else {
                   <i class="ph ph-newspaper" aria-hidden="true"></i>
                 }
@@ -68,7 +68,7 @@
             <li><a class="magazine-card" [routerLink]="['/revistas', magazine.id]">
               <div class="magazine-cover">
                 @if (magazine.cover && !brokenCovers().has(magazine.id)) {
-                  <img [src]="magazine.cover" [alt]="'Portada de ' + magazine.title" loading="lazy" decoding="async" (error)="coverFailed(magazine.id)" />
+                  <img [src]="magazine.cover" [alt]="'Portada de ' + magazine.title" width="300" height="400" decoding="async" [attr.loading]="$index < eagerCovers ? 'eager' : 'lazy'" [attr.fetchpriority]="$index < eagerCovers ? 'high' : 'auto'" (error)="coverFailed(magazine.id)" />
                 } @else {
                   <i class="ph ph-newspaper" aria-hidden="true"></i>
                 }

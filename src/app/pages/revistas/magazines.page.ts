@@ -61,6 +61,11 @@ export class MagazinesPage implements OnDestroy {
   readonly price = formatPrice;
   readonly sorts = MAGAZINE_SORTS;
   readonly letters = MAGAZINE_LETTERS;
+  /**
+   * Portadas visibles sin desplazarse (primera fila de 2 columnas): se descargan de inmediato
+   * y con prioridad alta porque son el contenido más grande de la pantalla; las demás, al acercarse.
+   */
+  readonly eagerCovers = 2;
   /** Portadas que no se pudieron descargar: se muestra el icono en su lugar. */
   readonly brokenCovers = signal<ReadonlySet<number>>(new Set());
 

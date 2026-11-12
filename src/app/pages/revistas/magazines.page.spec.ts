@@ -198,6 +198,18 @@ describe('Revistas: catálogo', () => {
     expect(purchases.observed).toBe(true);
   });
 
+  it('descarga primero las portadas visibles y deja las demás para después', async () => {
+    const fixture = await open();
+    const otra = { ...SALUD, id: 9, cover: 'https://res.cloudinary.com/demo/image/upload/pg_1/otra' };
+    response.next([SALUD, { ...ANATOMIA, cover: 'https://res.cloudinary.com/demo/image/upload/pg_1/anatomia' }, otra]);
+    await fixture.whenStable();
+    const imgs = Array.from(fixture.nativeElement.querySelectorAll('.magazine-cover img')) as HTMLImageElement[];
+    expect(imgs.map((img) => img.getAttribute('loading'))).toEqual(['eager', 'eager', 'lazy']);
+    expect(imgs.map((img) => img.getAttribute('fetchpriority'))).toEqual(['high', 'high', 'auto']);
+    expect(imgs[0].getAttribute('width')).toBe('300');
+    expect(imgs[0].getAttribute('height')).toBe('400');
+  });
+
   it('al salir cancela la consulta pendiente', async () => {
     const fixture = await open();
     expect(response.observed).toBe(true);
