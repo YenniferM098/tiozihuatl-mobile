@@ -18,6 +18,7 @@
       </div>
       @if (item.purchased === true) {
         <p class="purchase-status purchased" role="status"><i class="ph ph-check-circle" aria-hidden="true"></i> Ya adquiriste esta revista.</p>
+        <ion-button class="read-button" expand="block" [routerLink]="['/revistas', item.id, 'lector']"><i class="ph ph-book-open-text" aria-hidden="true"></i>&nbsp; Leer revista</ion-button>
       } @else {
         <section class="purchase-note" aria-label="Cómo adquirir la revista">
           @if (item.purchased === null) { <p role="status">No fue posible verificar si ya adquiriste esta revista.</p> }

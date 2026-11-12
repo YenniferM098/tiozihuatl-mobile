@@ -151,6 +151,8 @@ describe('Revistas: catálogo', () => {
     await fixture.whenStable();
     const [salud, anatomia] = Array.from(fixture.nativeElement.querySelectorAll('.magazine-card')) as HTMLElement[];
     expect(salud.querySelector('.purchased')?.textContent).toContain('Adquirida');
+    // En "Todas" la lectura se ofrece desde el detalle, no en la tarjeta.
+    expect(fixture.nativeElement.querySelector('.read-link')).toBeNull();
     expect(anatomia.querySelector('.purchased')).toBeNull();
   });
 
@@ -168,6 +170,9 @@ describe('Revistas: catálogo', () => {
     expect(el.textContent).toContain('El 01/10/2026');
     expect(el.querySelector('h2 b')).toBeNull();
     expect(el.querySelector('a.magazine-card[href="/revistas/3"]')).toBeTruthy();
+    const read = el.querySelector('a.read-link') as HTMLAnchorElement;
+    expect(read.getAttribute('href')).toBe('/revistas/3/lector');
+    expect(read.getAttribute('aria-label')).toBe('Leer <b>Salud</b>');
 
     fixture.componentInstance.selectView('otra');
     expect(fixture.componentInstance.view()).toBe('mine');

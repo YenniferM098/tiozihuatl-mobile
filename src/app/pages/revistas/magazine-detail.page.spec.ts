@@ -114,6 +114,9 @@ describe('Revistas: detalle de la revista', () => {
     const el: HTMLElement = fixture.nativeElement;
     expect(el.querySelector('.purchase-status')?.textContent).toContain('Ya adquiriste esta revista.');
     expect(el.querySelector('.web-link, .purchase-note')).toBeNull();
+    const read = el.querySelector('ion-button.read-button') as HTMLElement;
+    expect(read.textContent).toContain('Leer revista');
+    expect(read.getAttribute('href')).toBe('/revistas/3/lector');
   });
 
   it('una revista no adquirida indica que se compra en el sitio web, sin compra en la app', async () => {
@@ -128,6 +131,7 @@ describe('Revistas: detalle de la revista', () => {
     expect(link.target).toBe('_blank');
     expect(link.rel).toBe('noopener noreferrer');
     expect(el.textContent).not.toMatch(/Comprar|Agregar al carrito/);
+    expect(el.querySelector('.read-button')).toBeNull();
   });
 
   it('si no pudo verificar la compra lo indica y ofrece el sitio web', async () => {

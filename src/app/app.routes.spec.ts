@@ -2,6 +2,8 @@ import { Route } from '@angular/router';
 import { routes } from './app.routes';
 import { authGuard, guestGuard, memberGuard } from './core/guards/auth.guard';
 import { HomePage } from './home/home.page';
+import { MagazineFilesService } from './core/services/magazine-files.service';
+import { PDF_READER_SOURCE } from './core/services/pdf-reader-source';
 import { BookDetailPage } from './pages/biblioteca/book-detail.page';
 import { BookReaderPage } from './pages/biblioteca/book-reader.page';
 import { LibraryPage } from './pages/biblioteca/library.page';
@@ -87,6 +89,14 @@ describe('Rutas de la app (HU-02 navegación)', () => {
     expect(visor.canActivate).toEqual([authGuard, memberGuard]);
     expect(await componente(lector)).toBe(BookReaderPage);
     expect(await componente(visor)).toBe(MaterialViewerPage);
+    expect(routes.indexOf(lector)).toBeLessThan(routes.indexOf(tabs));
+  });
+
+  it('Lector de revistas (HU-08) a pantalla completa para todos los roles con sesión y con el PDF de Revistas', async () => {
+    const lector = ruta('revistas/:id/lector');
+    expect(lector.canActivate).toEqual([authGuard]);
+    expect(lector.providers).toEqual([{ provide: PDF_READER_SOURCE, useExisting: MagazineFilesService }]);
+    expect(await componente(lector)).toBe(BookReaderPage);
     expect(routes.indexOf(lector)).toBeLessThan(routes.indexOf(tabs));
   });
 

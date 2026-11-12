@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard, memberGuard, startGuard, welcomeGuard } from './core/guards/auth.guard';
+import { MagazineFilesService } from './core/services/magazine-files.service';
 import { MaterialFilesService } from './core/services/material-files.service';
 import { PDF_READER_SOURCE } from './core/services/pdf-reader-source';
 
@@ -51,6 +52,14 @@ export const routes: Routes = [
     path: 'materiales/:id/lector',
     canActivate: [authGuard, memberGuard],
     providers: [{ provide: PDF_READER_SOURCE, useExisting: MaterialFilesService }],
+    loadComponent: () => import('./pages/biblioteca/book-reader.page').then((m) => m.BookReaderPage),
+  },
+  {
+    // Lector de Revistas a pantalla completa para todos los roles con sesión: el mismo motor de
+    // Biblioteca con el PDF que el backend solo entrega si el usuario adquirió la revista.
+    path: 'revistas/:id/lector',
+    canActivate: [authGuard],
+    providers: [{ provide: PDF_READER_SOURCE, useExisting: MagazineFilesService }],
     loadComponent: () => import('./pages/biblioteca/book-reader.page').then((m) => m.BookReaderPage),
   },
   {

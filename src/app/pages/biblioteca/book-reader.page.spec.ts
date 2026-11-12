@@ -3,7 +3,7 @@ import { ElementRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { LibraryService } from '../../core/services/library.service';
 import { PDF_READER_SOURCE } from '../../core/services/pdf-reader-source';
@@ -220,10 +220,12 @@ describe('Lector: apertura autorizada y bloqueo de contenido no disponible', () 
   let id: string;
   let pdf: ReturnType<typeof vi.fn>;
   let progressPrefix: string | undefined;
+  let errorMessage: ((error: unknown) => string) | undefined;
+  let canRetry: ((error: unknown) => boolean) | undefined;
   function create(): BookReaderPage {
     TestBed.configureTestingModule({ providers: [
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => id } } } },
-      { provide: PDF_READER_SOURCE, useValue: { pdf, progressPrefix } },
+      { provide: PDF_READER_SOURCE, useValue: { pdf, progressPrefix, errorMessage, canRetry, detailPath: canRetry ? '/revistas' : undefined } },
     ] });
     const reader = TestBed.runInInjectionContext(() => new BookReaderPage());
     const container = document.createElement('div');
@@ -231,7 +233,7 @@ describe('Lector: apertura autorizada y bloqueo de contenido no disponible', () 
     (reader as unknown as ReaderInternals).container = new ElementRef(container);
     return reader;
   }
-  beforeEach(() => { id = '52'; pdf = vi.fn(); progressPrefix = undefined; });
+  beforeEach(() => { id = '52'; pdf = vi.fn(); progressPrefix = undefined; errorMessage = undefined; canRetry = undefined; });
   afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
   it('abre el PDF autorizado del libro y muestra su título y número de páginas', async () => {
@@ -261,6 +263,36 @@ describe('Lector: apertura autorizada y bloqueo de contenido no disponible', () 
     material.load();
     expect((material as unknown as { bookId: string }).bookId).toBe('material.52');
     material.ngOnDestroy();
+  });
+  it('una revista guarda su página con su propia clave y muestra los mensajes de Revistas', () => {
+    progressPrefix = 'revista.';
+    errorMessage = () => 'Solo puedes leer las revistas que adquiriste.';
+    pdf.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+    const reader = create();
+    reader.load();
+    expect((reader as unknown as { bookId: string }).bookId).toBe('revista.52');
+    expect(reader.error()).toBe('Solo puedes leer las revistas que adquiriste.');
+    reader.ngOnDestroy();
+  });
+  it('ante contenido no adquirido no ofrece Reintentar sino volver al detalle', () => {
+    canRetry = () => false;
+    pdf.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 403 })));
+    const reader = create();
+    reader.load();
+    expect(reader.retryable()).toBe(false);
+    expect(reader.detailUrl).toBe('/revistas/52');
+    // Una nueva carga vuelve a ofrecer Reintentar hasta conocer el resultado.
+    pdf.mockReturnValueOnce(new Subject());
+    reader.load();
+    expect(reader.retryable()).toBe(true);
+    reader.ngOnDestroy();
+  });
+  it('sin canRetry (Biblioteca y Materiales) siempre ofrece Reintentar', () => {
+    pdf.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+    const reader = create();
+    reader.load();
+    expect(reader.retryable()).toBe(true);
+    reader.ngOnDestroy();
   });
   it('no pide el archivo con un identificador inválido', () => {
     id = 'abc';

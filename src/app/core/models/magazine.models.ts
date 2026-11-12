@@ -49,6 +49,11 @@ export interface PurchasedMagazineDto {
   fecha_compra?: string | null;
 }
 
+/** Respuesta de GET /magazines/secure-pdf/:id cuando el usuario adquirió la revista (403 si no). */
+export interface SecurePdfResponse {
+  url?: string;
+}
+
 /** Ordenamientos que admite GET /magazines/filter. */
 export type MagazineSort = 'asc' | 'desc' | 'price_asc' | 'price_desc';
 
@@ -93,7 +98,7 @@ export interface MagazineDetail extends Magazine {
 }
 
 /** Motivo de un error ya clasificado para mostrar el estado de interfaz adecuado. */
-export type MagazineErrorKind = 'connection' | 'session' | 'notFound' | 'server';
+export type MagazineErrorKind = 'connection' | 'session' | 'forbidden' | 'notFound' | 'unavailable' | 'server';
 
 export class MagazineError extends Error {
   constructor(

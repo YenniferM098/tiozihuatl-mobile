@@ -1,5 +1,7 @@
 .magazine-grid { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.magazine-grid > li { display:flex; }
+.magazine-grid > li { display:flex; flex-direction:column; gap:6px; }
+.magazine-grid > li > .magazine-card { flex:1; }
+.read-link { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border-radius:12px; background:var(--ion-color-primary); color:white; font-size:14px; font-weight:600; text-decoration:none; }
 .magazine-card { width:100%; display:flex; flex-direction:column; background:white; border:1px solid #e3e9ef; border-radius:16px; overflow:hidden; color:var(--tz-text); text-decoration:none; }
 .magazine-cover { position:relative; aspect-ratio:3/4; display:grid; place-items:center; background:#edf5fb; color:var(--ion-color-primary-shade); font-size:40px; }
 .magazine-cover img { width:100%; height:100%; object-fit:cover; }
