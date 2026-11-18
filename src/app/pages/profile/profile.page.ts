@@ -31,7 +31,7 @@ import { ProfileViewModel } from './profile.view-model';
 
 // Mismas reglas que el registro de visitante (register.page.ts).
 const NAME_PATTERN = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,30}$/;
-const PHONE_PATTERN = /^[0-9]{10}$/;
+const PHONE_PATTERN = /^\d{10}$/;
 // Límites de la palabra secreta que aplica el backend al actualizar el perfil.
 const SECRET_MIN = 4;
 const SECRET_MAX = 10;
@@ -188,7 +188,7 @@ export class ProfilePage {
   }
 
   saveProfile(): void {
-    if (this.saving()) return;
+    if (!this.canSubmit('edit')) return;
     if (this.editForm.invalid) {
       this.editForm.markAllAsTouched();
       return;
@@ -202,7 +202,7 @@ export class ProfilePage {
   }
 
   saveSecret(): void {
-    if (this.saving()) return;
+    if (!this.canSubmit('secret')) return;
     if (this.secretForm.invalid) {
       this.secretForm.markAllAsTouched();
       return;
@@ -211,13 +211,22 @@ export class ProfilePage {
   }
 
   savePassword(): void {
-    if (this.saving()) return;
+    if (!this.canSubmit('password')) return;
     if (this.passwordForm.invalid) {
       this.passwordForm.markAllAsTouched();
       return;
     }
     const { actual, contrasena } = this.passwordForm.getRawValue();
     this.submit(this.vm.changePassword(actual, contrasena), 'Contraseña actualizada correctamente.', false);
+  }
+
+  /**
+   * Solo se envía desde la hoja abierta y sin otro envío en curso. Al guardar con éxito la
+   * hoja se cierra con animación y el botón vuelve a estar activo un instante: un clic en
+   * ese momento no debe repetir la petición.
+   */
+  private canSubmit(sheet: Exclude<Sheet, null>): boolean {
+    return !this.saving() && this.sheet() === sheet;
   }
 
   /* ---------- Mensajes de validación (cerca de cada campo) ---------- */

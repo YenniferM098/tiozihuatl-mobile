@@ -1,4 +1,5 @@
 ion-content { --background:#eef2f6; }
+.detail-button { display:block; max-width:320px; margin:0 auto; padding:0 16px; }
 .page-container { width:calc(100% - 24px); max-width:860px; margin:12px auto; }
 .page-slot { position:relative; width:100%; margin-bottom:12px; background:white; box-shadow:0 2px 12px #0001; overflow:hidden; }
 .page-placeholder { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:12px; color:var(--tz-text-muted); text-align:center; }

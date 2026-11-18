@@ -1,0 +1,14 @@
+[
+  {
+    "caso": "Token con firma alterada",
+    "tokenAlterado": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MH0.firma-alterada"
+  },
+  {
+    "caso": "Token que no es JWT",
+    "tokenAlterado": "token-que-no-es-jwt"
+  },
+  {
+    "caso": "Token vencido",
+    "tokenAlterado": "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjF9.vencido"
+  }
+]

@@ -51,11 +51,15 @@ export class HomeContentService {
           (Array.isArray(events) ? events : [])
             .filter((e) => isTruthy(e.destacado))
             .slice(0, MAX_EVENTS)
-            .map((e) => ({
-              id: e.id_evento,
-              title: plainText(e.titulo),
-              images: eventImages(e),
-            })),
+            .map((e) => {
+              const gallery = eventImages(e);
+              return {
+                id: e.id_evento,
+                title: plainText(e.titulo),
+                images: gallery.slice(0, MAX_EVENT_IMAGES),
+                gallery,
+              };
+            }),
         ),
       ),
     );
@@ -190,7 +194,7 @@ function eventImages(e: EventDto): string[] {
     .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
     .map((img) => img.url);
   const urls = [e.imagen_principal, ...ordered].filter(isHttpsUrl);
-  return [...new Set(urls)].slice(0, MAX_EVENT_IMAGES);
+  return [...new Set(urls)];
 }
 
 function firstItem(list: string | null | undefined): string {

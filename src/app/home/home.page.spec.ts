@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { AuthUser, UserRole } from '../core/models/auth.models';
 import { AuthService } from '../core/services/auth.service';
@@ -17,7 +17,7 @@ describe('HomePage (HU-02 acceso según el rol)', () => {
   let auth: { logout: ReturnType<typeof vi.fn> };
   let router: { navigateByUrl: ReturnType<typeof vi.fn> };
 
-  const EVENTO = { id: 1, title: 'Feria', images: [] };
+  const EVENTO = { id: 1, title: 'Feria', images: [], gallery: [] };
   const LIBRO = { id: 2, title: 'Álgebra', cover: null };
   const REVISTA = { id: 3, title: 'Ciencia', cover: null };
   const MATERIAL = { id: 4, title: 'Guía', type: 'PDF', icon: 'file-pdf', detail: '' };
@@ -139,5 +139,65 @@ describe('HomePage (HU-02 acceso según el rol)', () => {
 
     expect(auth.logout).toHaveBeenCalled();
     expect(router.navigateByUrl).toHaveBeenCalledWith('/login', { replaceUrl: true });
+  });
+});
+
+describe('Inicio: cada elemento abre su información (#204)', () => {
+  const user = signal<AuthUser | null>(null);
+  const IMG = (n: number) => `https://res.cloudinary.com/demo/image/upload/eventos/${n}.jpg`;
+
+  async function render(rol: UserRole) {
+    user.set({ id: 1, id_usuario: 1, nombre: 'Ana', rol, correo: 'a@b.com', id_semestre: 3 });
+    TestBed.configureTestingModule({
+      imports: [HomePage],
+      providers: [
+        provideRouter([]),
+        { provide: SessionService, useValue: { user } },
+        { provide: AuthService, useValue: { logout: vi.fn() } },
+        {
+          provide: HomeContentService,
+          useValue: {
+            featuredEvents: () => of([{ id: 7, title: 'Congreso', images: [IMG(1)], gallery: [IMG(1), IMG(2), IMG(3), IMG(4)] }]),
+            recentMagazines: () => of([{ id: 30, title: 'Edición 04', cover: null }]),
+            books: () => of([{ id: 52, title: 'Anatomía', cover: null }]),
+            semesterMaterials: () => of([{ id: 11, title: 'Guía', type: 'PDF', icon: 'file-pdf', detail: '' }]),
+            teacherMaterials: () => of([]),
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(HomePage);
+    await fixture.whenStable();
+    return fixture;
+  }
+
+  it('Estudiante: libros, revistas y materiales llevan a su detalle', async () => {
+    const el: HTMLElement = (await render('Estudiante')).nativeElement;
+    expect(el.querySelector('a[href="/biblioteca/52"]')?.textContent).toContain('Anatomía');
+    expect(el.querySelector('a[href="/revistas/30"]')?.textContent).toContain('Edición 04');
+    expect(el.querySelector('a.material__link[href="/materiales/11"]')?.textContent).toContain('Guía');
+  });
+
+  it('el destacado abre el visor con todas sus imágenes y se cierra con la X', async () => {
+    const fixture = await render('Estudiante');
+    const page = fixture.componentInstance;
+    const card = fixture.nativeElement.querySelector('.event[role="button"]') as HTMLElement;
+    expect(card.getAttribute('aria-label')).toBe('Ver imágenes de Congreso');
+    expect(page.viewer()).toBeNull();
+
+    card.click();
+    expect(page.viewer()?.gallery).toHaveLength(4);
+    page.closeEvent();
+    expect(page.viewer()).toBeNull();
+
+    card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(page.viewer()?.id).toBe(7);
+  });
+
+  it('Visitante: solo destacados y revistas, sin enlaces a Biblioteca ni Materiales', async () => {
+    const el: HTMLElement = (await render('Visitante')).nativeElement;
+    expect(el.querySelector('.event[role="button"]')).toBeTruthy();
+    expect(el.querySelector('a[href="/revistas/30"]')).toBeTruthy();
+    expect(el.querySelector('a[href^="/biblioteca"], a[href^="/materiales"]')).toBeNull();
   });
 });

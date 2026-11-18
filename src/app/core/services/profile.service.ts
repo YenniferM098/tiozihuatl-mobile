@@ -18,16 +18,21 @@ const MESSAGES = {
 } as const;
 
 /**
- * Mensajes del backend (sin acentos) reescritos para mostrarse al usuario.
- * Se comparan en minúsculas; si no hay coincidencia se usa el mensaje del backend.
+ * Mensajes del backend (sin acentos) reescritos para mostrarse al usuario. Se comparan en
+ * minúsculas. Solo se muestran los que están en esta lista: el backend responde 400 con el
+ * texto original de cualquier error no controlado (por ejemplo, `getaddrinfo ENOTFOUND …` si
+ * no alcanza la base de datos), y ese texto no debe llegar a la pantalla.
  */
 const SERVER_MESSAGES: readonly [string, string][] = [
   ['correo electronico ya esta registrado', 'El correo electrónico ya está registrado en otra cuenta.'],
   ['telefono ya esta registrado', 'El número de teléfono ya está registrado en otra cuenta.'],
   ['ya esta registrado', 'Uno de los datos capturados ya está registrado en otra cuenta.'],
   ['contrasena actual es incorrecta', 'La contraseña actual es incorrecta.'],
+  ['debe proporcionar ambas contrasenas', 'Escribe tu contraseña actual y la nueva.'],
   ['palabra secreta debe tener', 'La palabra secreta debe tener entre 4 y 10 caracteres.'],
   ['solo las cuentas de tipo visitante', 'Solo las cuentas de Visitante pueden eliminarse desde el perfil.'],
+  ['datos relacionados protegidos', 'No fue posible eliminar la cuenta porque aún tiene datos relacionados protegidos.'],
+  ['usuario no encontrado', 'No se encontró tu cuenta. Inicia sesión nuevamente.'],
 ];
 
 /**
@@ -79,7 +84,7 @@ export class ProfileService {
   /** El saludo de Inicio y otros módulos leen el nombre y correo de la sesión. */
   private syncSession(profile: Profile): void {
     const current = this.session.current;
-    if (!current || current.user.id_usuario !== profile.id) return;
+    if (current?.user.id_usuario !== profile.id) return;
     const { nombre, correo } = current.user;
     if (nombre === profile.nombre && correo === profile.correo) return;
     this.session.save({ ...current, user: { ...current.user, nombre: profile.nombre, correo: profile.correo } });
@@ -118,15 +123,17 @@ export function toProfileError(err: unknown): ProfileError {
     case 409:
       return new ProfileError('conflict', serverMessage || MESSAGES.validation);
     case 400:
-      return new ProfileError('validation', serverMessage || MESSAGES.validation);
+      // Un 400 sin mensaje conocido es una falla del servidor, no un dato mal capturado.
+      return serverMessage ? new ProfileError('validation', serverMessage) : new ProfileError('server', MESSAGES.server);
     default:
       return new ProfileError('server', MESSAGES.server);
   }
 }
 
+/** Mensaje para el usuario si el del backend es conocido; si no, cadena vacía. */
 function friendly(message: string): string {
   const text = message.toLowerCase();
-  return SERVER_MESSAGES.find(([key]) => text.includes(key))?.[1] ?? message.trim();
+  return SERVER_MESSAGES.find(([key]) => text.includes(key))?.[1] ?? '';
 }
 
 function toProfile(dto: ProfileDto): Profile {
@@ -160,7 +167,7 @@ function isTruthy(value: unknown): boolean {
 /** Texto plano: quita etiquetas HTML y espacios repetidos. Angular lo interpola siempre como texto. */
 function clean(value: string | null | undefined): string {
   return String(value ?? '')
-    .replace(/<[^>]*>/g, ' ')
+    .replace(/<[^<>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }

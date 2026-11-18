@@ -38,6 +38,7 @@ describe('HomeContentService (HU-02 Inicio después de iniciar sesión)', () => 
             { id_imagen: 1, url: `${IMG}/a.jpg`, orden: 1 },
             { id_imagen: 3, url: 'javascript:alert(1)', orden: 3 },
             { id_imagen: 4, url: `${IMG}/principal.jpg` },
+            { id_imagen: 5, url: `${IMG}/c.jpg`, orden: 4 },
           ],
         },
         { id_evento: 2, titulo: 'Oculto', descripcion: '', destacado: 0, imagen_principal: null },
@@ -45,8 +46,14 @@ describe('HomeContentService (HU-02 Inicio después de iniciar sesión)', () => 
       ]);
 
       expect(await result).toEqual([
-        { id: 1, title: 'Feria del libro', images: [`${IMG}/principal.jpg`, `${IMG}/a.jpg`, `${IMG}/b.jpg`] },
-        { id: 3, title: 'Otro', images: [] },
+        {
+          id: 1,
+          title: 'Feria del libro',
+          // La tarjeta muestra 3; el visor, todas.
+          images: [`${IMG}/principal.jpg`, `${IMG}/a.jpg`, `${IMG}/b.jpg`],
+          gallery: [`${IMG}/principal.jpg`, `${IMG}/a.jpg`, `${IMG}/b.jpg`, `${IMG}/c.jpg`],
+        },
+        { id: 3, title: 'Otro', images: [], gallery: [] },
       ]);
     });
 

@@ -5,7 +5,10 @@
 </ion-header>
 <ion-content [scrollEvents]="true" (ionScroll)="onScroll()">
   @if (loading()) { <app-library-state [message]="loadingMessage()" [loading]="true" /> }
-  @else if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load()" /> }
+  @else if (error()) {
+    <app-library-state [message]="error()" [retry]="retryable()" (retryClick)="load()" />
+    @if (!retryable()) { <ion-button class="detail-button" expand="block" fill="outline" [routerLink]="detailUrl">Volver al detalle</ion-button> }
+  }
   <div class="page-container" #container>
     @for (slot of slots(); track slot.number) {
       <section class="page-slot" [attr.data-page]="slot.number" [style.height.px]="slot.height" [attr.aria-label]="'Página ' + slot.number">

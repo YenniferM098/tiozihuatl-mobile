@@ -1,0 +1,26 @@
+[
+  {
+    "caso": "Búsqueda sin acentos y precio de menor a mayor",
+    "busqueda": "enfermeria",
+    "letra": "R",
+    "orden": "price_asc",
+    "busquedaSinResultados": "zzqx-sin-resultados-hu07",
+    "tokenAlterado": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MH0.firma-alterada"
+  },
+  {
+    "caso": "Búsqueda en mayúsculas y precio de mayor a menor",
+    "busqueda": "REVISTA",
+    "letra": "S",
+    "orden": "price_desc",
+    "busquedaSinResultados": "revista-inexistente-hu07-0000",
+    "tokenAlterado": "token-que-no-es-jwt"
+  },
+  {
+    "caso": "Búsqueda parcial y título de Z a A",
+    "busqueda": "edicion",
+    "letra": "r",
+    "orden": "desc",
+    "busquedaSinResultados": "qqqq-hu07",
+    "tokenAlterado": "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjF9.vencido"
+  }
+]
