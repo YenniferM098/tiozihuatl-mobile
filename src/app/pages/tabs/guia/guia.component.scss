@@ -1,8 +1,8 @@
 /*
  * Guía de primer uso: capa a pantalla completa sobre la app.
- * El oscurecido sale de la sombra enorme del resaltado, así la opción del paso
- * queda "recortada" en claro; el globo blanco se ubica encima de la barra inferior
- * con una flecha que apunta a la opción.
+ * El oscurecido sale de la sombra enorme del resaltado, así el elemento del paso
+ * queda "recortado" en claro; el globo blanco se ubica arriba o abajo de él con una
+ * flecha que lo señala.
  */
 :host {
   --guia-oscuro: rgba(15, 23, 32, 0.66);
@@ -27,7 +27,6 @@
 
 .guia__foco {
   position: absolute;
-  border-radius: 999px;
   box-shadow:
     0 0 0 3px rgba(255, 255, 255, 0.9),
     0 0 0 9999px var(--guia-oscuro);
@@ -125,6 +124,13 @@
   transform: rotate(45deg);
   border-radius: 0 0 4px 0;
   transition: left var(--guia-duracion) var(--guia-ease);
+
+  /* Globo debajo del elemento: la flecha sale por arriba. */
+  &--arriba {
+    top: -8px;
+    bottom: auto;
+    border-radius: 4px 0 0 0;
+  }
 }
 
 @keyframes guia-aparece {

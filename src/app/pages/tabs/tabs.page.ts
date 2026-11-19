@@ -1,10 +1,13 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router } from '@angular/router';
 import { IonLabel, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular';
 import { HapticDirective } from '../../core/directives/haptic.directive';
 import { OnboardingService } from '../../core/services/onboarding.service';
 import { SessionService } from '../../core/services/session.service';
 import { GuiaComponent } from './guia/guia.component';
-import { pasosGuia } from './guia/pasos';
+import { GuideModulo, GuidePaso, moduloDeRuta, pasosGuia, pasosModulo } from './guia/pasos';
+import { filter } from 'rxjs';
 
 interface TabItem {
   /** Segmento de ruta hijo de las pestañas (/home, /biblioteca…). */
@@ -46,11 +49,35 @@ export class TabsPage {
   readonly showGuide = this.onboarding.guidePending;
   readonly guideSteps = computed(() => pasosGuia(this.user()?.rol));
 
+  /** Guía del módulo abierto, la primera vez que se entra a él. */
+  readonly moduleGuide = signal<{ module: GuideModulo; steps: GuidePaso[] } | null>(null);
+
+  private readonly router = inject(Router);
+
   constructor() {
     this.onboarding.settleGuide();
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe((e) => this.openModuleGuide(e.urlAfterRedirects));
   }
 
   closeGuide(): void {
     this.onboarding.markGuideSeen();
+    // Si la guía de la barra se cerró dentro de un módulo, sigue la de ese módulo.
+    this.openModuleGuide(this.router.url);
+  }
+
+  closeModuleGuide(module: GuideModulo): void {
+    this.onboarding.markModuleGuideSeen(module);
+    this.moduleGuide.set(null);
+  }
+
+  private openModuleGuide(url: string): void {
+    const module = moduloDeRuta(url, this.user()?.rol);
+    if (!module || this.showGuide() || !this.onboarding.shouldShowModuleGuide(module)) return;
+    this.moduleGuide.set({ module, steps: pasosModulo(module) });
   }
 }

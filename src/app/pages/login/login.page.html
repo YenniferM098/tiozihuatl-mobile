@@ -16,6 +16,7 @@
         <span class="login__label" id="role-label">Tipo de usuario</span>
         <ion-segment
           class="login__roles"
+          data-guia="login-rol"
           aria-labelledby="role-label"
           [value]="form.controls.rol.value"
           [disabled]="loading()"
@@ -73,7 +74,7 @@
         </ion-input>
 
         <div class="login__forgot">
-          <button type="button" class="login__link" (click)="goToForgotPassword()">¿Olvidaste tu contraseña?</button>
+          <button type="button" class="login__link" data-guia="login-recuperar" (click)="goToForgotPassword()">¿Olvidaste tu contraseña?</button>
         </div>
 
         @if (errorMessage(); as message) {
@@ -104,3 +105,7 @@
     </section>
   </main>
 </ion-content>
+
+@if (showGuide()) {
+  <app-guia [pasos]="guideSteps" (cerrada)="closeGuide()" />
+}
