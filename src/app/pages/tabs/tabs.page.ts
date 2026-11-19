@@ -1,7 +1,10 @@
 import { Component, computed, inject } from '@angular/core';
 import { IonLabel, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular';
 import { HapticDirective } from '../../core/directives/haptic.directive';
+import { OnboardingService } from '../../core/services/onboarding.service';
 import { SessionService } from '../../core/services/session.service';
+import { GuiaComponent } from './guia/guia.component';
+import { pasosGuia } from './guia/pasos';
 
 interface TabItem {
   /** Segmento de ruta hijo de las pestañas (/home, /biblioteca…). */
@@ -26,10 +29,11 @@ const TABS: readonly TabItem[] = [
   selector: 'app-tabs',
   templateUrl: 'tabs.page.html',
   styleUrls: ['tabs.page.scss'],
-  imports: [IonTabs, IonTabBar, IonTabButton, IonLabel, HapticDirective],
+  imports: [IonTabs, IonTabBar, IonTabButton, IonLabel, HapticDirective, GuiaComponent],
 })
 export class TabsPage {
   private readonly user = inject(SessionService).user;
+  private readonly onboarding = inject(OnboardingService);
 
   /** Estudiante y Docente: 5 opciones. Visitante: Inicio, Revistas y Perfil. */
   readonly tabs = computed(() => {
@@ -37,4 +41,16 @@ export class TabsPage {
     const isMember = rol === 'Estudiante' || rol === 'Docente';
     return TABS.filter((item) => isMember || !item.membersOnly);
   });
+
+  /** Guía de primer uso (MEJ-01): solo después del primer inicio de sesión en este dispositivo. */
+  readonly showGuide = this.onboarding.guidePending;
+  readonly guideSteps = computed(() => pasosGuia(this.user()?.rol));
+
+  constructor() {
+    this.onboarding.settleGuide();
+  }
+
+  closeGuide(): void {
+    this.onboarding.markGuideSeen();
+  }
 }

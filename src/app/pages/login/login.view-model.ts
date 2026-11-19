@@ -3,6 +3,7 @@ import { AbstractControl, NonNullableFormBuilder, ValidationErrors, Validators }
 import { Router } from '@angular/router';
 import { UserRole } from '../../core/models/auth.models';
 import { AuthError, AuthService } from '../../core/services/auth.service';
+import { OnboardingService } from '../../core/services/onboarding.service';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MATRICULA_PATTERN = /^[A-Za-z0-9-]{3,30}$/;
@@ -31,6 +32,7 @@ export class LoginViewModel {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly onboarding = inject(OnboardingService);
 
   readonly roles: RoleOption[] = [
     { value: 'Estudiante', label: 'Estudiante', icon: 'ph-graduation-cap' },
@@ -83,6 +85,8 @@ export class LoginViewModel {
         next: () => {
           this.loading.set(false);
           this.form.controls.contrasena.reset();
+          // Primer inicio de sesión en este dispositivo: la guía de primer uso se muestra al llegar a Inicio.
+          this.onboarding.markGuidePendingIfNew();
           this.router.navigateByUrl('/home', { replaceUrl: true });
         },
         error: (err: unknown) => {
