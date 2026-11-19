@@ -1,0 +1,1536 @@
+{
+  "info": {
+    "name": "tiozihuatl-mobile pruebas de sistema",
+    "description": "Pruebas de sistema contra la API de producción: funcional (#59) y de seguridad (#60). Las credenciales de las cuentas de prueba llegan como variables de entorno desde los secrets del repositorio.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "funcional",
+      "description": "#59 TEST-F09 Prueba funcional del sistema",
+      "item": [
+        {
+          "name": "SF-01 Registro con datos inválidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('rechaza los datos con 400', () => pm.response.to.have.status(400));",
+                  "pm.test('explica el error de validación', () => pm.expect(pm.response.json().error).to.be.a('string').and.not.empty);",
+                  "pm.test('no crea la cuenta', () => pm.expect(pm.response.json()).to.not.have.any.keys('id_usuario', 'accessToken'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/pre-registro",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\",\n  \"correo\": \"correo-invalido\",\n  \"telefono\": \"12\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SF-02 Iniciar sesión como Estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('entrega el token de acceso y el de renovación', () => {",
+                  "  pm.expect(body.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.expect(body.refreshToken).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.test('identifica el rol Estudiante', () => pm.expect(body.user.rol).to.eql('Estudiante'));",
+                  "pm.test('no incluye la contraseña del usuario', () => pm.expect(body.user).to.not.have.any.keys('contrasena', 'password'));",
+                  "pm.collectionVariables.set('estToken', body.accessToken);",
+                  "pm.collectionVariables.set('estRefresh', body.refreshToken);",
+                  "pm.collectionVariables.set('estId', body.user.id_usuario);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credential\": \"{{estudianteCredencial}}\",\n  \"contrasena\": \"{{estudianteContrasena}}\",\n  \"rolSeleccionado\": \"Estudiante\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SF-03 Validar la sesión activa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('es la sesión del mismo usuario', () => pm.expect(pm.response.text()).to.include(String(pm.collectionVariables.get('estId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "SF-04 Consultar el perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const perfil = pm.response.json();",
+                  "pm.test('es el perfil de la cuenta que inició sesión', () => pm.expect(perfil.id_usuario).to.eql(Number(pm.collectionVariables.get('estId'))));",
+                  "pm.test('trae nombre, correo y rol Estudiante', () => {",
+                  "  pm.expect(perfil).to.include.keys('nombre', 'correo', 'matricula');",
+                  "  pm.expect(perfil.rol).to.eql('Estudiante');",
+                  "});",
+                  "pm.test('no incluye la contraseña', () => pm.expect(perfil).to.not.have.any.keys('contrasena', 'password'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/users/profile"
+          }
+        },
+        {
+          "name": "SF-05 Consultar el catálogo de Biblioteca",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('devuelve libros', () => pm.expect(pm.response.json()).to.be.an('array').that.is.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/catalog"
+          }
+        },
+        {
+          "name": "SF-06 Filtrar libros con contenido digital",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const libros = pm.response.json();",
+                  "pm.test('devuelve al menos 1 libro', () => pm.expect(libros).to.be.an('array').that.is.not.empty);",
+                  "pm.test('cada resultado tiene contenido digital', () => libros.forEach((l) => pm.expect(l.tiene_digital, l.titulo).to.eql(1)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/catalog?formato=DIGITAL"
+          }
+        },
+        {
+          "name": "SF-07 Abrir un libro en el lector: obtener la URL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('entrega una URL HTTPS de Cloudinary', () => pm.expect(body.url).to.match(/^https:\\/\\/res\\.cloudinary\\.com\\//));",
+                  "pm.collectionVariables.set('pdfUrl', body.url);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/catalog/libros/{{libroDigitalId}}/pdf-url"
+          }
+        },
+        {
+          "name": "SF-07 Abrir un libro en el lector: descargar el PDF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde con el archivo', () => pm.expect(pm.response.code).to.be.oneOf([200, 206]));",
+                  "pm.test('es un PDF', () => pm.expect(pm.response.stream.slice(0, 5).toString()).to.eql('%PDF-'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Range",
+                "value": "bytes=0-511"
+              }
+            ],
+            "url": "{{pdfUrl}}"
+          }
+        },
+        {
+          "name": "SF-08 Consultar los materiales del semestre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('devuelve una página con materiales', () => {",
+                  "  pm.expect(body.data).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body.total).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&page=1&limit=9"
+          }
+        },
+        {
+          "name": "SF-09 Filtrar materiales por materia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const material = pm.response.json().data.find((m) => Number(m.id_material) === Number(pm.collectionVariables.get('materialId')));",
+                  "pm.test('el material de prueba aparece en la materia', () => pm.expect(material).to.be.an('object'));",
+                  "if (material) pm.collectionVariables.set('materialUrl', material.url);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&materia={{materiaId}}&page=1&limit=100"
+          }
+        },
+        {
+          "name": "SF-09 Descargar el material",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde con el archivo', () => pm.expect(pm.response.code).to.be.oneOf([200, 206]));",
+                  "pm.test('es un PDF', () => pm.expect(pm.response.stream.slice(0, 4).toString()).to.eql('%PDF'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Range",
+                "value": "bytes=0-511"
+              }
+            ],
+            "url": "{{materialUrl}}"
+          }
+        },
+        {
+          "name": "SF-10 Consultar el catálogo de Revistas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const revistas = pm.response.json().data;",
+                  "pm.test('devuelve revistas', () => pm.expect(revistas).to.be.an('array').that.is.not.empty);",
+                  "if (revistas && revistas.length) pm.collectionVariables.set('revistaId', revistas[0].id_magazine);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines"
+          }
+        },
+        {
+          "name": "SF-10 Consultar el detalle de una revista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const revista = pm.response.json().data ?? {};",
+                  "pm.test('es la revista elegida', () => pm.expect(revista.id_revista).to.eql(Number(pm.collectionVariables.get('revistaId'))));",
+                  "pm.test('trae título y precio', () => {",
+                  "  pm.expect(revista.titulo).to.be.a('string').and.not.empty;",
+                  "  pm.expect(Number(revista.precio)).to.be.at.least(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines/{{revistaId}}"
+          }
+        },
+        {
+          "name": "SF-11 Consultar las revistas adquiridas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('devuelve una lista (puede estar vacía)', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines/my-purchases"
+          }
+        },
+        {
+          "name": "SF-12 Renovar la sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('entrega un token de acceso nuevo', () => pm.expect(body.accessToken).to.be.a('string').and.not.empty);",
+                  "if (body.accessToken) pm.collectionVariables.set('estToken', body.accessToken);",
+                  "if (body.refreshToken) pm.collectionVariables.set('estRefresh', body.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"{{estId}}\",\n  \"refreshToken\": \"{{estRefresh}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SF-13 Cerrar la sesión del Estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"{{estId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SF-14 Iniciar sesión como Visitante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('entrega el token de acceso y el de renovación', () => {",
+                  "  pm.expect(body.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.expect(body.refreshToken).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.test('identifica el rol Visitante', () => pm.expect(body.user.rol).to.eql('Visitante'));",
+                  "pm.test('no incluye la contraseña del usuario', () => pm.expect(body.user).to.not.have.any.keys('contrasena', 'password'));",
+                  "pm.collectionVariables.set('visToken', body.accessToken);",
+                  "pm.collectionVariables.set('visRefresh', body.refreshToken);",
+                  "pm.collectionVariables.set('visId', body.user.id_usuario);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credential\": \"{{visitanteCredencial}}\",\n  \"contrasena\": \"{{visitanteContrasena}}\",\n  \"rolSeleccionado\": \"Visitante\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SF-15 Visitante consulta Revistas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('devuelve revistas', () => pm.expect(pm.response.json().data).to.be.an('array').that.is.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{visToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines"
+          }
+        },
+        {
+          "name": "SF-15 Visitante consulta su perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const perfil = pm.response.json();",
+                  "pm.test('es el perfil del Visitante', () => {",
+                  "  pm.expect(perfil.id_usuario).to.eql(Number(pm.collectionVariables.get('visId')));",
+                  "  pm.expect(perfil.rol).to.eql('Visitante');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{visToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/users/profile"
+          }
+        },
+        {
+          "name": "SF-16 Cerrar la sesión del Visitante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{visToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"{{visId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SF-17 Búsqueda sin resultados en Biblioteca",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "const lista = Array.isArray(body) ? body : body.data;",
+                  "pm.test('devuelve una lista vacía, sin error', () => pm.expect(lista).to.be.an('array').that.is.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/catalog?search={{busquedaSinResultados}}"
+          }
+        },
+        {
+          "name": "SF-17 Búsqueda sin resultados en Materiales",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "const lista = Array.isArray(body) ? body : body.data;",
+                  "pm.test('devuelve una lista vacía, sin error', () => pm.expect(lista).to.be.an('array').that.is.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&search={{busquedaSinResultados}}&page=1&limit=9"
+          }
+        },
+        {
+          "name": "SF-17 Búsqueda sin resultados en Revistas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "const lista = Array.isArray(body) ? body : body.data;",
+                  "pm.test('devuelve una lista vacía, sin error', () => pm.expect(lista).to.be.an('array').that.is.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines/filter?search={{busquedaSinResultados}}&sort=asc"
+          }
+        }
+      ]
+    },
+    {
+      "name": "seguridad",
+      "description": "#60 TEST-S06 Prueba de seguridad del sistema",
+      "item": [
+        {
+          "name": "SS-01 Iniciar sesión con contraseña incorrecta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401', () => pm.response.to.have.status(401));",
+                  "pm.test('no entrega token', () => pm.expect(pm.response.json()).to.not.have.property('accessToken'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credential\": \"{{estudianteCredencial}}\",\n  \"contrasena\": \"Incorrecta-9!\",\n  \"rolSeleccionado\": \"Estudiante\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SS-02 Iniciar sesión con un rol que no corresponde",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 403', () => pm.response.to.have.status(403));",
+                  "pm.test('indica que el rol no coincide', () => pm.expect(pm.response.json().error).to.match(/rol no coincide/i));",
+                  "pm.test('no entrega token', () => pm.expect(pm.response.json()).to.not.have.property('accessToken'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credential\": \"{{estudianteCredencial}}\",\n  \"contrasena\": \"{{estudianteContrasena}}\",\n  \"rolSeleccionado\": \"Visitante\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SS-03 Sesión sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401', () => pm.response.to.have.status(401));",
+                  "pm.test('no entrega datos protegidos', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "SS-03 Perfil sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401', () => pm.response.to.have.status(401));",
+                  "pm.test('no entrega datos protegidos', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/profile"
+          }
+        },
+        {
+          "name": "SS-03 Revistas adquiridas sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401', () => pm.response.to.have.status(401));",
+                  "pm.test('no entrega datos protegidos', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines/my-purchases"
+          }
+        },
+        {
+          "name": "SS-04 Sesión con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401 o 403', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));",
+                  "pm.test('no entrega datos protegidos', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "SS-04 Perfil con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401 o 403', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));",
+                  "pm.test('no entrega datos protegidos', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "url": "{{baseUrl}}/users/profile"
+          }
+        },
+        {
+          "name": "SS-04 Revistas adquiridas con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401 o 403', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));",
+                  "pm.test('no entrega datos protegidos', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines/my-purchases"
+          }
+        },
+        {
+          "name": "SS-07 Modificar el perfil sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401', () => pm.response.to.have.status(401));",
+                  "pm.test('no entrega datos protegidos', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cambio no autorizado\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SS-07 Modificar el perfil con token alterado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401 o 403', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));",
+                  "pm.test('no entrega datos protegidos', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAlterado}}"
+              }
+            ],
+            "url": "{{baseUrl}}/users/profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cambio no autorizado\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SS-10 Catálogo público de revistas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const revistas = pm.response.json().data ?? [];",
+                  "if (revistas.length) pm.collectionVariables.set('revistaId', revistas[0].id_magazine);",
+                  "pm.test('[Hallazgo conocido #197] el catálogo público no expone la ubicación del PDF (pdf_public_id)', () => {",
+                  "  revistas.forEach((r) => pm.expect(r, r.titulo).to.not.have.property('pdf_public_id'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines"
+          }
+        },
+        {
+          "name": "SS-09 PDF de revista sin sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401', () => pm.response.to.have.status(401));",
+                  "pm.test('no entrega datos protegidos', () => pm.expect(pm.response.json()).to.have.property('error'));",
+                  "",
+                  "pm.test('no entrega la dirección del archivo', () => pm.expect(pm.response.text()).to.not.include('res.cloudinary.com'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines/secure-pdf/{{revistaId}}"
+          }
+        },
+        {
+          "name": "SS-09 Vista de revista sin sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega el acceso con 401', () => pm.response.to.have.status(401));",
+                  "pm.test('no entrega datos protegidos', () => pm.expect(pm.response.json()).to.have.property('error'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines/{{revistaId}}/view"
+          }
+        },
+        {
+          "name": "SS-12 Libro con identificador inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 400 o 404, nunca 500', () => pm.expect(pm.response.code).to.be.oneOf([400, 404]));",
+                  "pm.test('no entrega una URL del archivo', () => pm.expect(pm.response.json()).to.not.have.property('url'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/catalog/libros/abc/pdf-url"
+          }
+        },
+        {
+          "name": "SS-12 Revista inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 400 o 404, nunca 500', () => pm.expect(pm.response.code).to.be.oneOf([400, 404]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/magazines/999999999"
+          }
+        },
+        {
+          "name": "SS-05 Iniciar sesión como Estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('entrega el token de acceso y el de renovación', () => {",
+                  "  pm.expect(body.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.expect(body.refreshToken).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.test('identifica el rol Estudiante', () => pm.expect(body.user.rol).to.eql('Estudiante'));",
+                  "pm.test('no incluye la contraseña del usuario', () => pm.expect(body.user).to.not.have.any.keys('contrasena', 'password'));",
+                  "pm.collectionVariables.set('estToken', body.accessToken);",
+                  "pm.collectionVariables.set('estRefresh', body.refreshToken);",
+                  "pm.collectionVariables.set('estId', body.user.id_usuario);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credential\": \"{{estudianteCredencial}}\",\n  \"contrasena\": \"{{estudianteContrasena}}\",\n  \"rolSeleccionado\": \"Estudiante\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SS-06 Renovar la sesión de otra cuenta",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('otroId', Number(pm.collectionVariables.get('estId')) + 1);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('niega la renovación con 401 o 403', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));",
+                  "pm.test('no entrega token', () => pm.expect(pm.response.json()).to.not.have.property('accessToken'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"{{otroId}}\",\n  \"refreshToken\": \"{{estRefresh}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SS-11 Perfil propio sin datos sensibles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('[SS-11] el perfil no incluye la contraseña ni la palabra secreta', () => {",
+                  "  pm.expect(pm.response.json()).to.not.have.any.keys('contrasena', 'password', 'palabra_secreta');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/users/profile"
+          }
+        },
+        {
+          "name": "SS-05 Cerrar la sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"{{estId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SS-05 Usar el token de acceso después de cerrar sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Posible hallazgo] el token de acceso deja de servir al cerrar sesión', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "SS-05 Renovar la sesión después de cerrarla",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Posible hallazgo] el token de renovación deja de servir al cerrar sesión', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"{{estId}}\",\n  \"refreshToken\": \"{{estRefresh}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SS-08 Iniciar sesión como Visitante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('entrega el token de acceso y el de renovación', () => {",
+                  "  pm.expect(body.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.expect(body.refreshToken).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.test('identifica el rol Visitante', () => pm.expect(body.user.rol).to.eql('Visitante'));",
+                  "pm.test('no incluye la contraseña del usuario', () => pm.expect(body.user).to.not.have.any.keys('contrasena', 'password'));",
+                  "pm.collectionVariables.set('visToken', body.accessToken);",
+                  "pm.collectionVariables.set('visRefresh', body.refreshToken);",
+                  "pm.collectionVariables.set('visId', body.user.id_usuario);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credential\": \"{{visitanteCredencial}}\",\n  \"contrasena\": \"{{visitanteContrasena}}\",\n  \"rolSeleccionado\": \"Visitante\"\n}"
+            }
+          }
+        },
+        {
+          "name": "SS-08 Visitante consulta el catálogo de Biblioteca",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Posible hallazgo] la API niega Biblioteca al rol Visitante', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{visToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/catalog"
+          }
+        },
+        {
+          "name": "SS-08 Visitante obtiene el PDF de un libro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Posible hallazgo] la API niega el PDF de un libro al rol Visitante', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{visToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/catalog/libros/{{libroDigitalId}}/pdf-url"
+          }
+        },
+        {
+          "name": "SS-08 Visitante consulta Materiales",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Posible hallazgo] la API niega Materiales al rol Visitante', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{visToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&page=1&limit=9"
+          }
+        },
+        {
+          "name": "SS-08 Cerrar la sesión del Visitante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{visToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"{{visId}}\"\n}"
+            }
+          }
+        }
+      ],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// SS-11: ninguna respuesta de la API expone información sensible.",
+              "if (pm.request.url.toString().startsWith(pm.environment.get('baseUrl') || pm.collectionVariables.get('baseUrl') || '@@')) {",
+              "  const texto = pm.response.text();",
+              "  pm.test('[SS-11] no expone contraseñas, hashes, trazas ni SQL', () => {",
+              "    pm.expect(texto).to.not.match(/\"(contrasena|password|hash)\"\\s*:/i);",
+              "    pm.expect(texto).to.not.match(/\\$2[aby]\\$\\d{2}\\$/);",
+              "    pm.expect(texto).to.not.match(/\\bat [\\w.<>]+ \\(|node_modules|ER_[A-Z_]+|sql syntax|SELECT .+ FROM/i);",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "libroDigitalId",
+      "value": "56"
+    },
+    {
+      "key": "semestreId",
+      "value": "1"
+    },
+    {
+      "key": "materiaId",
+      "value": "1"
+    },
+    {
+      "key": "materialId",
+      "value": "40"
+    },
+    {
+      "key": "busquedaSinResultados",
+      "value": "zzqx-sin-resultados-sistema"
+    },
+    {
+      "key": "tokenAlterado",
+      "value": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MH0.firma-alterada"
+    }
+  ]
+}
