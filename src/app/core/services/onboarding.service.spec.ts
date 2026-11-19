@@ -53,6 +53,46 @@ describe('OnboardingService (Bienvenida y guía de primer uso MEJ-01)', () => {
     expect(otroInicio.guidePending()).toBe(false);
   });
 
+  it('la guía de cada módulo aparece después de la de la barra y una sola vez', () => {
+    const servicio = abrirApp();
+    servicio.markGuidePendingIfNew();
+    expect(servicio.shouldShowModuleGuide('biblioteca')).toBe(false);
+
+    servicio.markGuideSeen();
+    expect(servicio.shouldShowModuleGuide('biblioteca')).toBe(true);
+
+    servicio.markModuleGuideSeen('biblioteca');
+    expect(servicio.shouldShowModuleGuide('biblioteca')).toBe(false);
+    expect(servicio.shouldShowModuleGuide('revistas')).toBe(true);
+    expect(abrirApp().shouldShowModuleGuide('biblioteca')).toBe(false);
+  });
+
+  it('quien ya tenía sesión antes de esta versión tampoco ve las guías de módulo', () => {
+    const actualizada = abrirApp();
+    actualizada.settleGuide();
+    expect(actualizada.shouldShowModuleGuide('revistas')).toBe(false);
+  });
+
+  it('al dejar la bienvenida en una instalación nueva queda pendiente la guía del inicio de sesión', () => {
+    const servicio = abrirApp();
+    expect(servicio.loginGuidePending()).toBe(false);
+    servicio.markWelcomeSeen();
+    expect(servicio.loginGuidePending()).toBe(true);
+    expect(abrirApp().loginGuidePending()).toBe(true);
+
+    servicio.markLoginGuideSeen();
+    expect(servicio.loginGuidePending()).toBe(false);
+    expect(abrirApp().loginGuidePending()).toBe(false);
+  });
+
+  it('si la bienvenida ya se había visto antes de esta versión no activa la guía del inicio de sesión', () => {
+    abrirApp().markWelcomeSeen();
+    localStorage.removeItem('tiozihuatl.guia.login');
+    const actualizada = abrirApp();
+    actualizada.markWelcomeSeen();
+    expect(actualizada.loginGuidePending()).toBe(false);
+  });
+
   it('funciona en memoria si el almacenamiento no está disponible', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('sin almacenamiento');
@@ -67,5 +107,9 @@ describe('OnboardingService (Bienvenida y guía de primer uso MEJ-01)', () => {
     servicio.markGuidePendingIfNew();
     expect(servicio.hasSeenWelcome).toBe(true);
     expect(servicio.guidePending()).toBe(true);
+
+    servicio.markGuideSeen();
+    servicio.markModuleGuideSeen('perfil');
+    expect(servicio.shouldShowModuleGuide('perfil')).toBe(false);
   });
 });
