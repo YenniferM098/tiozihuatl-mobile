@@ -1286,7 +1286,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('[Posible hallazgo] el token de acceso deja de servir al cerrar sesión', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                  "pm.test('[Hallazgo conocido #217] el token de acceso deja de servir al cerrar sesión', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
                 ]
               }
             }
@@ -1314,7 +1314,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('[Posible hallazgo] el token de renovación deja de servir al cerrar sesión', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                  "pm.test('[Hallazgo conocido #217] el token de renovación deja de servir al cerrar sesión', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
                 ]
               }
             }
@@ -1380,7 +1380,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('[Posible hallazgo] la API niega Biblioteca al rol Visitante', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                  "pm.test('[Hallazgo conocido #216] la API niega Biblioteca al rol Visitante', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
                 ]
               }
             }
@@ -1408,7 +1408,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('[Posible hallazgo] la API niega el PDF de un libro al rol Visitante', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                  "pm.test('[Hallazgo conocido #216] la API niega el PDF de un libro al rol Visitante', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
                 ]
               }
             }
@@ -1436,7 +1436,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('[Posible hallazgo] la API niega Materiales al rol Visitante', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                  "pm.test('[Hallazgo conocido #216] la API niega Materiales al rol Visitante', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
                 ]
               }
             }
