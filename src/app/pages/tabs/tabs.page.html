@@ -8,3 +8,9 @@
     }
   </ion-tab-bar>
 </ion-tabs>
+
+@if (showGuide()) {
+  <app-guia [pasos]="guideSteps()" (cerrada)="closeGuide()" />
+} @else if (moduleGuide(); as guia) {
+  <app-guia [pasos]="guia.steps" (cerrada)="closeModuleGuide(guia.module)" />
+}

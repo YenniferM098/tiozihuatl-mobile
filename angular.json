@@ -133,6 +133,7 @@
               "src/app/core/interceptors/**/*.ts",
               "src/app/core/services/auth.service.ts",
               "src/app/core/services/session.service.ts",
+              "src/app/core/services/onboarding.service.ts",
               "src/app/core/services/home-content.service.ts",
               "src/app/core/services/library.service.ts",
               "src/app/pages/biblioteca/library.page.ts",

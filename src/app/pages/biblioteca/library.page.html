@@ -2,10 +2,10 @@
 <ion-content>
   <section class="search-area">
     <p>Consulta el acervo institucional</p>
-    <ion-searchbar aria-label="Buscar libros por título o autor" placeholder="Buscar por título o autor" [debounce]="400" [maxlength]="200" [(ngModel)]="filters.search" (ionInput)="load()" />
+    <ion-searchbar data-guia="biblioteca-buscador" aria-label="Buscar libros por título o autor" placeholder="Buscar por título o autor" [debounce]="400" [maxlength]="200" [(ngModel)]="filters.search" (ionInput)="load()" />
   </section>
   <main class="library-body">
-    <details class="filters" open>
+    <details class="filters" data-guia="biblioteca-filtros" open>
       <summary><i class="ph ph-sliders-horizontal" aria-hidden="true"></i> Filtros y ordenamiento</summary>
       <div class="filter-grid">
         <ion-select label="Materia" interface="alert" [(ngModel)]="filters.materia" (ionChange)="load()"><ion-select-option value="">Todas</ion-select-option>@for (subject of subjects(); track subject.id) { <ion-select-option [value]="subject.nombre">{{ subject.nombre }}</ion-select-option> }</ion-select>
@@ -22,7 +22,7 @@
     @else if (books().length) {
       <p class="result-count" role="status">{{ books().length }} libros encontrados</p>
       <div class="book-list">@for (book of visibleBooks; track book.id) {
-        <a class="book-card" [routerLink]="['/biblioteca', book.id]">
+        <a class="book-card" data-guia="biblioteca-libro" [routerLink]="['/biblioteca', book.id]">
           <app-book-cover [id]="book.id" [title]="book.titulo" [digital]="!!book.tiene_digital" />
           <div><h2>{{ book.titulo }}</h2>@if (book.autores) { <p>{{ book.autores }}</p> }@if (book.materias) { <p class="category">{{ book.materias }}</p> }<span class="badge">{{ book.tiene_digital ? 'Contenido digital' : 'Información bibliográfica' }}</span>@if (book.semestres) { <p>{{ book.semestres }}</p> }</div>
         </a>
