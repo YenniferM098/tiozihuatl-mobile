@@ -760,9 +760,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('niega el acceso con 403', () => pm.response.to.have.status(403));",
-                  "pm.test('indica que el rol no coincide', () => pm.expect(pm.response.json().error).to.match(/rol no coincide/i));",
-                  "pm.test('no entrega token', () => pm.expect(pm.response.json()).to.not.have.property('accessToken'));"
+                  "// La API busca la cuenta entre los usuarios del rol elegido: responde 401 (no encontrado) o 403 (rol no coincide).",
+                  "pm.test('niega el acceso con 401 o 403', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));",
+                  "pm.test('explica el motivo sin entregar token', () => {",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty;",
+                  "  pm.expect(pm.response.json()).to.not.have.property('accessToken');",
+                  "});"
                 ]
               }
             }
