@@ -85,7 +85,7 @@
           <div><dt>Correo electrónico</dt><dd>{{ p.correo || '—' }}</dd></div>
           <div><dt>Teléfono de contacto</dt><dd>{{ p.telefono || '—' }}</dd></div>
         </dl>
-        <button type="button" class="outline" tzHaptic (click)="openEdit()">
+        <button type="button" class="outline" data-guia="perfil-editar" tzHaptic (click)="openEdit()">
           <i class="ph ph-pencil-simple" aria-hidden="true"></i>Editar información
         </button>
       </section>
@@ -103,7 +103,7 @@
           </span>
           <i class="ph ph-caret-right" aria-hidden="true"></i>
         </button>
-        <button type="button" class="row" tzHaptic (click)="openPassword()">
+        <button type="button" class="row" data-guia="perfil-contrasena" tzHaptic (click)="openPassword()">
           <i class="ph ph-lock-key row__icon" aria-hidden="true"></i>
           <span class="row__text">
             <span class="row__label">Cambiar contraseña</span>
@@ -134,7 +134,7 @@
       </section>
 
       <!-- ---------- Sesión ---------- -->
-      <button type="button" class="logout" tzHaptic (click)="logout()">
+      <button type="button" class="logout" data-guia="perfil-salir" tzHaptic (click)="logout()">
         <i class="ph ph-sign-out" aria-hidden="true"></i>Cerrar sesión
       </button>
     } @else {
