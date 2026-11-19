@@ -1,0 +1,31 @@
+<div class="guia" role="dialog" aria-modal="true" aria-labelledby="guia-titulo" aria-describedby="guia-texto">
+  <!-- Capa que bloquea los toques fuera del globo; oscurece la pantalla si no hay opción resaltada. -->
+  <div class="guia__fondo" [class.guia__fondo--oscuro]="!foco()"></div>
+
+  @if (foco(); as f) {
+    <div class="guia__foco" aria-hidden="true"
+      [style.top.px]="f.top" [style.left.px]="f.left" [style.width.px]="f.width" [style.height.px]="f.height"></div>
+  }
+
+  <section class="guia__globo"
+    [style.bottom.px]="posicion().bottom" [style.left.px]="posicion().left" [style.width.px]="posicion().width">
+    <p class="guia__contador">{{ indice() + 1 }} de {{ pasos().length }}</p>
+    <h2 id="guia-titulo" class="guia__titulo">{{ paso().titulo }}</h2>
+    <p id="guia-texto" class="guia__texto" aria-live="polite">{{ paso().texto }}</p>
+
+    <div class="guia__acciones">
+      <button type="button" class="guia__boton guia__omitir" tzHaptic (click)="omitir()">Omitir</button>
+      <span class="guia__espacio"></span>
+      @if (!esPrimero()) {
+        <button type="button" class="guia__boton guia__anterior" tzHaptic (click)="anterior()">Anterior</button>
+      }
+      <button type="button" class="guia__boton guia__siguiente" tzHaptic (click)="siguiente()">
+        {{ esUltimo() ? 'Entendido' : 'Siguiente' }}
+      </button>
+    </div>
+
+    @if (foco()) {
+      <span class="guia__flecha" aria-hidden="true" [style.left.px]="posicion().flecha"></span>
+    }
+  </section>
+</div>
