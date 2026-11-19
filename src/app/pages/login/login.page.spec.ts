@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthError, AuthService } from '../../core/services/auth.service';
+import { OnboardingService } from '../../core/services/onboarding.service';
 import { LoginPage } from './login.page';
 
 describe('LoginPage (HU-02 Inicio de sesión)', () => {
@@ -126,5 +127,50 @@ describe('LoginPage (HU-02 Inicio de sesión)', () => {
 
     expect(router.navigateByUrl).toHaveBeenCalledWith('/register');
     expect(router.navigateByUrl).toHaveBeenCalledWith('/forgot-password');
+  });
+
+  describe('guía de primer uso (MEJ-01)', () => {
+    const crear = (primeraVez: boolean) => {
+      localStorage.clear();
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: AuthService, useValue: auth },
+          { provide: Router, useValue: router },
+        ],
+      });
+      if (primeraVez) TestBed.inject(OnboardingService).markWelcomeSeen();
+      const fixture = TestBed.createComponent(LoginPage);
+      fixture.detectChanges();
+      return fixture;
+    };
+
+    afterEach(() => localStorage.clear());
+
+    it('en una instalación nueva resalta el tipo de usuario y la recuperación de contraseña', () => {
+      const fixture = crear(true);
+      const html: HTMLElement = fixture.nativeElement;
+      expect(fixture.componentInstance.showGuide()).toBe(true);
+      expect(fixture.componentInstance.guideSteps.map((p) => p.objetivo)).toEqual([
+        '[data-guia="login-rol"]',
+        '[data-guia="login-recuperar"]',
+      ]);
+      expect(html.querySelector('app-guia')).not.toBeNull();
+      expect(html.querySelector('[data-guia="login-rol"]')).not.toBeNull();
+      expect(html.querySelector('[data-guia="login-recuperar"]')?.textContent).toContain('¿Olvidaste tu contraseña?');
+    });
+
+    it('al cerrarla no vuelve a mostrarse', () => {
+      const fixture = crear(true);
+      fixture.componentInstance.closeGuide();
+      fixture.detectChanges();
+      expect(fixture.componentInstance.showGuide()).toBe(false);
+      expect(fixture.nativeElement.querySelector('app-guia')).toBeNull();
+    });
+
+    it('sin pasar por la bienvenida (app ya instalada) no se muestra', () => {
+      const fixture = crear(false);
+      expect(fixture.componentInstance.showGuide()).toBe(false);
+    });
   });
 });

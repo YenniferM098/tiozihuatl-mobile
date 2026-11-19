@@ -1,0 +1,156 @@
+/*
+ * Guía de primer uso: capa a pantalla completa sobre la app.
+ * El oscurecido sale de la sombra enorme del resaltado, así el elemento del paso
+ * queda "recortado" en claro; el globo blanco se ubica arriba o abajo de él con una
+ * flecha que lo señala.
+ */
+:host {
+  --guia-oscuro: rgba(15, 23, 32, 0.66);
+  --guia-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --guia-duracion: 0.35s;
+}
+
+.guia {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.guia__fondo {
+  position: absolute;
+  inset: 0;
+
+  &--oscuro {
+    background: var(--guia-oscuro);
+  }
+}
+
+.guia__foco {
+  position: absolute;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.9),
+    0 0 0 9999px var(--guia-oscuro);
+  pointer-events: none;
+  transition:
+    top var(--guia-duracion) var(--guia-ease),
+    left var(--guia-duracion) var(--guia-ease),
+    width var(--guia-duracion) var(--guia-ease),
+    height var(--guia-duracion) var(--guia-ease);
+}
+
+.guia__globo {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 18px 18px 14px;
+  border-radius: 20px;
+  background: #ffffff;
+  color: var(--tz-text);
+  box-shadow: 0 12px 32px rgba(15, 23, 32, 0.24);
+  animation: guia-aparece var(--guia-duracion) var(--guia-ease);
+}
+
+.guia__contador {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ion-color-primary-shade);
+}
+
+.guia__titulo {
+  margin: 0 0 6px;
+  font-family: var(--tz-font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.guia__texto {
+  margin: 0 0 14px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--tz-text-muted);
+}
+
+.guia__acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guia__espacio {
+  flex: 1;
+}
+
+.guia__boton {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: transparent;
+  color: var(--tz-text-muted);
+  transition: transform var(--tz-press-out);
+
+  &:active {
+    transform: scale(var(--tz-press-scale));
+    transition: transform var(--tz-press-in);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ion-color-primary-shade);
+    outline-offset: 2px;
+  }
+}
+
+.guia__anterior {
+  color: var(--ion-color-primary-shade);
+}
+
+.guia__siguiente {
+  padding: 0 18px;
+  background: var(--ion-color-primary-shade);
+  color: #ffffff;
+}
+
+/* Flecha bajo el globo que apunta a la opción resaltada. */
+.guia__flecha {
+  position: absolute;
+  bottom: -8px;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  background: #ffffff;
+  transform: rotate(45deg);
+  border-radius: 0 0 4px 0;
+  transition: left var(--guia-duracion) var(--guia-ease);
+
+  /* Globo debajo del elemento: la flecha sale por arriba. */
+  &--arriba {
+    top: -8px;
+    bottom: auto;
+    border-radius: 4px 0 0 0;
+  }
+}
+
+@keyframes guia-aparece {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guia__foco,
+  .guia__flecha {
+    transition: none;
+  }
+
+  .guia__globo {
+    animation: none;
+  }
+}

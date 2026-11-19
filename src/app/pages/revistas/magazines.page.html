@@ -4,17 +4,17 @@
   <section class="search-area">
     <p>Consulta las publicaciones del Instituto.</p>
     @if (view() === 'all') {
-      <ion-searchbar aria-label="Buscar revistas por título" placeholder="Buscar por título" [debounce]="400" [maxlength]="100" [(ngModel)]="filters.search" (ionInput)="load()" />
+      <ion-searchbar data-guia="revistas-buscador" aria-label="Buscar revistas por título" placeholder="Buscar por título" [debounce]="400" [maxlength]="100" [(ngModel)]="filters.search" (ionInput)="load()" />
     }
   </section>
   <main class="library-body">
-    <ion-segment class="views" [value]="view()" (ionChange)="selectView($event.detail.value)" aria-label="Revistas que se muestran">
+    <ion-segment class="views" data-guia="revistas-vistas" [value]="view()" (ionChange)="selectView($event.detail.value)" aria-label="Revistas que se muestran">
       <ion-segment-button value="all"><ion-label>Todas</ion-label></ion-segment-button>
       <ion-segment-button value="mine"><ion-label>Mis revistas</ion-label></ion-segment-button>
     </ion-segment>
 
     @if (view() === 'all') {
-      <details class="filters" open>
+      <details class="filters" data-guia="revistas-filtros" open>
         <summary><i class="ph ph-sliders-horizontal" aria-hidden="true"></i> Filtros y ordenamiento</summary>
         <div class="filter-grid">
           <ion-select label="Letra inicial" interface="alert" [(ngModel)]="filters.letter" (ionChange)="load()"><ion-select-option value="">Todas</ion-select-option>@for (letter of letters; track letter) { <ion-select-option [value]="letter">{{ letter }}</ion-select-option> }</ion-select>
@@ -30,7 +30,7 @@
         <p class="result-count" role="status">{{ loading() ? 'Actualizando resultados…' : countLabel() }}</p>
         <ul class="magazine-grid">
           @for (magazine of magazines(); track magazine.id) {
-            <li><a class="magazine-card" [routerLink]="['/revistas', magazine.id]">
+            <li><a class="magazine-card" data-guia="revistas-revista" [routerLink]="['/revistas', magazine.id]">
               <div class="magazine-cover">
                 @if (magazine.cover && !brokenCovers().has(magazine.id)) {
                   <img [src]="magazine.cover" [alt]="'Portada de ' + magazine.title" width="300" height="400" decoding="async" [attr.loading]="$index < eagerCovers ? 'eager' : 'lazy'" [attr.fetchpriority]="$index < eagerCovers ? 'high' : 'auto'" (error)="coverFailed(magazine.id)" />
@@ -65,7 +65,7 @@
         <p class="result-count" role="status">{{ purchases().length === 1 ? '1 revista adquirida' : purchases().length + ' revistas adquiridas' }}</p>
         <ul class="magazine-grid">
           @for (magazine of purchases(); track magazine.id) {
-            <li><a class="magazine-card" [routerLink]="['/revistas', magazine.id]">
+            <li><a class="magazine-card" data-guia="revistas-revista" [routerLink]="['/revistas', magazine.id]">
               <div class="magazine-cover">
                 @if (magazine.cover && !brokenCovers().has(magazine.id)) {
                   <img [src]="magazine.cover" [alt]="'Portada de ' + magazine.title" width="300" height="400" decoding="async" [attr.loading]="$index < eagerCovers ? 'eager' : 'lazy'" [attr.fetchpriority]="$index < eagerCovers ? 'high' : 'auto'" (error)="coverFailed(magazine.id)" />
