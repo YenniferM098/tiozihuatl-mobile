@@ -88,6 +88,8 @@ git push origin v0.1.0
 # PR release/0.1.0 -> develop y merge
 ```
 
+Al crear el tag también corre `sistema.yml`, con las pruebas de sistema funcional y de seguridad contra la API de producción ([Pruebas](pruebas.md#pruebas-de-sistema)). Cuando `monitoreo.yml` llega a `main`, el monitoreo de la API empieza a ejecutarse cada 6 horas ([Monitoreo](monitoreo.md)).
+
 El tag debe coincidir con `package.json`; si no, el pipeline se detiene. La primera versión
 se descarga del artefacto `aab-0.1.0` y se sube a mano en *Play Console → Pruebas → Prueba
 cerrada*. Las siguientes se suben solas cuando ya existe `PLAY_SERVICE_ACCOUNT_JSON`.

@@ -37,17 +37,21 @@ flowchart TD
 |---|---|---|
 | Presentación: Vista | `src/app/pages/**/*.page.html`, `*.page.ts` | Plantilla y enlace con el ViewModel. No contiene reglas de negocio ni llamadas HTTP. |
 | Presentación: ViewModel | `src/app/pages/**/*.view-model.ts` | Estado de la pantalla en *signals*, validaciones del formulario y acciones (enviar, paginar, reintentar). |
-| Aplicación | `src/app/core/services`, `core/guards`, `core/interceptors` | Casos de uso: iniciar sesión, renovar el token, registrar visitante, recuperar contraseña, consultar el catálogo con control de rol. Traduce errores técnicos a mensajes para el usuario. |
-| Dominio | `src/app/core/models`, `src/app/domain/repositories` | Modelos de datos y contratos `AuthRepository` y `LibraryRepository`. No conoce Angular HTTP. |
-| Datos | `src/app/data/repositories` | `HttpAuthRepository` y `HttpLibraryRepository`: implementan los contratos sobre la API REST. |
+| Aplicación | `src/app/core/services`, `core/guards`, `core/interceptors` | Casos de uso: iniciar sesión, renovar el token, registrar visitante, recuperar contraseña, consultar los catálogos con control de rol, gestionar el perfil, descargar archivos y recordar la guía de primer uso. Traduce errores técnicos a mensajes para el usuario. |
+| Dominio | `src/app/core/models`, `src/app/domain/repositories` | Modelos de datos y contratos `AuthRepository`, `LibraryRepository`, `MaterialsRepository`, `MagazinesRepository` y `ProfileRepository`. No conoce Angular HTTP. |
+| Datos | `src/app/data/repositories`, `src/app/data/storage` | `HttpAuthRepository`, `HttpLibraryRepository`, `HttpMaterialsRepository`, `HttpMagazinesRepository` y `HttpProfileRepository` implementan los contratos sobre la API REST; `data/storage` guarda la sesión cifrada. |
 
 ### Cómo se aplica MVVM
 
 - **Model:** modelos de `core/models` y los servicios que obtienen los datos a través de los repositorios.
 - **View:** la plantilla HTML y la clase de la página, que solo reexpone lo que tiene el ViewModel.
-- **ViewModel:** `LoginViewModel` (`pages/login/login.view-model.ts`) y `LibraryViewModel` (`pages/biblioteca/library.view-model.ts`) concentran el estado y la lógica de la pantalla. Se pueden probar sin montar la vista.
+- **ViewModel:** los archivos `*.view-model.ts` de Login, Biblioteca, Materiales, Perfil, Revistas y el detalle de una revista concentran el estado y la lógica de la pantalla. Se pueden probar sin montar la vista.
 
 Las demás pantallas siguen la misma separación dentro de su clase: la plantilla solo enlaza *signals* y métodos, y la lógica de datos vive en los servicios.
+
+### Guía de primer uso
+
+La guía (MEJ-01) es un componente de presentación compartido, `pages/tabs/guia/guia.component.ts`, que resalta un elemento de la pantalla y muestra un globo con su mensaje. Los pasos de cada pantalla están en `pages/tabs/guia/pasos.ts` y señalan los elementos por su atributo `data-guia`, así que los módulos no conocen la guía. `OnboardingService` recuerda en el dispositivo qué guías ya se mostraron.
 
 ## Patrones de diseño
 
@@ -55,7 +59,7 @@ Las demás pantallas siguen la misma separación dentro de su clase: la plantill
 |---|---|---|
 | **MVVM** | `*.page.ts` + `*.view-model.ts` | Separar la vista del estado y la lógica de presentación. |
 | **Repository** | `domain/repositories/*.repository.ts` (contrato) y `data/repositories/http-*.repository.ts` (implementación) | Los servicios no dependen de `HttpClient`; el origen de los datos se puede cambiar o simular en pruebas. |
-| **Factory** | `AUTH_REPOSITORY`, `LIBRARY_REPOSITORY` y `PDF_READER_SOURCE` (`InjectionToken` con `factory`) | Decide qué implementación se entrega a quien la pide. |
+| **Factory** | Un `InjectionToken` con `factory` por repositorio (`AUTH_REPOSITORY`, `LIBRARY_REPOSITORY`, `MATERIALS_REPOSITORY`, `MAGAZINES_REPOSITORY`, `PROFILE_REPOSITORY`), además de `SESSION_STORE` y `PDF_READER_SOURCE` | Decide qué implementación se entrega a quien la pide; por ejemplo, el almacén cifrado en Android y `localStorage` en el navegador, o el PDF de un libro, un material o una revista para el mismo lector. |
 | **Singleton** | Servicios y repositorios con `providedIn: 'root'` | Una sola instancia compartida: sesión, autenticación y caché del catálogo. |
 | **Observer** | RxJS (`Observable`, `shareReplay`) y *signals* de Angular | La vista se actualiza sola cuando cambia el estado; varias peticiones de renovación comparten una sola respuesta. |
 | **Interceptor (Chain of Responsibility)** | `core/interceptors/auth.interceptor.ts` | Agrega el token `Bearer` a cada petición a la API. |
