@@ -15,11 +15,14 @@ Aplicación móvil del Instituto de Estudios Superiores Tiozihuatl para que estu
 |---|---|---|
 | Registro de visitante | HU-01 | Liberado en 0.1.0 |
 | Inicio de sesión | HU-02 | Liberado en 0.1.0 |
-| Biblioteca Digital | HU-04 | Desarrollado, se libera en 0.2.0 |
-| Lectura de libros digitales | HU-05 | Desarrollado, se libera en 0.3.0 |
-| Materiales Complementarios | HU-06 | Pendiente (iteración 7) |
-| Gestión del perfil y derechos ARCO | HU-03 | Desarrollado, se integra en la iteración 8 ([detalle](docs/perfil-arco.md)) |
-| Revistas Digitales | HU-07 y HU-08 | Pendiente (iteración 8) |
+| Biblioteca Digital | HU-04 | Liberado en 0.2.0 |
+| Lectura de libros digitales | HU-05 | Liberado en 0.3.0 |
+| Materiales Complementarios | HU-06 | Liberado en 0.4.0 |
+| Gestión del perfil y derechos ARCO | HU-03 | Liberado en 0.5.0 ([detalle](docs/perfil-arco.md)) |
+| Revistas Digitales | HU-07 y HU-08 | Liberado en 0.6.0 |
+| Guía de primer uso | MEJ-01 | Se libera en 0.9.0 |
+
+La versión 0.9.0 (versión integrada) también agrega el [monitoreo](docs/monitoreo.md) de la API y las [pruebas de sistema](docs/pruebas.md#pruebas-de-sistema) funcional y de seguridad.
 
 ## Usuarios
 
@@ -27,7 +30,7 @@ Aplicación móvil del Instituto de Estudios Superiores Tiozihuatl para que estu
 |---|---|
 | Estudiante | Biblioteca, lector, materiales y revistas |
 | Docente | Biblioteca, lector, materiales y revistas |
-| Visitante | Se registra desde la app; consulta el catálogo de revistas |
+| Visitante | Se registra desde la app; consulta el catálogo de revistas y lee las que adquirió |
 
 ## Tecnologías
 
@@ -35,6 +38,7 @@ Aplicación móvil del Instituto de Estudios Superiores Tiozihuatl para que estu
 - Capacitor 8 para Android
 - API REST institucional con autenticación JWT
 - Vitest, ESLint, Newman (Postman) y Lighthouse CI para las pruebas
+- Monitoreo de la API con su propio pipeline de GitHub Actions
 - GitHub Actions para integración y despliegue continuos
 
 ## Documentación
@@ -43,9 +47,10 @@ Aplicación móvil del Instituto de Estudios Superiores Tiozihuatl para que estu
 |---|---|
 | [Metodología y planeación](docs/metodologia-y-planeacion.md) | Mobile-D, tablero Kanban, iteraciones, versiones y flujo de trabajo con GitFlow |
 | [Arquitectura](docs/arquitectura.md) | Capas MVVM + Clean Architecture, patrones de diseño y pruebas de caja blanca |
-| [Pruebas](docs/pruebas.md) | Las 7 pruebas por historia, pipelines, caja blanca y caja negra, y evidencias de aceptación |
-| [Seguridad](docs/seguridad.md) | JWT, refresco por 401, almacenamiento cifrado, certificate pinning, R8 y permisos |
-| [Perfil y derechos ARCO](docs/perfil-arco.md) | Gestión del perfil, desarrollada y programada para la iteración 8 |
+| [Pruebas](docs/pruebas.md) | Las 7 pruebas por historia, pruebas de sistema, pipelines, caja blanca y caja negra, y evidencias de aceptación |
+| [Seguridad](docs/seguridad.md) | JWT, refresco por 401, almacenamiento cifrado, certificate pinning, R8, permisos y resultados de las pruebas de seguridad del sistema |
+| [Monitoreo](docs/monitoreo.md) | SLA, SLO, SLI y presupuesto de errores; disponibilidad, tiempo de respuesta y tasa de éxito de la API con `monitoreo.yml` |
+| [Perfil y derechos ARCO](docs/perfil-arco.md) | Gestión del perfil y cómo se cubren los derechos ARCO |
 | [Publicación en Google Play](docs/publicacion-play.md) | Firma, AAB, prueba cerrada y paso a producción |
 
 ## Ejecutar el proyecto
