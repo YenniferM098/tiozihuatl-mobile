@@ -1,0 +1,54 @@
+# Pipeline de monitoreo de Tiozihuatl Mobile (#128, #129, #130).
+# Es independiente de los pipelines de pruebas, seguridad y publicación: no compila
+# ni despliega, solo mide la API de producción que usa la app.
+#
+#   monitoreo-api ── disponibilidad, tiempo de respuesta (P95) y tasa de éxito HTTP
+#                    contra su SLO; publica el reporte en el resumen y como artifact
+#
+# Se ejecuta cada 6 horas y de forma manual desde Actions (GitHub solo programa y
+# muestra el botón manual cuando el archivo ya está en la rama principal). También
+# corre en los PR que modifican el monitoreo. Si alguna métrica no cumple su SLO,
+# la ejecución queda en rojo como alerta.
+
+name: Monitoreo
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/monitoreo.yml'
+      - 'scripts/monitoreo/**'
+
+concurrency:
+  group: monitoreo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '24'
+  # URL de la API (Settings > Secrets and variables > Actions > Variables).
+  API_URL: ${{ vars.API_URL }}
+
+jobs:
+  monitoreo-api:
+    name: Monitoreo de la API (disponibilidad, tiempo de respuesta y tasa de éxito)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Medir las métricas y generar el reporte
+        run: node scripts/monitoreo/medir-api.mjs
+      - name: Guardar el reporte
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: reporte-monitoreo
+          path: reporte-monitoreo/
+          if-no-files-found: ignore

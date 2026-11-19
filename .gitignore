@@ -71,6 +71,7 @@ Thumbs.db
 
 # Reportes de pruebas (los genera el pipeline)
 /reportes
+/reporte-monitoreo
 /.lighthouseci
 
 # Llaves de firma de Android (nunca se suben al repositorio)
