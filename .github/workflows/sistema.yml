@@ -1,0 +1,100 @@
+# Pipeline de pruebas de sistema de Tiozihuatl Mobile (#59, #60).
+# Es independiente de los pipelines de pruebas, seguridad, publicación y monitoreo:
+# no compila ni despliega, recorre la API de producción como lo hace la app.
+#
+#   funcional ── #59 flujo de extremo a extremo con Estudiante y Visitante
+#   seguridad ── #60 accesos no autorizados, sesiones, roles y datos sensibles
+#
+# Se ejecuta de forma manual, al crear el tag de una versión y en los PR que modifican
+# estas pruebas. Cada job publica su reporte de casos en el resumen y como artifact.
+# Los hallazgos (conocidos o posibles) se reportan sin dejar la ejecución en rojo.
+#
+# Cuentas de prueba (Settings > Secrets and variables > Actions > Secrets):
+#   SISTEMA_ESTUDIANTE_CREDENCIAL, SISTEMA_ESTUDIANTE_CONTRASENA,
+#   SISTEMA_VISITANTE_CREDENCIAL, SISTEMA_VISITANTE_CONTRASENA
+
+name: Pruebas de sistema
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    paths:
+      - '.github/workflows/sistema.yml'
+      - 'tests/postman/sistema/**'
+      - 'scripts/sistema/**'
+
+concurrency:
+  group: sistema
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '24'
+  # URL de la API (Settings > Secrets and variables > Actions > Variables).
+  API_URL: ${{ vars.API_URL }}
+  ESTUDIANTE_CREDENCIAL: ${{ secrets.SISTEMA_ESTUDIANTE_CREDENCIAL }}
+  ESTUDIANTE_CONTRASENA: ${{ secrets.SISTEMA_ESTUDIANTE_CONTRASENA }}
+  VISITANTE_CREDENCIAL: ${{ secrets.SISTEMA_VISITANTE_CREDENCIAL }}
+  VISITANTE_CONTRASENA: ${{ secrets.SISTEMA_VISITANTE_CONTRASENA }}
+
+jobs:
+  pruebas:
+    name: ${{ matrix.titulo }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      # Uno después del otro para no rebasar el límite de peticiones de la API.
+      max-parallel: 1
+      matrix:
+        include:
+          - carpeta: funcional
+            titulo: Prueba funcional del sistema
+          - carpeta: seguridad
+            titulo: Prueba de seguridad del sistema
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Verificar las cuentas de prueba
+        run: |
+          for nombre in ESTUDIANTE_CREDENCIAL ESTUDIANTE_CONTRASENA VISITANTE_CREDENCIAL VISITANTE_CONTRASENA; do
+            if [ -z "${!nombre}" ]; then
+              echo "::error::Falta el secret SISTEMA_$nombre"
+              exit 1
+            fi
+          done
+      - name: Instalar Newman
+        run: npm install --global newman@6
+      # El reporte HTML no se usa porque incluiría los cuerpos con las credenciales.
+      - name: Ejecutar la colección
+        run: |
+          mkdir -p reportes
+          newman run tests/postman/sistema/sistema.postman_collection.json \
+            -e tests/postman/ci.postman_environment.json \
+            --env-var "baseUrl=$API_URL" \
+            --env-var "estudianteCredencial=$ESTUDIANTE_CREDENCIAL" \
+            --env-var "estudianteContrasena=$ESTUDIANTE_CONTRASENA" \
+            --env-var "visitanteCredencial=$VISITANTE_CREDENCIAL" \
+            --env-var "visitanteContrasena=$VISITANTE_CONTRASENA" \
+            --folder "${{ matrix.carpeta }}" \
+            --delay-request 1000 \
+            --timeout-request 60000 \
+            -r cli,json \
+            --reporter-json-export "reportes/${{ matrix.carpeta }}.json" || true
+      - name: Generar el reporte de casos
+        run: node scripts/sistema/reporte-sistema.mjs "reportes/${{ matrix.carpeta }}.json" "${{ matrix.titulo }}" "reportes/${{ matrix.carpeta }}.md"
+      - name: Guardar el reporte
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: reporte-sistema-${{ matrix.carpeta }}
+          # Solo el reporte de casos: el JSON de Newman incluye las credenciales enviadas.
+          path: reportes/${{ matrix.carpeta }}.md
+          if-no-files-found: ignore
