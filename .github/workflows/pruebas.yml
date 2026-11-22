@@ -63,6 +63,11 @@ jobs:
   integracion:
     name: Pruebas de integración (Newman)
     runs-on: ubuntu-latest
+    # La cuenta de integración tiene una sola sesión: dos ejecuciones a la vez se la cerrarían
+    # entre sí. Se comparte el grupo con las pruebas de publicación y las demás esperan su turno.
+    concurrency:
+      group: cuenta-integracion-api
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -71,6 +76,10 @@ jobs:
       - name: Instalar Newman
         run: npm install --global newman@6 newman-reporter-htmlextra@1
       - name: Ejecutar la colección con cada archivo de datos
+        # Biblioteca y Materiales exigen sesión (#216): usan la cuenta de pruebas de integración.
+        env:
+          INTEGRACION_CREDENCIAL: ${{ secrets.INTEGRACION_ESTUDIANTE_CREDENCIAL }}
+          INTEGRACION_CONTRASENA: ${{ secrets.INTEGRACION_ESTUDIANTE_CONTRASENA }}
         run: |
           mkdir -p reportes
           estado=0
@@ -80,6 +89,8 @@ jobs:
             newman run tests/postman/tiozihuatl-mobile.postman_collection.json \
               -e tests/postman/ci.postman_environment.json \
               --env-var "baseUrl=$API_URL" \
+              --env-var "integracionCredencial=$INTEGRACION_CREDENCIAL" \
+              --env-var "integracionContrasena=$INTEGRACION_CONTRASENA" \
               --folder "$hu" \
               -d "$datos" \
               --delay-request 700 \
