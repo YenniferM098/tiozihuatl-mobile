@@ -30,6 +30,8 @@ for datos in tests/postman/datos/*.json; do
   hu=$(basename "$datos" .json)
   echo "::group::$hu"
   newman run "$coleccion" -e "$ambiente" --env-var "baseUrl=$base_url" --folder "$hu" -d "$datos" \
+    --env-var "integracionCredencial=${INTEGRACION_CREDENCIAL:-}" \
+    --env-var "integracionContrasena=${INTEGRACION_CONTRASENA:-}" \
     --delay-request 700 --timeout-request 60000 \
     -r cli,htmlextra --reporter-htmlextra-export "reportes/liberacion-$hu.html" || resultado=1
   echo "::endgroup::"

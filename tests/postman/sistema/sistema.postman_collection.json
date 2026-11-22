@@ -640,6 +640,28 @@
           "name": "SF-17 Búsqueda sin resultados en Biblioteca",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Biblioteca y Materiales exigen sesión de Estudiante o Docente (#216). La sesión del",
+                  "// Estudiante se cerró en SF-13, así que se inicia de nuevo para las búsquedas de SF-17.",
+                  "pm.sendRequest({",
+                  "  url: `${pm.variables.get('baseUrl')}/auth/login`,",
+                  "  method: 'POST',",
+                  "  header: [{ key: 'Content-Type', value: 'application/json' }],",
+                  "  body: { mode: 'raw', raw: JSON.stringify({ credential: pm.variables.get('estudianteCredencial'), contrasena: pm.variables.get('estudianteContrasena'), rolSeleccionado: 'Estudiante' }) },",
+                  "}, (err, res) => {",
+                  "  if (!err && res.code === 200 && res.json().accessToken) {",
+                  "    pm.collectionVariables.set('estToken', res.json().accessToken);",
+                  "  } else {",
+                  "    console.log('No se pudo iniciar sesión como Estudiante para SF-17:', err ? 'sin respuesta' : `HTTP ${res.code}`);",
+                  "  }",
+                  "});"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -658,6 +680,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
               }
             ],
             "url": "{{baseUrl}}/catalog?search={{busquedaSinResultados}}"
@@ -685,6 +711,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{estToken}}"
               }
             ],
             "url": "{{baseUrl}}/material/materiales/todos?semestre={{semestreId}}&search={{busquedaSinResultados}}&page=1&limit=9"
@@ -1098,7 +1128,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('responde 400 o 404, nunca 500', () => pm.expect(pm.response.code).to.be.oneOf([400, 404]));",
+                  "// Sin sesión responde 401 (#216); con sesión, 400 o 404. Nunca 500.",
+                  "pm.test('responde 400, 401 o 404, nunca 500', () => pm.expect(pm.response.code).to.be.oneOf([400, 401, 404]));",
                   "pm.test('no entrega una URL del archivo', () => pm.expect(pm.response.json()).to.not.have.property('url'));"
                 ]
               }

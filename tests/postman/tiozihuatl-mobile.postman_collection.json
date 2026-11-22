@@ -870,7 +870,27 @@
               "  busquedaSinResultados: 'zzqx-sin-resultados-hu04', libroId: 52, esperaDigital: true };",
               "Object.entries(porDefecto).forEach(([clave, valor]) => {",
               "  if (!pm.iterationData.has(clave)) pm.variables.set(clave, valor);",
-              "});"
+              "});",
+              "",
+              "// Biblioteca y Materiales solo responden a la comunidad institucional (#216): se inicia sesión",
+              "// una vez por ejecución con la cuenta de pruebas de integración (secretos INTEGRACION_ESTUDIANTE_*",
+              "// en GitHub Actions). Es distinta de la de sistema.yml para que los pipelines no se cierren la sesión.",
+              "const credencial = pm.variables.get('integracionCredencial');",
+              "if (credencial && !pm.collectionVariables.get('integracionToken')) {",
+              "  pm.sendRequest({",
+              "    url: `${pm.variables.get('baseUrl')}/auth/login`,",
+              "    method: 'POST',",
+              "    header: [{ key: 'Content-Type', value: 'application/json' }],",
+              "    body: { mode: 'raw', raw: JSON.stringify({ credential: credencial, contrasena: pm.variables.get('integracionContrasena'), rolSeleccionado: 'Estudiante' }) },",
+              "  }, (err, res) => {",
+              "    if (!err && res.code === 200 && res.json().accessToken) {",
+              "      pm.collectionVariables.set('integracionToken', res.json().accessToken);",
+              "    } else {",
+              "      // Sin datos de la cuenta en el registro: solo el código de la respuesta.",
+              "      console.log('No se pudo iniciar sesión con la cuenta de integración:', err ? 'sin respuesta' : `HTTP ${res.code}`);",
+              "    }",
+              "  });",
+              "}"
             ]
           }
         }
@@ -925,6 +945,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -969,6 +993,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1019,6 +1047,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1069,6 +1101,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1118,6 +1154,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1166,6 +1206,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1216,6 +1260,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1266,6 +1314,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1307,6 +1359,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1355,6 +1411,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1398,6 +1458,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1452,6 +1516,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1481,7 +1549,27 @@
               "const porDefecto = { libroDigitalId: 56, libroFisicoId: 62, libroInexistenteId: 999999 };",
               "Object.entries(porDefecto).forEach(([clave, valor]) => {",
               "  if (!pm.iterationData.has(clave)) pm.variables.set(clave, valor);",
-              "});"
+              "});",
+              "",
+              "// Biblioteca y Materiales solo responden a la comunidad institucional (#216): se inicia sesión",
+              "// una vez por ejecución con la cuenta de pruebas de integración (secretos INTEGRACION_ESTUDIANTE_*",
+              "// en GitHub Actions). Es distinta de la de sistema.yml para que los pipelines no se cierren la sesión.",
+              "const credencial = pm.variables.get('integracionCredencial');",
+              "if (credencial && !pm.collectionVariables.get('integracionToken')) {",
+              "  pm.sendRequest({",
+              "    url: `${pm.variables.get('baseUrl')}/auth/login`,",
+              "    method: 'POST',",
+              "    header: [{ key: 'Content-Type', value: 'application/json' }],",
+              "    body: { mode: 'raw', raw: JSON.stringify({ credential: credencial, contrasena: pm.variables.get('integracionContrasena'), rolSeleccionado: 'Estudiante' }) },",
+              "  }, (err, res) => {",
+              "    if (!err && res.code === 200 && res.json().accessToken) {",
+              "      pm.collectionVariables.set('integracionToken', res.json().accessToken);",
+              "    } else {",
+              "      // Sin datos de la cuenta en el registro: solo el código de la respuesta.",
+              "      console.log('No se pudo iniciar sesión con la cuenta de integración:', err ? 'sin respuesta' : `HTTP ${res.code}`);",
+              "    }",
+              "  });",
+              "}"
             ]
           }
         }
@@ -1515,6 +1603,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1586,6 +1678,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1625,6 +1721,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1664,6 +1764,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1696,7 +1800,27 @@
               "  tipo: 'PDF', docenteId: '68', busquedaSinResultados: 'zzqx-sin-resultados-hu06', materialId: 40, tipoMaterial: 'PDF' };",
               "Object.entries(porDefecto).forEach(([clave, valor]) => {",
               "  if (!pm.iterationData.has(clave)) pm.variables.set(clave, valor);",
-              "});"
+              "});",
+              "",
+              "// Biblioteca y Materiales solo responden a la comunidad institucional (#216): se inicia sesión",
+              "// una vez por ejecución con la cuenta de pruebas de integración (secretos INTEGRACION_ESTUDIANTE_*",
+              "// en GitHub Actions). Es distinta de la de sistema.yml para que los pipelines no se cierren la sesión.",
+              "const credencial = pm.variables.get('integracionCredencial');",
+              "if (credencial && !pm.collectionVariables.get('integracionToken')) {",
+              "  pm.sendRequest({",
+              "    url: `${pm.variables.get('baseUrl')}/auth/login`,",
+              "    method: 'POST',",
+              "    header: [{ key: 'Content-Type', value: 'application/json' }],",
+              "    body: { mode: 'raw', raw: JSON.stringify({ credential: credencial, contrasena: pm.variables.get('integracionContrasena'), rolSeleccionado: 'Estudiante' }) },",
+              "  }, (err, res) => {",
+              "    if (!err && res.code === 200 && res.json().accessToken) {",
+              "      pm.collectionVariables.set('integracionToken', res.json().accessToken);",
+              "    } else {",
+              "      // Sin datos de la cuenta en el registro: solo el código de la respuesta.",
+              "      console.log('No se pudo iniciar sesión con la cuenta de integración:', err ? 'sin respuesta' : `HTTP ${res.code}`);",
+              "    }",
+              "  });",
+              "}"
             ]
           }
         }
@@ -1746,6 +1870,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1809,6 +1937,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1876,6 +2008,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -1941,6 +2077,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -2006,6 +2146,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -2072,6 +2216,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -2126,6 +2274,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -2185,6 +2337,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -2225,6 +2381,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -2265,6 +2425,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
@@ -2311,6 +2475,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{integracionToken}}"
               }
             ],
             "url": {
