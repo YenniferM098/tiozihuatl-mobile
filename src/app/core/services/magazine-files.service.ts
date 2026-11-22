@@ -78,6 +78,14 @@ export class MagazineFilesService implements PdfReaderSource {
   }
 }
 
+/**
+ * Entrega de Cloudinary que se acepta para el PDF:
+ * - pública (`/upload/`), la que usan las revistas subidas antes de #197;
+ * - protegida y firmada (`/authenticated/s--<firma>--/`), la que genera el backend después
+ *   de #197: Cloudinary solo la entrega con la firma que calcula el backend con su secreto.
+ */
+const DELIVERY_PATH = /\/(image|raw)\/(upload|authenticated\/s--[\w-]{8,}--)\//;
+
 /** Solo PDF https de Cloudinary, sin credenciales ni puertos extraños. */
 export function isMagazinePdfUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false;
@@ -89,7 +97,7 @@ export function isMagazinePdfUrl(value: unknown): value is string {
       !url.username &&
       !url.password &&
       (!url.port || url.port === '443') &&
-      /\/(image|raw)\/upload\//.test(url.pathname) &&
+      DELIVERY_PATH.test(url.pathname) &&
       /\.pdf$/i.test(url.pathname)
     );
   } catch {

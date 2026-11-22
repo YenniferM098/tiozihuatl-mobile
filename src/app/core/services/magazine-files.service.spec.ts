@@ -65,6 +65,18 @@ describe('MagazineFilesService - archivo protegido de la revista', () => {
     expect(new TextDecoder().decode(data).startsWith('%PDF-')).toBe(true);
   });
 
+  it('abre el PDF protegido con la dirección firmada que entrega el backend (#197), sin enviar el token', async () => {
+    const signed = 'https://res.cloudinary.com/demo/image/authenticated/s--AbC_12-x--/v17/magazines/revistas/salud.pdf';
+    const result = firstValueFrom(service.pdf(3));
+    http.expectOne(`${API}/secure-pdf/3`).flush({ url: signed });
+    http.expectOne(API).flush({ data: [] });
+    const file = http.expectOne(signed);
+    expect(file.request.headers.has('Authorization')).toBe(false);
+    file.flush(pdfBytes());
+
+    expect(new TextDecoder().decode((await result).data).startsWith('%PDF-')).toBe(true);
+  });
+
   it('una revista no adquirida (403) no se descarga e informa que solo se leen las adquiridas', async () => {
     const result = firstValueFrom(service.pdf(4));
     http.expectOne(`${API}/secure-pdf/4`).flush({ error: 'Access denied' }, { status: 403, statusText: 'Forbidden' });
@@ -164,5 +176,14 @@ describe('isMagazinePdfUrl', () => {
     expect(isMagazinePdfUrl('https://user:pass@res.cloudinary.com/demo/image/upload/r.pdf')).toBe(false);
     expect(isMagazinePdfUrl('https://res.cloudinary.com:8443/demo/image/upload/r.pdf')).toBe(false);
     expect(isMagazinePdfUrl('no es url')).toBe(false);
+  });
+
+  it('acepta el PDF protegido con la firma del backend (#197) y rechaza el protegido sin firma', () => {
+    expect(isMagazinePdfUrl('https://res.cloudinary.com/demo/image/authenticated/s--AbC_12-x--/v17/magazines/revistas/r.pdf')).toBe(true);
+    expect(isMagazinePdfUrl('https://res.cloudinary.com/demo/raw/authenticated/s--Zz9_Yy8-W--/r.pdf')).toBe(true);
+    expect(isMagazinePdfUrl('https://res.cloudinary.com/demo/image/authenticated/v17/r.pdf')).toBe(false);
+    expect(isMagazinePdfUrl('https://res.cloudinary.com/demo/image/authenticated/s----/r.pdf')).toBe(false);
+    expect(isMagazinePdfUrl('https://res.cloudinary.com/demo/image/private/s--AbC_12-x--/r.pdf')).toBe(false);
+    expect(isMagazinePdfUrl('https://res.cloudinary.com/demo/image/authenticated/s--AbC_12-x--/r.jpg')).toBe(false);
   });
 });
