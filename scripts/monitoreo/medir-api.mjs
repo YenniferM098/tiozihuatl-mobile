@@ -38,10 +38,11 @@ const TIEMPO_LIMITE_MS = 10000;
 /** Endpoints públicos que usa la app al abrir cada módulo. */
 const ENDPOINTS = [
   { nombre: 'Estado de la API', ruta: '/health' },
-  { nombre: 'Catálogo de Biblioteca', ruta: '/catalog' },
+  // Biblioteca y Materiales exigen sesión desde #216: se miden sus listas públicas de filtros.
+  { nombre: 'Materias de Biblioteca', ruta: '/catalog/materias' },
   { nombre: 'Catálogo de Revistas', ruta: '/magazines' },
   { nombre: 'Semestres de Materiales', ruta: '/material/semestres' },
-  { nombre: 'Materiales del semestre', ruta: '/material/materiales/todos?semestre=1&page=1&limit=9' },
+  { nombre: 'Materias de Materiales', ruta: '/material/materias' },
 ];
 
 /** SLO de #128. */

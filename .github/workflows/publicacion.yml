@@ -32,6 +32,10 @@ jobs:
   pruebas-api-produccion:
     name: Pruebas en el entorno de liberación (API de producción)
     runs-on: ubuntu-latest
+    # Comparte la cuenta de integración con pruebas.yml: espera su turno para no cerrarle la sesión.
+    concurrency:
+      group: cuenta-integracion-api
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -40,6 +44,10 @@ jobs:
       - name: Instalar Newman
         run: npm install --global newman@6 newman-reporter-htmlextra@1
       - name: Probar la API de producción
+        # Biblioteca y Materiales exigen sesión (#216): usan la cuenta de pruebas de integración.
+        env:
+          INTEGRACION_CREDENCIAL: ${{ secrets.INTEGRACION_ESTUDIANTE_CREDENCIAL }}
+          INTEGRACION_CONTRASENA: ${{ secrets.INTEGRACION_ESTUDIANTE_CONTRASENA }}
         run: bash scripts/liberacion/probar-api.sh
       - name: Guardar reporte
         if: always()
