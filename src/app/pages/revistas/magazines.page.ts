@@ -3,7 +3,6 @@ import { Component, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
-  IonButton,
   IonContent,
   IonHeader,
   IonLabel,
@@ -14,10 +13,12 @@ import {
   IonSegmentButton,
   IonSelect,
   IonSelectOption,
-  IonTitle,
+  IonSpinner,
   IonToolbar,
 } from '@ionic/angular';
 import { MAGAZINES_WEB_URL, MagazineFilters } from '../../core/models/magazine.models';
+import { ListSkeletonComponent } from '../../shared/list-skeleton.component';
+import { SectionTitleComponent } from '../../shared/section-title.component';
 import { LibraryStateComponent } from '../biblioteca/library-state.component';
 import { MAGAZINE_LETTERS, MAGAZINE_SORTS, MagazinesView, MagazinesViewModel, formatPrice } from './magazines.view-model';
 
@@ -32,7 +33,6 @@ import { MAGAZINE_LETTERS, MAGAZINE_SORTS, MagazinesView, MagazinesViewModel, fo
     RouterLink,
     IonHeader,
     IonToolbar,
-    IonTitle,
     IonContent,
     IonRefresher,
     IonRefresherContent,
@@ -42,8 +42,10 @@ import { MAGAZINE_LETTERS, MAGAZINE_SORTS, MagazinesView, MagazinesViewModel, fo
     IonLabel,
     IonSelect,
     IonSelectOption,
-    IonButton,
+    IonSpinner,
     LibraryStateComponent,
+    SectionTitleComponent,
+    ListSkeletonComponent,
   ],
 })
 export class MagazinesPage implements OnDestroy {
@@ -106,6 +108,13 @@ export class MagazinesPage implements OnDestroy {
     const label = total === 1 ? '1 revista' : `${total} revistas`;
     if (!this.filtered) return label;
     return `${label} ${total === 1 ? 'encontrada' : 'encontradas'}`;
+  }
+
+  /** Total del catálogo para el título; solo en "Todas", sin filtros y con datos cargados. */
+  get headerCount(): string {
+    const total = this.magazines().length;
+    if (this.view() !== 'all' || this.loading() || this.filtered || !total) return '';
+    return total === 1 ? '1 revista' : `${total} revistas`;
   }
 
   reset(): void {

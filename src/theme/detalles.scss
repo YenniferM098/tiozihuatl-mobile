@@ -1,0 +1,28 @@
+// Detalles de libro, material y revista (#229, propuesta A "portada protagonista"):
+// la portada en una franja azul claro, el título centrado, los datos en filas con ícono
+// y la acción principal fija abajo. Hoja global porque la usan tres pantallas.
+
+.detail-page { max-width: 760px; margin: 0 auto; padding: 0 0 calc(24px + env(safe-area-inset-bottom)); }
+.detail-page > app-library-state, .detail-page > .detail-back { display: block; margin: 0 16px; }
+.detail-hero { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px 20px 20px; background: #e6f3fc; }
+.hero-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: #fff; color: var(--ion-color-primary-shade); font-size: 12px; font-weight: 700; }
+.hero-badge.muted { color: var(--tz-text-muted); }
+.detail-heading-a { padding: 18px 20px 0; text-align: center; }
+.detail-heading-a h1 { margin: 0; font: 800 22px/1.25 var(--tz-font-display); color: var(--tz-text); overflow-wrap: anywhere; }
+.detail-heading-a p { margin: 6px 0 0; color: var(--tz-text-muted); font-size: 14px; overflow-wrap: anywhere; }
+.info-list { margin: 18px 16px 0; padding: 4px 16px; background: #fff; border: 1px solid #e3e9ef; border-radius: 16px; }
+.info-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+.info-row + .info-row { border-top: 1px solid #eef2f5; }
+.info-icon { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: #e6f3fc; color: var(--ion-color-primary-shade); font-size: 18px; }
+.info-row > div { min-width: 0; }
+.info-label { margin: 0; font-size: 12px; color: var(--tz-text-muted); }
+.info-value { margin: 2px 0 0; font-size: 14px; font-weight: 600; color: var(--tz-text); overflow-wrap: anywhere; line-height: 1.45; }
+.info-value.description { font-weight: 400; white-space: pre-wrap; line-height: 1.6; }
+.info-row .tags { margin-top: 4px; }
+.detail-note { margin: 14px 20px 0; color: var(--tz-text-muted); font-size: 13px; line-height: 1.5; text-align: center; }
+.detail-back { margin-top: 8px !important; }
+ion-footer.action-footer { padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); background: #fff; box-shadow: 0 -6px 18px rgba(29, 43, 54, 0.08); }
+ion-footer.action-footer::before { display: none; }
+ion-footer.action-footer ion-button { --border-radius: 14px; min-height: 50px; margin: 0; font-weight: 700; }
+ion-footer.action-footer ion-button + ion-button { margin-top: 8px; }
+ion-footer.action-footer .footer-note { margin: 0 0 8px; text-align: center; font-size: 12px; color: var(--tz-text-muted); }

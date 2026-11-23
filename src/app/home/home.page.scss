@@ -1,5 +1,5 @@
 /*
- * Inicio: saludo sobre el azul institucional y una hoja blanca con curva (como Login).
+ * Inicio: saludo en la barra azul y secciones sobre fondo gris claro (#229).
  * Iconos en azul institucional; libros, revistas y materiales son informativos
  * y no tienen estados de toque. El texto compartido y los estados de carga viven en
  * home.page.common.scss para respetar el presupuesto de estilos por archivo del build.
@@ -8,52 +8,56 @@
   --gutter: 20px;
 }
 
-/* ---------- Saludo ---------- */
-.hero {
-  padding: calc(28px + var(--ion-safe-area-top, 0px)) var(--gutter) 56px;
-  background: var(--ion-color-primary);
+/* ---------- Saludo en la barra azul (#229) ---------- */
+.greeting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 6px 16px 10px;
   color: #fff;
 }
 
-.hero__inner {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+.greeting__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ion-color-primary-shade);
+  font: 800 1.2rem/1 var(--tz-font-display);
+}
+
+.greeting__text {
+  flex: 1;
+  min-width: 0;
 }
 
 .hero__title {
   margin: 0;
-  font: 800 2rem/1.15 var(--tz-font-display);
-  overflow-wrap: anywhere;
+  font: 800 1.3rem/1.2 var(--tz-font-display);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.hero__subtitle {
-  margin: 6px 0 0;
-  font-size: 0.95rem;
-  line-height: 1.45;
-  opacity: 0.92;
+/* ---------- Contenido sobre fondo gris claro, como las listas ---------- */
+.home-content {
+  --background: #f6f8fa;
 }
 
-.hero__logout {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  font-size: 22px;
-}
-
-/* ---------- Hoja blanca ---------- */
 .home {
-  position: relative;
   max-width: 720px;
-  margin: -32px auto 0;
+  margin: 0 auto;
   padding: 4px 0 32px;
-  background: #fff;
-  border-top-left-radius: 40px;
+}
+
+.home__intro {
+  margin: 14px var(--gutter) 0;
+  color: var(--tz-text-muted);
+  font-size: 0.9rem;
 }
 
 .home__section {
@@ -70,6 +74,21 @@
 
   i {
     font-size: 24px;
+  }
+}
+
+.see-all {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--ion-color-primary-shade);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+
+  i {
+    font-size: 16px;
   }
 }
 

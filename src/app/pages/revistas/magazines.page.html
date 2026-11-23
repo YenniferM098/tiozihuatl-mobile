@@ -1,12 +1,13 @@
-<ion-header><ion-toolbar color="primary"><ion-title>Revistas Digitales</ion-title></ion-toolbar></ion-header>
+<ion-header class="section-header">
+  <ion-toolbar color="primary"><app-section-title icon="newspaper" title="Revistas Digitales" [count]="headerCount" /></ion-toolbar>
+  @if (view() === 'all') {
+    <ion-toolbar color="primary" class="search-toolbar">
+      <ion-searchbar data-guia="revistas-buscador" aria-label="Buscar revistas por título" placeholder="Buscar por título" [debounce]="400" [maxlength]="100" [(ngModel)]="filters.search" (ionInput)="load()" />
+    </ion-toolbar>
+  }
+</ion-header>
 <ion-content>
   <ion-refresher slot="fixed" (ionRefresh)="refresh($event)"><ion-refresher-content /></ion-refresher>
-  <section class="search-area">
-    <p>Consulta las publicaciones del Instituto.</p>
-    @if (view() === 'all') {
-      <ion-searchbar data-guia="revistas-buscador" aria-label="Buscar revistas por título" placeholder="Buscar por título" [debounce]="400" [maxlength]="100" [(ngModel)]="filters.search" (ionInput)="load()" />
-    }
-  </section>
   <main class="library-body">
     <ion-segment class="views" data-guia="revistas-vistas" [value]="view()" (ionChange)="selectView($event.detail.value)" aria-label="Revistas que se muestran">
       <ion-segment-button value="all"><ion-label>Todas</ion-label></ion-segment-button>
@@ -14,20 +15,18 @@
     </ion-segment>
 
     @if (view() === 'all') {
-      <details class="filters" data-guia="revistas-filtros" open>
-        <summary><i class="ph ph-sliders-horizontal" aria-hidden="true"></i> Filtros y ordenamiento</summary>
-        <div class="filter-grid">
-          <ion-select label="Letra inicial" interface="alert" [(ngModel)]="filters.letter" (ionChange)="load()"><ion-select-option value="">Todas</ion-select-option>@for (letter of letters; track letter) { <ion-select-option [value]="letter">{{ letter }}</ion-select-option> }</ion-select>
-          <ion-select label="Ordenar por" interface="alert" [(ngModel)]="filters.sort" (ionChange)="load()">@for (sort of sorts; track sort.value) { <ion-select-option [value]="sort.value">{{ sort.label }}</ion-select-option> }</ion-select>
-        </div>
-        @if (filtered) { <ion-button fill="clear" (click)="reset()">Limpiar búsqueda y filtros</ion-button> }
-      </details>
-      @if (loading() && !magazines().length) { <app-library-state [message]="filtered ? 'Buscando revistas…' : 'Cargando revistas…'" [loading]="true" /> }
+      <div class="chip-row" role="group" aria-label="Filtros y ordenamiento" data-guia="revistas-filtros">
+        @if (filtered) { <button type="button" class="clear-chip" (click)="reset()"><i class="ph ph-funnel-x" aria-hidden="true"></i> Quitar filtros</button> }
+        <ion-select class="filter-chip" [class.active]="!!filters.letter" label="Letra" interface="alert" [(ngModel)]="filters.letter" (ionChange)="load()"><ion-select-option value="">Todas</ion-select-option>@for (letter of letters; track letter) { <ion-select-option [value]="letter">{{ letter }}</ion-select-option> }</ion-select>
+        <ion-select class="filter-chip" [class.active]="filters.sort !== sorts[0].value" label="Ordenar" interface="alert" [(ngModel)]="filters.sort" (ionChange)="load()">@for (sort of sorts; track sort.value) { <ion-select-option [value]="sort.value">{{ sort.label }}</ion-select-option> }</ion-select>
+      </div>
+      @if (loading() && !magazines().length) { <app-list-skeleton layout="grid" [message]="filtered ? 'Buscando revistas…' : 'Cargando revistas…'" /> }
       @else if (error() && !magazines().length) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load(true)" /> }
       @else if (!magazines().length) { <app-library-state [message]="filtered ? 'No se encontraron revistas para esta búsqueda o filtros.' : 'Por ahora no hay revistas disponibles.'" /> }
       @else {
         @if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load(true)" /> }
-        <p class="result-count" role="status">{{ loading() ? 'Actualizando resultados…' : countLabel() }}</p>
+        @if (loading()) { <p class="updating" role="status"><ion-spinner name="dots" aria-hidden="true" /> Actualizando resultados…</p> }
+        @else if (filtered) { <p class="result-count" role="status">{{ countLabel() }}</p> }
         <ul class="magazine-grid">
           @for (magazine of magazines(); track magazine.id) {
             <li><a class="magazine-card" data-guia="revistas-revista" [routerLink]="['/revistas', magazine.id]">
@@ -53,7 +52,7 @@
         </ul>
       }
     } @else {
-      @if (purchasesLoading()) { <app-library-state message="Cargando tus revistas…" [loading]="true" /> }
+      @if (purchasesLoading()) { <app-list-skeleton layout="grid" [count]="2" message="Cargando tus revistas…" /> }
       @else if (purchasesError()) { <app-library-state [message]="purchasesError()" [retry]="true" (retryClick)="loadPurchases()" /> }
       @else if (!purchases().length) {
         <div class="no-purchases">

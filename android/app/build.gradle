@@ -46,6 +46,11 @@ android {
         }
     }
     buildTypes {
+        // APK de pruebas (#229): se instala como otra app ("IEST pruebas") junto a la de Play.
+        debug {
+            applicationIdSuffix ".pruebas"
+            versionNameSuffix "-pruebas"
+        }
         release {
             // Sin llave configurada el build release queda sin firmar (Play lo rechaza).
             if (signingConfigs.release.storeFile != null) {

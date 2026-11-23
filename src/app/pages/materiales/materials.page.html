@@ -1,28 +1,43 @@
-<ion-header><ion-toolbar color="primary"><ion-title>Materiales complementarios</ion-title></ion-toolbar></ion-header>
+<ion-header class="section-header">
+  <ion-toolbar color="primary"><app-section-title icon="files" title="Materiales complementarios" [count]="countLabel" /></ion-toolbar>
+  <ion-toolbar color="primary" class="search-toolbar">
+    <ion-searchbar data-guia="materiales-buscador" aria-label="Buscar materiales por título o descripción" placeholder="Buscar por título o descripción" [debounce]="400" [maxlength]="200" [(ngModel)]="filters.search" (ionInput)="load(true)" />
+  </ion-toolbar>
+</ion-header>
 <ion-content>
-  <section class="search-area"><p>Consulta los recursos académicos publicados por tus docentes.</p><ion-searchbar data-guia="materiales-buscador" aria-label="Buscar materiales por título o descripción" placeholder="Buscar por título o descripción" [debounce]="400" [maxlength]="200" [(ngModel)]="filters.search" (ionInput)="load(true)" /></section>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)"><ion-refresher-content /></ion-refresher>
   <main class="library-body">
-    @if (semesterName()) { <p class="semester">Semestre de tu cuenta: {{ semesterName() }}</p> }
-    <details class="filters" data-guia="materiales-filtros" open><summary><i class="ph ph-sliders-horizontal" aria-hidden="true"></i> Filtrar materiales</summary>
-      <div class="filter-grid">
-        <ion-select label="Materia" interface="alert" [(ngModel)]="filters.materia" (ionChange)="load(true)"><ion-select-option value="">Todas</ion-select-option>@for (subject of subjects(); track subject.id) { <ion-select-option [value]="'' + subject.id">{{ subject.nombre }}</ion-select-option> }</ion-select>
-        <ion-select label="Tipo de recurso" interface="alert" [(ngModel)]="filters.tipo" (ionChange)="load(true)"><ion-select-option value="">Todos</ion-select-option>@for (type of types; track type) { <ion-select-option [value]="type">{{ type }}</ion-select-option> }</ion-select>
-        <ion-select label="Docente" interface="alert" [(ngModel)]="filters.docente" (ionChange)="load(true)"><ion-select-option value="">Todos</ion-select-option>@for (teacher of teachers(); track teacher.id_usuario) { <ion-select-option [value]="'' + teacher.id_usuario">{{ teacher.nombre }}</ion-select-option> }</ion-select>
-      </div>@if (filtered) { <ion-button fill="clear" (click)="reset()">Limpiar búsqueda y filtros</ion-button> }
-    </details>
+    @if (semesterName()) { <p class="semester"><i class="ph ph-graduation-cap" aria-hidden="true"></i> Semestre de tu cuenta: {{ semesterName() }}</p> }
+    <div class="chip-row" role="group" aria-label="Filtrar materiales" data-guia="materiales-filtros">
+      @if (filtered) { <button type="button" class="clear-chip" (click)="reset()"><i class="ph ph-funnel-x" aria-hidden="true"></i> Quitar filtros</button> }
+      <ion-select class="filter-chip" [class.active]="!!filters.materia" label="Materia" interface="alert" [(ngModel)]="filters.materia" (ionChange)="load(true)"><ion-select-option value="">Todas</ion-select-option>@for (subject of subjects(); track subject.id) { <ion-select-option [value]="'' + subject.id">{{ subject.nombre }}</ion-select-option> }</ion-select>
+      <ion-select class="filter-chip" [class.active]="!!filters.tipo" label="Tipo" interface="alert" [(ngModel)]="filters.tipo" (ionChange)="load(true)"><ion-select-option value="">Todos</ion-select-option>@for (type of types; track type) { <ion-select-option [value]="type">{{ type }}</ion-select-option> }</ion-select>
+      <ion-select class="filter-chip" [class.active]="!!filters.docente" label="Docente" interface="alert" [(ngModel)]="filters.docente" (ionChange)="load(true)"><ion-select-option value="">Todos</ion-select-option>@for (teacher of teachers(); track teacher.id_usuario) { <ion-select-option [value]="'' + teacher.id_usuario">{{ teacher.nombre }}</ion-select-option> }</ion-select>
+    </div>
     @if (optionsError()) { <app-library-state [message]="optionsError()" [retry]="true" (retryClick)="loadOptions()" /> }
-    @if (loading()) { <app-library-state message="Cargando materiales…" [loading]="true" /> }
-    @else if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load()" /> }
-    @else if (!materials().length) { <app-library-state [message]="filtered ? 'No se encontraron materiales para esta búsqueda o filtros.' : 'No hay materiales publicados disponibles para tu cuenta.'" /> }
-    @else {
-      <p class="result-count" role="status">{{ total() }} materiales encontrados</p>
+    @if (loading() && !materials().length) { <app-list-skeleton message="Cargando materiales…" /> }
+    @else if (loading()) { <p class="updating" role="status"><ion-spinner name="dots" aria-hidden="true" /> Actualizando materiales…</p> }
+    @if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load()" /> }
+    @else if (!loading() && !materials().length) { <app-library-state [message]="filtered ? 'No se encontraron materiales para esta búsqueda o filtros.' : 'No hay materiales publicados disponibles para tu cuenta.'" /> }
+    @else if (materials().length) {
+      @if (filtered) { <p class="result-count" role="status">{{ total() === 1 ? '1 material encontrado' : total() + ' materiales encontrados' }}</p> }
       <div class="book-list">@for (material of materials(); track material.id_material) {
         <a class="book-card" data-guia="materiales-material" [routerLink]="['/materiales', material.id_material]">
           <span class="resource-icon"><i class="ph ph-{{ icon(material.tipo) }}" aria-hidden="true"></i></span>
-          <div><h2>{{ material.titulo }}</h2><span class="badge">{{ material.tipo }}</span>@if (material.descripcion) { <p class="description-preview">{{ material.descripcion }}</p> }@if (material.nombre_docente) { <p>{{ material.nombre_docente }}</p> }@if (material.materias) { <p>{{ material.materias }}</p> }@if (material.semestres) { <p>{{ material.semestres }}</p> }<span class="detail-label">Consultar detalle</span></div>
+          <div class="card-body">
+            <h2>{{ material.titulo }}</h2>
+            @if (material.nombre_docente) { <p class="author"><i class="ph ph-chalkboard-teacher" aria-hidden="true"></i> {{ material.nombre_docente }}</p> }
+            @if (material.materias) { <p class="category"><i class="ph ph-bookmark-simple" aria-hidden="true"></i> {{ list(material.materias) }}</p> }
+            @if (material.descripcion) { <p class="description-preview">{{ material.descripcion }}</p> }
+            <div class="tags">
+              <span class="badge">{{ material.tipo }}</span>
+              @for (semester of semesterTags(material.semestres); track semester) { <span class="semester-tag">{{ semester }}</span> }
+            </div>
+            @if (material.semestres) { <span class="sr-only">Semestres: {{ material.semestres }}</span> }
+          </div>
         </a>
       }</div>
-      @if (totalPages() > 1) { <nav class="pagination" aria-label="Páginas de materiales"><ion-button [disabled]="page() <= 1" (click)="changePage(-1)">Anterior</ion-button><span aria-live="polite">{{ page() }} / {{ totalPages() }}</span><ion-button [disabled]="page() >= totalPages()" (click)="changePage(1)">Siguiente</ion-button></nav> }
+      @if (totalPages() > 1) { <nav class="pagination" aria-label="Páginas de materiales"><ion-button fill="outline" [disabled]="page() <= 1" (click)="changePage(-1)">Anterior</ion-button><span aria-live="polite">{{ page() }} / {{ totalPages() }}</span><ion-button fill="outline" [disabled]="page() >= totalPages()" (click)="changePage(1)">Siguiente</ion-button></nav> }
     }
   </main>
 </ion-content>

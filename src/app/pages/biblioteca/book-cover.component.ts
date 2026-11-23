@@ -3,14 +3,17 @@ import { Subscription } from 'rxjs';
 import { LibraryService } from '../../core/services/library.service';
 @Component({
   selector: 'app-book-cover',
+  host: { '[class.large]': 'large()' },
   template: `@if (url()) { <img loading="lazy" decoding="async" [src]="url()" [alt]="'Portada de ' + title()" (error)="url.set('')" /> }
     @else { <span class="placeholder" aria-label="Portada no disponible"><i class="ph ph-book-open" aria-hidden="true"></i></span> }`,
-  styles: [`:host { display:block; width:76px; flex-shrink:0; } img,.placeholder { width:100%; height:108px; border-radius:8px; object-fit:contain; background:#edf5fb; } .placeholder { display:grid; place-items:center; font-size:32px; color:var(--ion-color-primary-shade); }`],
+  styles: [`:host { display:block; width:76px; flex-shrink:0; } img,.placeholder { width:100%; height:108px; border-radius:8px; object-fit:contain; background:#edf5fb; } .placeholder { display:grid; place-items:center; font-size:32px; color:var(--ion-color-primary-shade); } :host(.large) { width:132px; } :host(.large) img, :host(.large) .placeholder { height:184px; border-radius:10px; box-shadow:0 12px 24px rgba(29,43,54,.22); background:#fff; } :host(.large) .placeholder { font-size:48px; }`],
 })
 export class BookCoverComponent implements OnDestroy {
   readonly id = input.required<number>();
   readonly title = input.required<string>();
   readonly digital = input(false);
+  /** Portada grande del detalle (#229). */
+  readonly large = input(false);
   readonly url = signal('');
   private readonly service = inject(LibraryService);
   private request?: Subscription;

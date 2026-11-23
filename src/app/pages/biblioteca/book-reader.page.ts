@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonSpinner, IonTitle, IonToolbar } from '@ionic/angular';
 import { Subscription } from 'rxjs';
@@ -47,6 +47,11 @@ export class BookReaderPage implements OnDestroy {
   readonly page = signal(1);
   readonly totalPages = signal(0);
   readonly resumeMessage = signal('');
+  /** Porcentaje leído según la página visible, para la barra de avance (#229). */
+  readonly readPercent = computed(() => {
+    const total = this.totalPages();
+    return total ? Math.min(100, Math.round((this.page() / total) * 100)) : 0;
+  });
   readonly slots = signal<PdfPageSlot[]>([]);
   readonly activePages = signal<Set<number>>(new Set());
   readonly readyPages = signal<Set<number>>(new Set());

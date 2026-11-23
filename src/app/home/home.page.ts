@@ -1,10 +1,9 @@
 import { Component, WritableSignal, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { IonContent, IonModal, IonRefresher, IonRefresherContent, IonSkeletonText } from '@ionic/angular';
+import { RouterLink } from '@angular/router';
+import { IonContent, IonHeader, IonModal, IonRefresher, IonRefresherContent, IonSkeletonText, IonToolbar } from '@ionic/angular';
 import { Observable, forkJoin, tap } from 'rxjs';
 import { HapticDirective } from '../core/directives/haptic.directive';
 import { FeaturedEvent, HomeBook, HomeMagazine, HomeMaterial } from '../core/models/home.models';
-import { AuthService } from '../core/services/auth.service';
 import { HomeContentService } from '../core/services/home-content.service';
 import { SessionService } from '../core/services/session.service';
 
@@ -21,12 +20,10 @@ type Section<T> = T[] | null;
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
-  styleUrls: ['home.page.scss', 'home.page.common.scss', 'home.page.waves.scss', 'home.page.viewer.scss'],
-  imports: [RouterLink, IonContent, IonModal, IonRefresher, IonRefresherContent, IonSkeletonText, HapticDirective],
+  styleUrls: ['home.page.scss', 'home.page.common.scss', 'home.page.viewer.scss'],
+  imports: [RouterLink, IonHeader, IonToolbar, IonContent, IonModal, IonRefresher, IonRefresherContent, IonSkeletonText, HapticDirective],
 })
 export class HomePage {
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
   private readonly content = inject(HomeContentService);
   private readonly user = inject(SessionService).user;
 
@@ -37,10 +34,17 @@ export class HomePage {
   /** Destacado abierto en el visor de imágenes; null si está cerrado. */
   readonly viewer = signal<FeaturedEvent | null>(null);
 
+  /** Primer nombre con mayúscula inicial ("ASTRID" → "Astrid"). */
   readonly firstName = computed(() => {
     const name = (this.user()?.nombre ?? '').trim();
-    return name ? name.split(/\s+/)[0] : '';
+    if (!name) return '';
+    const first = name.split(/\s+/)[0].toLocaleLowerCase('es-MX');
+    return first.charAt(0).toLocaleUpperCase('es-MX') + first.slice(1);
   });
+
+  /** Inicial del avatar del saludo. */
+  readonly initial = computed(() => this.firstName().charAt(0) || '?');
+
 
   /** El título dice qué criterio usa cada sección. */
   readonly isTeacher = computed(() => this.user()?.rol === 'Docente');
@@ -71,10 +75,6 @@ export class HomePage {
     this.brokenCovers.update((set) => new Set(set).add(url));
   }
 
-  logout(): void {
-    this.auth.logout();
-    this.router.navigateByUrl('/login', { replaceUrl: true });
-  }
 
   /** Primero identifica el tipo de usuario y después consulta solo lo que le corresponde. */
   private load(done?: () => void): void {
