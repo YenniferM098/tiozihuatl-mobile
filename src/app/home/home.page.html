@@ -1,23 +1,22 @@
+<!-- ---------- Saludo en la barra azul, como el título de las demás secciones (#229) ---------- -->
+<ion-header class="section-header">
+  <ion-toolbar color="primary">
+    <div class="greeting">
+      <span class="greeting__avatar" aria-hidden="true">{{ initial() }}</span>
+      <div class="greeting__text">
+        <h1 class="hero__title">Hola{{ firstName() ? ', ' + firstName() : '' }}</h1>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
 <ion-content class="home-content">
   <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- ---------- Saludo sobre el azul institucional (como en Login) ---------- -->
-  <header class="hero">
-    <div class="hero__inner">
-      <div>
-        <h1 class="hero__title">Hola{{ firstName() ? ', ' + firstName() : '' }}</h1>
-        <p class="hero__subtitle">Qué gusto verte. Esto es lo más reciente en Tiozihuatl.</p>
-      </div>
-      <button type="button" class="hero__logout" tzHaptic (click)="logout()" aria-label="Cerrar sesión">
-        <i class="ph ph-sign-out" aria-hidden="true"></i>
-      </button>
-    </div>
-  </header>
-
-  <!-- Las secciones alternan blanco y azul, separadas por una ola (home.page.waves.scss). -->
   <main class="home">
+    <p class="home__intro">Esto es lo más reciente en Tiozihuatl.</p>
     <!-- ---------- Eventos destacados ---------- -->
     @if (events() === null) {
       <section class="home__section" aria-hidden="true">
@@ -67,6 +66,7 @@
       <section class="home__section" aria-labelledby="home-books">
         <h2 id="home-books" class="heading">
           <i class="ph ph-books" aria-hidden="true"></i>Libros recientes
+          <a class="see-all" routerLink="/biblioteca">Ver todo<i class="ph ph-caret-right" aria-hidden="true"></i></a>
         </h2>
         <ul class="pair">
           @for (book of books(); track book.id) {
@@ -103,6 +103,7 @@
       <section class="home__section" aria-labelledby="home-magazines">
         <h2 id="home-magazines" class="heading">
           <i class="ph ph-newspaper" aria-hidden="true"></i>Revistas recientes
+          <a class="see-all" routerLink="/revistas">Ver todo<i class="ph ph-caret-right" aria-hidden="true"></i></a>
         </h2>
         <ul class="pair">
           @for (magazine of magazines(); track magazine.id) {
@@ -133,6 +134,7 @@
       <section class="home__section" aria-labelledby="home-materials">
         <h2 id="home-materials" class="heading">
           <i class="ph ph-files" aria-hidden="true"></i>{{ isTeacher() ? 'Tus materiales recientes' : 'Materiales recientes' }}
+          <a class="see-all" routerLink="/materiales">Ver todo<i class="ph ph-caret-right" aria-hidden="true"></i></a>
         </h2>
         <ul class="materials">
           @for (material of materials(); track material.id) {

@@ -53,6 +53,13 @@ describe('HomePage (HU-02 acceso según el rol)', () => {
     expect(crear('Estudiante', '  ').firstName()).toBe('');
   });
 
+  it('el saludo usa mayúscula inicial y la inicial del avatar (#229)', () => {
+    const page = crear('Estudiante', 'ASTRID LÓPEZ');
+    expect(page.firstName()).toBe('Astrid');
+    expect(page.initial()).toBe('A');
+    expect(crear('Estudiante', ' ').initial()).toBe('?');
+  });
+
   it('Estudiante: consulta libros y materiales de su semestre', () => {
     const page = crear('Estudiante');
 
@@ -132,14 +139,6 @@ describe('HomePage (HU-02 acceso según el rol)', () => {
     expect(page.brokenCovers().has('https://res.cloudinary.com/libro.png')).toBe(true);
   });
 
-  it('cierra la sesión y vuelve al login', () => {
-    const page = crear('Estudiante');
-
-    page.logout();
-
-    expect(auth.logout).toHaveBeenCalled();
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/login', { replaceUrl: true });
-  });
 });
 
 describe('Inicio: cada elemento abre su información (#204)', () => {
@@ -192,6 +191,14 @@ describe('Inicio: cada elemento abre su información (#204)', () => {
 
     card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     expect(page.viewer()?.id).toBe(7);
+  });
+
+  it('cada sección tiene «Ver todo» hacia su módulo; cerrar sesión queda solo en Perfil (#229)', async () => {
+    const el: HTMLElement = (await render('Estudiante')).nativeElement;
+    const links = [...el.querySelectorAll('a.see-all')].map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['/biblioteca', '/revistas', '/materiales']);
+    expect(el.querySelector('[aria-label="Cerrar sesión"]')).toBeNull();
+    expect(el.querySelector('ion-header')?.textContent).not.toContain('IEST Tiozihuatl');
   });
 
   it('Visitante: solo destacados y revistas, sin enlaces a Biblioteca ni Materiales', async () => {
