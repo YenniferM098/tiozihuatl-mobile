@@ -5,12 +5,14 @@ import {
   AlertController,
   IonButton,
   IonContent,
+  IonHeader,
   IonInput,
   IonModal,
   IonRefresher,
   IonRefresherContent,
   IonSkeletonText,
   IonSpinner,
+  IonToolbar,
   NavController,
   ToastController,
 } from '@ionic/angular';
@@ -27,6 +29,7 @@ import {
   patternTrimmed,
   strongPassword,
 } from '../../core/validators/form.validators';
+import { SectionTitleComponent } from '../../shared/section-title.component';
 import { ProfileViewModel } from './profile.view-model';
 
 // Mismas reglas que el registro de visitante (register.page.ts).
@@ -55,6 +58,8 @@ const DATE_TIME = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeSt
     ReactiveFormsModule,
     IonButton,
     IonContent,
+    IonHeader,
+    IonToolbar,
     IonInput,
     IonModal,
     IonRefresher,
@@ -62,6 +67,7 @@ const DATE_TIME = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeSt
     IonSkeletonText,
     IonSpinner,
     HapticDirective,
+    SectionTitleComponent,
   ],
 })
 export class ProfilePage {
@@ -73,6 +79,21 @@ export class ProfilePage {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly vm = new ProfileViewModel();
+
+  /** Iniciales del avatar: primera letra del nombre y del primer apellido ("Astrid López" → "AL"). */
+  initials(fullName: string | null | undefined): string {
+    const words = (fullName ?? '').trim().split(/\s+/).filter(Boolean);
+    const letters = words.slice(0, 2).map((w) => w.charAt(0).toLocaleUpperCase('es-MX')).join('');
+    return letters || '?';
+  }
+
+  /** Nombre con mayúscula inicial en cada palabra ("ASTRID LÓPEZ" → "Astrid López"). */
+  properName(fullName: string | null | undefined): string {
+    return (fullName ?? '')
+      .trim()
+      .toLocaleLowerCase('es-MX')
+      .replace(/(^|\s)(\p{L})/gu, (_, space: string, letter: string) => space + letter.toLocaleUpperCase('es-MX'));
+  }
   readonly profile = this.vm.profile;
   readonly error = this.vm.error;
   readonly saving = this.vm.saving;

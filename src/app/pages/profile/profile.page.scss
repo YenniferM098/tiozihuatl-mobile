@@ -1,5 +1,5 @@
 /*
- * Perfil: identidad sobre el azul institucional (mockup 7.5) y hoja blanca con las
+ * Perfil: título en la barra azul, tarjeta de identidad y tarjetas con las secciones (#229);
  * tarjetas. Tarjetas y estados: profile.cards.scss. Hojas de edición: profile.sheets.scss.
  */
 :host {
@@ -10,54 +10,55 @@
   --background: #f5f7fa;
 }
 
+/* Tarjeta de identidad (#229): avatar con iniciales, nombre y datos de la cuenta. */
 .hero {
-  padding: calc(24px + var(--ion-safe-area-top, 0px)) var(--gutter) 64px;
-  background: var(--ion-color-primary);
-  color: #fff;
-  text-align: center;
-}
-
-.hero__title {
-  margin: 0;
-  font: 800 1.35rem/1.2 var(--tz-font-display);
-  text-align: left;
+  max-width: 720px;
+  margin: 16px auto 0;
+  padding: 0 16px;
 }
 
 .identity {
-  margin-top: 18px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #e3e9ef;
+  box-shadow: 0 2px 10px rgba(28, 120, 181, 0.06);
 }
 
 .identity__avatar {
-  display: inline-grid;
+  display: grid;
   place-items: center;
-  width: 84px;
-  height: 84px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: #fff;
-  color: var(--ion-color-primary-shade);
-  font-size: 42px;
-  box-shadow: 0 8px 20px rgba(29, 43, 54, 0.15);
+  background: linear-gradient(160deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+  color: #fff;
+  font: 800 1.4rem/1 var(--tz-font-display);
 }
 
 .identity__name {
-  margin: 14px 0 0;
-  font: 800 1.25rem/1.25 var(--tz-font-display);
-  text-transform: uppercase;
+  margin: 0;
+  color: var(--tz-text);
+  font: 800 1.1rem/1.25 var(--tz-font-display);
   overflow-wrap: anywhere;
 }
 
 .identity__sub {
   margin: 4px 0 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
+  color: var(--tz-text-muted);
+  font-size: 0.85rem;
 }
 
 .chips {
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 8px;
-  margin: 14px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -68,20 +69,15 @@
   gap: 6px;
   padding: 5px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
+  background: #e6f3fc;
+  color: var(--ion-color-primary-shade);
   font-size: 0.75rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
 }
 
 .sheet {
-  position: relative;
   max-width: 720px;
   min-height: 50vh;
-  margin: -32px auto 0;
-  padding: 20px 16px calc(32px + var(--ion-safe-area-bottom, 0px));
-  background: #f5f7fa;
-  // Las dos esquinas iguales para que la hoja y sus tarjetas queden centradas y simétricas.
-  border-radius: 28px 28px 0 0;
+  margin: 0 auto;
+  padding: 16px 16px calc(32px + var(--ion-safe-area-bottom, 0px));
 }

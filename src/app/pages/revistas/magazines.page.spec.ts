@@ -54,7 +54,8 @@ describe('Revistas: catálogo', () => {
     expect(el.querySelector('img')?.getAttribute('alt')).toBe(`Portada de ${SALUD.title}`);
     expect(el.querySelectorAll('.magazine-card')[1].querySelector('img')).toBeNull();
     expect(el.querySelector('a.magazine-card[href="/revistas/3"]')).toBeTruthy();
-  });
+    // Primera prueba del archivo: incluye compilar la pantalla, que con toda la suite en paralelo puede pasar de 5 s.
+  }, 20_000);
 
   it('marca el descuento con el precio anterior tachado', async () => {
     const fixture = await open();
@@ -111,8 +112,8 @@ describe('Revistas: catálogo', () => {
     const fixture = await open();
     response.next([SALUD]);
     await fixture.whenStable();
-    expect(fixture.nativeElement.textContent).toContain('1 revista');
-    expect(fixture.nativeElement.textContent).not.toContain('Limpiar búsqueda');
+    expect(fixture.nativeElement.querySelector('app-section-title .section-count')?.textContent).toBe('1 revista');
+    expect(fixture.nativeElement.querySelector('.clear-chip')).toBeNull();
 
     const page = fixture.componentInstance;
     page.filters.search = 'zzz';
@@ -125,9 +126,7 @@ describe('Revistas: catálogo', () => {
     expect(fixture.nativeElement.textContent).toContain('No se encontraron revistas para esta búsqueda o filtros.');
 
     response = new Subject();
-    (Array.from(fixture.nativeElement.querySelectorAll('ion-button')) as HTMLElement[])
-      .find((b) => b.textContent?.includes('Limpiar'))!
-      .click();
+    (fixture.nativeElement.querySelector('.clear-chip') as HTMLElement).click();
     expect(search).toHaveBeenLastCalledWith({ search: '', letter: '', sort: 'asc' }, false);
   });
 

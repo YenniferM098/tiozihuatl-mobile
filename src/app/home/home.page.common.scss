@@ -71,10 +71,6 @@ ion-skeleton-text {
   margin: 0 var(--gutter) 10px;
 }
 
-.hero__logout:active {
-  background: rgba(255, 255, 255, 0.34);
-}
-
 /* ---------- Tablet ---------- */
 @media (min-width: 768px) {
   :host {

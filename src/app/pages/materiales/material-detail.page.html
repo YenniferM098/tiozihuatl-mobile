@@ -1,24 +1,40 @@
 <ion-header><ion-toolbar color="primary"><ion-buttons slot="start"><ion-back-button defaultHref="/materiales" text="Volver" /></ion-buttons><ion-title>Detalle del material</ion-title></ion-toolbar></ion-header>
-<ion-content><main class="library-body">
+<ion-content><main class="detail-page">
   @if (loading()) { <app-library-state message="Cargando información del material…" [loading]="true" /> }
   @else if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load()" /> }
   @else if (material(); as resource) {
-    <article class="detail-card"><div class="detail-heading"><span class="resource-icon"><i class="ph ph-{{ icon(resource.tipo) }}" aria-hidden="true"></i></span><h1>{{ resource.titulo }}</h1></div>
-      <dl><dt>Tipo de recurso</dt><dd>{{ resource.tipo }}</dd>@if (resource.descripcion) { <dt>Descripción</dt><dd class="description">{{ resource.descripcion }}</dd> }@if (resource.nombre_docente) { <dt>Docente</dt><dd>{{ resource.nombre_docente }}</dd> }@if (resource.materias) { <dt>Materias</dt><dd>{{ resource.materias }}</dd> }@if (resource.semestres) { <dt>Semestres</dt><dd>{{ resource.semestres }}</dd> }@if (resource.fecha_creacion) { <dt>Fecha de publicación</dt><dd>{{ resource.fecha_creacion | date:'dd/MM/yyyy' }}</dd> }</dl>
-      @if (hasFile(resource.url)) {
-        @if (canPreview(resource.tipo)) {
-          <ion-button expand="block" [routerLink]="['/materiales', resource.id_material, resource.tipo === 'PDF' ? 'lector' : 'visor']" [disabled]="downloading()"><i class="ph ph-eye" aria-hidden="true"></i>&nbsp; Visualizar material</ion-button>
-        } @else { <p>Este formato no tiene vista previa dentro de la aplicación. Descárgalo para abrirlo con una aplicación compatible.</p> }
-        <ion-button expand="block" fill="outline" (click)="download()" [disabled]="downloading()"><i class="ph ph-download-simple" aria-hidden="true"></i>&nbsp; {{ downloading() ? 'Descargando…' : 'Descargar archivo' }}</ion-button>
-        @if (downloading()) { <app-library-state message="Descargando archivo…" [loading]="true" /> }
-        @if (downloadMessage()) { <p role="status">{{ downloadMessage() }}</p> }
-        @if (downloadError()) { <p role="alert">{{ downloadError() }}</p> }
-        @if (downloaded()) { <ion-button expand="block" fill="clear" (click)="openDownloaded()">Abrir archivo descargado</ion-button> }
-      } @else { <p role="status">El material no tiene un archivo disponible.</p> }
-    </article>
+    <section class="detail-hero">
+      <span class="material-hero-icon"><i class="ph ph-{{ icon(resource.tipo) }}" aria-hidden="true"></i></span>
+      <span class="hero-badge">{{ resource.tipo }}</span>
+    </section>
+    <div class="detail-heading-a"><h1>{{ resource.titulo }}</h1>@if (resource.nombre_docente) { <p>{{ resource.nombre_docente }}</p> }</div>
+    <section class="info-list" aria-label="Información del material">
+      @if (resource.descripcion) { <div class="info-row"><span class="info-icon"><i class="ph ph-text-align-left" aria-hidden="true"></i></span><div><p class="info-label">Descripción</p><p class="info-value description">{{ resource.descripcion }}</p></div></div> }
+      @if (resource.nombre_docente) { <div class="info-row"><span class="info-icon"><i class="ph ph-chalkboard-teacher" aria-hidden="true"></i></span><div><p class="info-label">Docente</p><p class="info-value">{{ resource.nombre_docente }}</p></div></div> }
+      @if (resource.materias) { <div class="info-row"><span class="info-icon"><i class="ph ph-bookmark-simple" aria-hidden="true"></i></span><div><p class="info-label">Materias</p><p class="info-value">{{ list(resource.materias) }}</p></div></div> }
+      @if (resource.semestres) { <div class="info-row"><span class="info-icon"><i class="ph ph-graduation-cap" aria-hidden="true"></i></span><div><p class="info-label">Semestres</p><div class="tags" aria-hidden="true">@for (semester of semesterTags(resource.semestres); track semester) { <span class="semester-tag">{{ semester }}</span> }</div><span class="sr-only">{{ resource.semestres }}</span></div></div> }
+      @if (resource.fecha_creacion) { <div class="info-row"><span class="info-icon"><i class="ph ph-calendar-blank" aria-hidden="true"></i></span><div><p class="info-label">Fecha de publicación</p><p class="info-value">{{ resource.fecha_creacion | date:'dd/MM/yyyy' }}</p></div></div> }
+    </section>
+    @if (hasFile(resource.url)) {
+      @if (!canPreview(resource.tipo)) { <p class="detail-note">Este formato no tiene vista previa dentro de la aplicación. Descárgalo para abrirlo con una aplicación compatible.</p> }
+      @if (downloading()) { <app-library-state message="Descargando archivo…" [loading]="true" /> }
+      @if (downloadMessage()) { <p class="detail-note" role="status">{{ downloadMessage() }}</p> }
+      @if (downloadError()) { <p class="detail-note" role="alert">{{ downloadError() }}</p> }
+      @if (downloaded()) { <ion-button class="detail-back" expand="block" fill="clear" (click)="openDownloaded()">Abrir archivo descargado</ion-button> }
+    } @else { <p class="detail-note" role="status">El material no tiene un archivo disponible.</p> }
   }
-  <ion-button expand="block" fill="clear" routerLink="/materiales">Regresar a materiales</ion-button>
+  <ion-button class="detail-back" expand="block" fill="clear" routerLink="/materiales">Regresar a materiales</ion-button>
 </main></ion-content>
+@if (!loading() && !error() && material(); as resource) {
+  @if (hasFile(resource.url)) {
+    <ion-footer class="action-footer">
+      @if (canPreview(resource.tipo)) {
+        <ion-button expand="block" [routerLink]="['/materiales', resource.id_material, resource.tipo === 'PDF' ? 'lector' : 'visor']" [disabled]="downloading()"><i class="ph ph-eye" aria-hidden="true"></i>&nbsp; Visualizar material</ion-button>
+      }
+      <ion-button expand="block" fill="outline" (click)="download()" [disabled]="downloading()"><i class="ph ph-download-simple" aria-hidden="true"></i>&nbsp; {{ downloading() ? 'Descargando…' : 'Descargar archivo' }}</ion-button>
+    </ion-footer>
+  }
+}
 
 <ion-modal class="download-confirmation" [isOpen]="downloadConfirmation()" (didDismiss)="closeConfirmation()" aria-label="Confirmación de descarga">
   <ng-template>

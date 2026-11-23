@@ -1,16 +1,27 @@
 <ion-header><ion-toolbar color="primary"><ion-buttons slot="start"><ion-back-button defaultHref="/biblioteca" text="Volver" /></ion-buttons><ion-title>Detalle del libro</ion-title></ion-toolbar></ion-header>
-<ion-content><main class="library-body">
+<ion-content><main class="detail-page">
   @if (loading()) { <app-library-state message="Cargando información del libro…" [loading]="true" /> }
   @else if (error()) { <app-library-state [message]="error()" [retry]="true" (retryClick)="load()" /> }
   @else if (book(); as book) {
-    <article class="detail-card">
-      <div class="detail-heading"><app-book-cover [id]="book.id" [title]="book.titulo" [digital]="!!book.tiene_digital" /><h1>{{ book.titulo }}</h1></div>
-      <dl>@if (book.autores) { <dt>Autoría</dt><dd>{{ book.autores }}</dd> }@if (book.editorial) { <dt>Editorial</dt><dd>{{ book.editorial }}</dd> }@if (book.materias) { <dt>Materias</dt><dd>{{ book.materias }}</dd> }@if (book.semestres) { <dt>Semestres</dt><dd>{{ book.semestres }}</dd> }<dt>Ejemplares físicos</dt><dd>{{ physicalCopies(book) }}</dd></dl>
-      @if (hasDigitalFile(book)) {
-        <p role="status">Este libro cuenta con contenido digital autorizado.</p>
-        <ion-button expand="block" [routerLink]="['/biblioteca', book.id, 'lector']">Abrir lector digital</ion-button>
-      } @else { <p role="status">Este libro no tiene contenido digital disponible. Puedes consultar su información bibliográfica.</p> }
-    </article>
+    <section class="detail-hero">
+      <app-book-cover [id]="book.id" [title]="book.titulo" [digital]="!!book.tiene_digital" [large]="true" />
+      @if (hasDigitalFile(book)) { <span class="hero-badge"><i class="ph ph-device-mobile" aria-hidden="true"></i> Contenido digital</span> }
+      @else { <span class="hero-badge muted"><i class="ph ph-info" aria-hidden="true"></i> Información bibliográfica</span> }
+    </section>
+    <div class="detail-heading-a"><h1>{{ book.titulo }}</h1>@if (book.autores) { <p>{{ book.autores }}</p> }</div>
+    <section class="info-list" aria-label="Información del libro">
+      @if (book.editorial) { <div class="info-row"><span class="info-icon"><i class="ph ph-buildings" aria-hidden="true"></i></span><div><p class="info-label">Editorial</p><p class="info-value">{{ book.editorial }}</p></div></div> }
+      @if (book.materias) { <div class="info-row"><span class="info-icon"><i class="ph ph-bookmark-simple" aria-hidden="true"></i></span><div><p class="info-label">Materias</p><p class="info-value">{{ list(book.materias) }}</p></div></div> }
+      @if (book.semestres) { <div class="info-row"><span class="info-icon"><i class="ph ph-graduation-cap" aria-hidden="true"></i></span><div><p class="info-label">Semestres</p><div class="tags" aria-hidden="true">@for (semester of semesterTags(book.semestres); track semester) { <span class="semester-tag">{{ semester }}</span> }</div><span class="sr-only">{{ book.semestres }}</span></div></div> }
+      <div class="info-row"><span class="info-icon"><i class="ph ph-books" aria-hidden="true"></i></span><div><p class="info-label">Ejemplares físicos</p><p class="info-value">{{ physicalCopies(book) }}</p></div></div>
+    </section>
+    @if (hasDigitalFile(book)) { <p class="detail-note" role="status">Este libro cuenta con contenido digital autorizado.</p> }
+    @else { <p class="detail-note" role="status">Este libro no tiene contenido digital disponible. Puedes consultar su información bibliográfica.</p> }
   }
-  <ion-button expand="block" fill="clear" routerLink="/biblioteca">Regresar al catálogo</ion-button>
+  <ion-button class="detail-back" expand="block" fill="clear" routerLink="/biblioteca">Regresar al catálogo</ion-button>
 </main></ion-content>
+@if (!loading() && !error() && book(); as book) {
+  @if (hasDigitalFile(book)) {
+    <ion-footer class="action-footer"><ion-button expand="block" [routerLink]="['/biblioteca', book.id, 'lector']"><i class="ph ph-book-open-text" aria-hidden="true"></i>&nbsp; Abrir lector digital</ion-button></ion-footer>
+  }
+}

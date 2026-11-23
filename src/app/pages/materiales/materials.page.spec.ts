@@ -32,6 +32,19 @@ describe('Materiales: estados de consulta y detalle', () => {
     expect(fixture.nativeElement.querySelector('.description-preview img')).toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/materiales/52"]')).toBeTruthy();
   });
+  it('muestra el título con el total, los filtros en chips y los semestres cortos (#229)', async () => {
+    const fixture = TestBed.createComponent(MaterialsPage); await fixture.whenStable();
+    fixture.componentInstance.ionViewWillEnter();
+    response.next(RESPONSE); await fixture.whenStable();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('app-section-title h1')?.textContent).toBe('Materiales complementarios');
+    expect(el.querySelector('.section-count')?.textContent).toBe('1 material');
+    expect(el.querySelectorAll('.chip-row ion-select.filter-chip').length).toBe(3);
+    expect(el.querySelector('.chip-row')?.getAttribute('data-guia')).toBe('materiales-filtros');
+    expect(el.querySelector('.semester-tag')?.textContent).toBe('1.º');
+    fixture.componentInstance.filters.tipo = 'PDF';
+    expect(fixture.componentInstance.countLabel).toBe('');
+  });
   it('distingue ausencia de materiales y búsqueda sin coincidencias', async () => {
     const fixture = TestBed.createComponent(MaterialsPage); await fixture.whenStable(); fixture.componentInstance.load();
     response.next({ ...RESPONSE, data: [], total: 0 }); await fixture.whenStable();
