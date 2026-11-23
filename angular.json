@@ -53,7 +53,8 @@
               "src/global.scss",
               "src/theme/variables.scss",
               "src/theme/forms.scss",
-              "src/theme/listas.scss"
+              "src/theme/listas.scss",
+              "src/theme/detalles.scss"
             ],
             "scripts": [],
             "browser": "src/main.ts"

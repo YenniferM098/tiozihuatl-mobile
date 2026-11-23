@@ -1,6 +1,6 @@
 import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
+import { IonBackButton, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { MAGAZINES_WEB_URL } from '../../core/models/magazine.models';
 import { LibraryStateComponent } from '../biblioteca/library-state.component';
 import { MagazineDetailViewModel } from './magazine-detail.view-model';
@@ -11,7 +11,7 @@ import { formatPrice } from './magazines.view-model';
   selector: 'app-magazine-detail',
   templateUrl: './magazine-detail.page.html',
   styleUrls: ['../biblioteca/library.scss', './magazine-detail.page.scss'],
-  imports: [RouterLink, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonButton, LibraryStateComponent],
+  imports: [RouterLink, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonFooter, IonButton, LibraryStateComponent],
 })
 export class MagazineDetailPage implements OnDestroy {
   private readonly route = inject(ActivatedRoute);

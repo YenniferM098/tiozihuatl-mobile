@@ -1,17 +1,18 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonModal, IonTitle, IonToolbar } from '@ionic/angular';
+import { IonBackButton, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonModal, IonTitle, IonToolbar } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ComplementaryMaterial, materialIcon } from '../../core/models/material.models';
 import { DownloadedMaterial } from '../../core/native/material-files';
 import { MaterialFilesService, materialFileError } from '../../core/services/material-files.service';
 import { MaterialsService, materialsError } from '../../core/services/materials.service';
+import { commaList, shortSemesters } from '../../shared/semesters';
 import { LibraryStateComponent } from '../biblioteca/library-state.component';
 @Component({
   selector: 'app-material-detail', templateUrl: './material-detail.page.html',
   styleUrls: ['../biblioteca/library.scss', './materials.page.scss', './material-detail.page.scss'],
-  imports: [DatePipe, RouterLink, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonButton, IonModal, LibraryStateComponent],
+  imports: [DatePipe, RouterLink, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonFooter, IonButton, IonModal, LibraryStateComponent],
 })
 export class MaterialDetailPage implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
@@ -37,6 +38,9 @@ export class MaterialDetailPage implements OnDestroy {
   hasFile(url: unknown): boolean { return this.files.safeUrl(url); }
   private request?: Subscription;
   readonly material = signal<ComplementaryMaterial | null>(null);
+  /** Materias legibles y semestres en etiquetas cortas (#229). */
+  readonly list = commaList;
+  readonly semesterTags = shortSemesters;
   readonly loading = signal(true);
   readonly error = signal('');
   readonly icon = materialIcon;

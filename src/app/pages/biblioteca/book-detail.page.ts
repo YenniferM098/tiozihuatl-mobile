@@ -1,16 +1,17 @@
 import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
+import { IonBackButton, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { LibraryBook } from '../../core/models/library.models';
 import { LibraryService, hasDigitalFile, libraryError } from '../../core/services/library.service';
+import { commaList, shortSemesters } from '../../shared/semesters';
 import { BookCoverComponent } from './book-cover.component';
 import { LibraryStateComponent } from './library-state.component';
 @Component({
   selector: 'app-book-detail',
   templateUrl: './book-detail.page.html',
   styleUrls: ['./library.scss'],
-  imports: [RouterLink, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonButton, BookCoverComponent, LibraryStateComponent],
+  imports: [RouterLink, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton, IonContent, IonFooter, IonButton, BookCoverComponent, LibraryStateComponent],
 })
 export class BookDetailPage implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
@@ -21,6 +22,9 @@ export class BookDetailPage implements OnDestroy {
   readonly error = signal('');
   /** El contenido digital solo se considera autorizado si el archivo existe en Cloudinary. */
   readonly hasDigitalFile = hasDigitalFile;
+  /** Materias legibles y semestres en etiquetas cortas (#229). */
+  readonly list = commaList;
+  readonly semesterTags = shortSemesters;
   /** Disponibilidad de ejemplares físicos según total/disponibles de GET /catalog. */
   physicalCopies(book: LibraryBook): string {
     if (Number(book.tiene_fisico) !== 1) return 'Este libro no cuenta con ejemplares físicos.';

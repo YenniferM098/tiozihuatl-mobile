@@ -1,9 +1,9 @@
 <ion-header><ion-toolbar color="primary"><ion-buttons slot="start"><ion-back-button defaultHref="/revistas" text="Volver" /></ion-buttons><ion-title>Detalle de la revista</ion-title></ion-toolbar></ion-header>
-<ion-content><main class="library-body">
+<ion-content><main class="detail-page">
   @if (loading()) { <app-library-state message="Cargando información de la revista…" [loading]="true" /> }
   @else if (error(); as failure) { <app-library-state [message]="failure.message" [retry]="failure.kind !== 'notFound'" (retryClick)="load()" /> }
   @else if (magazine(); as item) {
-    <article class="detail-card">
+    <section class="detail-hero">
       <div class="magazine-detail-cover">
         @if (item.cover && !coverBroken()) {
           <img [src]="item.cover" [alt]="'Portada de ' + item.title" width="300" height="400" decoding="async" fetchpriority="high" (error)="coverBroken.set(true)" />
@@ -11,26 +11,31 @@
           <i class="ph ph-newspaper" aria-hidden="true"></i>
         }
       </div>
+      @if (item.purchased === true) { <p class="purchase-status purchased" role="status"><i class="ph ph-check-circle" aria-hidden="true"></i> Ya adquiriste esta revista.</p> }
+    </section>
+    <div class="detail-heading-a">
       <h1>{{ item.title }}</h1>
       <div class="price-block" [attr.aria-label]="item.hasDiscount ? 'Precio ' + price(item.finalPrice) + ', antes ' + price(item.price) : 'Precio ' + price(item.price)">
         <strong>{{ price(item.finalPrice) }}</strong>
         @if (item.hasDiscount) { <s>{{ price(item.price) }}</s><span class="discount">Descuento</span> }
       </div>
-      @if (item.purchased === true) {
-        <p class="purchase-status purchased" role="status"><i class="ph ph-check-circle" aria-hidden="true"></i> Ya adquiriste esta revista.</p>
-        <ion-button class="read-button" expand="block" [routerLink]="['/revistas', item.id, 'lector']"><i class="ph ph-book-open-text" aria-hidden="true"></i>&nbsp; Leer revista</ion-button>
-      } @else {
-        <section class="purchase-note" aria-label="Cómo adquirir la revista">
-          @if (item.purchased === null) { <p role="status">No fue posible verificar si ya adquiriste esta revista.</p> }
-          <p>La compra de revistas no está disponible en la aplicación. Puedes adquirirla desde el sitio web del Instituto.</p>
-          <a class="web-link" [href]="webUrl" target="_blank" rel="noopener noreferrer"><i class="ph ph-globe" aria-hidden="true"></i> Adquirir en el sitio web</a>
-        </section>
-      }
-      <dl>
-        <dt>Descripción</dt>
-        <dd class="description">{{ item.description || 'Esta revista no tiene descripción.' }}</dd>
-      </dl>
-    </article>
+    </div>
+    <section class="info-list" aria-label="Información de la revista">
+      <div class="info-row"><span class="info-icon"><i class="ph ph-text-align-left" aria-hidden="true"></i></span><div><p class="info-label">Descripción</p><p class="info-value description">{{ item.description || 'Esta revista no tiene descripción.' }}</p></div></div>
+    </section>
+    @if (item.purchased === null) { <p class="detail-note" role="status">No fue posible verificar si ya adquiriste esta revista.</p> }
   }
-  <ion-button expand="block" fill="clear" routerLink="/revistas">Regresar a revistas</ion-button>
+  <ion-button class="detail-back" expand="block" fill="clear" routerLink="/revistas">Regresar a revistas</ion-button>
 </main></ion-content>
+@if (!loading() && !error() && magazine(); as item) {
+  <ion-footer class="action-footer">
+    @if (item.purchased === true) {
+      <ion-button class="read-button" expand="block" [routerLink]="['/revistas', item.id, 'lector']"><i class="ph ph-book-open-text" aria-hidden="true"></i>&nbsp; Leer revista</ion-button>
+    } @else {
+      <section class="purchase-note" aria-label="Cómo adquirir la revista">
+        <p class="footer-note">La compra de revistas no está disponible en la aplicación. Puedes adquirirla desde el sitio web del Instituto.</p>
+        <a class="web-link" [href]="webUrl" target="_blank" rel="noopener noreferrer"><i class="ph ph-globe" aria-hidden="true"></i> Adquirir en el sitio web</a>
+      </section>
+    }
+  </ion-footer>
+}
