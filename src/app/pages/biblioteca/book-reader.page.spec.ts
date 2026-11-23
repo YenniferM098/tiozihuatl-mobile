@@ -137,14 +137,18 @@ describe('Lector continuo: scroll, carga progresiva y recursos', () => {
     expect(reader.pageErrors().has(2)).toBe(false);
     expect(pump).toHaveBeenCalled();
   });
-  it('conserva el contador compacto en el encabezado sin botones de avance y refleja la página visible', async () => {
+  it('muestra la barra de avance y la pastilla con la página visible, sin botones de avance (#229)', async () => {
     const fixture = TestBed.createComponent(BookReaderPage); await fixture.whenStable();
     fixture.componentInstance.loading.set(false); fixture.componentInstance.totalPages.set(10); fixture.componentInstance.page.set(6);
     await fixture.whenStable();
-    expect(fixture.nativeElement.querySelector('ion-header .page-counter').textContent).toContain('6 / 10');
-    expect(fixture.nativeElement.querySelector('.page-counter ion-button')).toBeNull();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('.page-counter')?.textContent).toContain('Página 6 de 10');
+    expect(el.querySelector('.page-counter')?.textContent).not.toContain('%');
+    expect(el.querySelector('ion-header .reading-progress')?.getAttribute('aria-valuenow')).toBe('60');
+    expect(el.querySelector('.page-counter ion-button')).toBeNull();
     fixture.componentInstance.page.set(7); await fixture.whenStable();
-    expect(fixture.nativeElement.querySelector('ion-header .page-counter').textContent).toContain('7 / 10');
+    expect(el.querySelector('.page-counter')?.textContent).toContain('Página 7 de 10');
+    expect((el.querySelector('.reading-progress span') as HTMLElement).style.width).toBe('70%');
     fixture.destroy();
   });
   it('abre el libro en la última página leída y avisa unos segundos dónde continúa', () => {

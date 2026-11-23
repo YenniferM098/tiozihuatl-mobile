@@ -1,9 +1,15 @@
 <ion-header><ion-toolbar color="primary"><ion-buttons slot="start"><ion-back-button [defaultHref]="detailUrl" text="Volver" /></ion-buttons><ion-title>{{ title() }}</ion-title></ion-toolbar>
   @if (totalPages() && !loading() && !error()) {
-    <nav class="page-counter" aria-label="Páginas del documento">@if (resumeMessage()) { <span class="resume-message" role="status">{{ resumeMessage() }}</span> }<span aria-live="polite">{{ page() + ' / ' + totalPages() }}</span></nav>
+    <div class="reading-progress" role="progressbar" aria-label="Avance de lectura" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="readPercent()"><span [style.width.%]="readPercent()"></span></div>
   }
 </ion-header>
 <ion-content [scrollEvents]="true" (ionScroll)="onScroll()">
+  @if (totalPages() && !loading() && !error()) {
+    <nav slot="fixed" class="page-counter" aria-label="Páginas del documento">
+      @if (resumeMessage()) { <span class="resume-message" role="status">{{ resumeMessage() }}</span> }
+      <span aria-live="polite">Página {{ page() }} de {{ totalPages() }}</span>
+    </nav>
+  }
   @if (loading()) { <app-library-state [message]="loadingMessage()" [loading]="true" /> }
   @else if (error()) {
     <app-library-state [message]="error()" [retry]="retryable()" (retryClick)="load()" />
