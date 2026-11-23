@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Nombre del APK de pruebas (#229), para distinguirlo de la app de Play en el celular. -->
+<resources>
+    <string name="app_name">IEST pruebas</string>
+    <string name="title_activity_main">IEST pruebas</string>
+</resources>
