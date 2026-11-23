@@ -60,6 +60,17 @@ describe('ProfilePage - Perfil de usuario', () => {
     expect(text).toContain('los administra el Instituto');
   });
 
+  it('muestra el título en la barra y la tarjeta con las iniciales y el nombre legible (#229)', () => {
+    const fixture = setup({ profile: () => of({ ...STUDENT, fullName: 'ASTRID CIRETH ZAMORA' }) });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('ion-header app-section-title h1')?.textContent).toBe('Mi perfil');
+    expect(el.querySelector('.identity__avatar')?.textContent?.trim()).toBe('AC');
+    expect(el.querySelector('.identity__name')?.textContent).toBe('Astrid Cireth Zamora');
+    const page = fixture.componentInstance;
+    expect(page.initials('')).toBe('?');
+    expect(page.properName('  ángel   ÑANDÚ ')).toBe('Ángel   Ñandú');
+  });
+
   it('Visitante: oculta la matrícula y los datos académicos', () => {
     const fixture = setup({ profile: () => of(VISITOR) });
     const text = fixture.nativeElement.textContent as string;

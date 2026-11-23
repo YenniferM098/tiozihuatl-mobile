@@ -1,18 +1,24 @@
+<!-- ---------- Título en la barra azul, como las demás secciones (#229) ---------- -->
+<ion-header class="section-header">
+  <ion-toolbar color="primary"><app-section-title icon="user-circle" title="Mi perfil" /></ion-toolbar>
+</ion-header>
+
 <ion-content class="profile-content">
   <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- ---------- Identidad sobre el azul institucional (mockup 7.5) ---------- -->
+  <!-- ---------- Tarjeta de identidad ---------- -->
   <header class="hero">
-    <h1 class="hero__title">Mi perfil</h1>
     @if (profile(); as p) {
       <div class="identity">
-        <span class="identity__avatar"><i class="ph ph-user" aria-hidden="true"></i></span>
-        <p class="identity__name">{{ p.fullName }}</p>
-        @if (p.matricula) {
-          <p class="identity__sub">Matrícula: {{ p.matricula }}</p>
-        }
+        <span class="identity__avatar" aria-hidden="true">{{ initials(p.fullName) }}</span>
+        <div class="identity__text">
+          <p class="identity__name">{{ properName(p.fullName) }}</p>
+          @if (p.matricula) {
+            <p class="identity__sub">Matrícula: {{ p.matricula }}</p>
+          }
+        </div>
         <ul class="chips" aria-label="Datos de la cuenta">
           <li class="chip"><i class="ph ph-shield-check" aria-hidden="true"></i>{{ p.rol }}</li>
           @if (p.carrera) {
